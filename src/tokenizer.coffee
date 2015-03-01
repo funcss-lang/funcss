@@ -97,12 +97,15 @@ class EOFToken
 
 class Tokenizer
   tokenize: (string) ->
-    @stream = string.split("")
-    @current = undefined
+    @init(string)
     tokens = []
     while not ((token = @consume_a_token()) instanceof EOFToken)
       tokens.push token
     return tokens
+
+  init: ->
+    @stream = string.split("")
+    @current = undefined
 
   consume_next: ->
     if @stream.length
@@ -349,7 +352,7 @@ class Tokenizer
 
   consume_an_ident_like_token: ->
     name = @consume_a_name()
-    lowerCase = name.toLowerCase()
+    lowerCase = name.toLowerCase() # XXX not really what the spec says
     if lowerCase is "url" and @next() is "("
       @consume_next()
       @consume_a_url_token()
