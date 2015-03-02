@@ -1,4 +1,4 @@
-Tokenizer = require("#{__dirname}/../../src/tokenizer.coffee")
+Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
 {
   IdentToken
   FunctionToken

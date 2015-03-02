@@ -162,6 +162,7 @@ class Parser
       @consume_next()
       switch
         when @current instanceof WhitespaceToken
+          "do nothing"
         when @current instanceof EOFToken
           return result
         when @current instanceof CDOToken or @current instanceof CDCToken
@@ -220,7 +221,7 @@ class Parser
       @consume_next()
       switch
         when @current instanceof WhitespaceToken or @current instanceof SemicolonToken
-          # do nothing
+          "do nothing"
         when @current instanceof EOFToken
           return result
         when @current instanceof AtKeywordToken
@@ -241,7 +242,7 @@ class Parser
             result.push declaration
         else
           while (c = @consume_component_value()) instanceof SemicolonToken or c instanceof EOFToken
-            # do nothing
+            "do nothing"
 
   consume_a_declaration: () ->
     name = @current
@@ -292,6 +293,16 @@ class Parser
           value.push @consume_component_value()
 
 
+
+module.exports = Parser
+for k,v of {
+  AtRule
+  QualifiedRule
+  Declaration
+  Function
+  SimpleBlock
+}
+  Parser[k] = v
 
 
 

@@ -103,7 +103,7 @@ class Tokenizer
       tokens.push token
     return tokens
 
-  init: ->
+  init: (string) ->
     @stream = string.split("")
     @current = undefined
 
