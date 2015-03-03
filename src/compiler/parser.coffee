@@ -31,6 +31,7 @@ Tokenizer = require("#{__dirname}/tokenizer")
   ClosingParenToken
   OpeningCurlyToken
   ClosingCurlyToken
+  EOFToken
 } = Tokenizer
 
 class AtRule
@@ -55,99 +56,112 @@ class SimpleBlock
   constructor : (token, value) ->
     @token = token
     @value = value
+class SyntaxError
+class Stylesheet
+  constructor : (value) ->
+    @value = value
 
 
 
 
 class Parser
   init: (tokens) ->
-    @stream = [t for t in tokens]
+    if typeof tokens is "string" or tokens instanceof String
+      @stream = new Tokenizer().tokenize(tokens)
+    else
+      @stream = (t for t in tokens)
     @current = undefined
 
   consume_next: ->
     if @stream.length
       @current = @stream.shift()
     else
-      @current = "EOF"
+      @current = new EOFToken
 
   next: ->
     if @stream.length
       @stream[0]
     else
-      "EOF"
+      new EOFToken
+
+  reconsume_current: ->
+    @stream.unshift(@current)
 
 
-  parseStylesheet: (tokens) ->
+  parse_stylesheet: (tokens) ->
     @init(tokens)
     return new Stylesheet(@consume_list_of_rules(true))
 
 
-  parseListOfRules: (tokens) ->
+  parse_list_of_rules: (tokens) ->
     @init(tokens)
     return @consume_list_of_rules(false)
 
-  parseRule: (tokens) ->
+  parse_rule: (tokens) ->
     @init(tokens)
     @consume_next()
     while @current instanceof WhitespaceToken
       @consume_next()
     if @current instanceof EOFToken
-      return "syntax error"
+      return new SyntaxError
     if @current instanceof AtKeywordToken
       result = @consume_at_rule()
     else
+      @reconsume_current()
       result = @consume_qualified_rule()
       if not result?
-        return "syntax error"
+        return new SyntaxError
+    @consume_next()
     while @current instanceof WhitespaceToken
       @consume_next()
     if @current instanceof EOFToken
       return result
-    return "syntax error"
+    return new SyntaxError
 
 
-  parseDeclaration: (tokens) ->
+  parse_declaration: (tokens) ->
     #> Note: Unlike "Parse a list of declarations", this parses only a declaration and not an at-rule.
     @init(tokens)
     @consume_next()
     while @current instanceof WhitespaceToken
       @consume_next()
     unless @current instanceof IdentToken
-      return "syntax error"
+      return new SyntaxError
     result = @consume_a_declaration
     if result?
       return result
     else
-      return "syntax error"
+      return new SyntaxError
     
 
 
-  parseListOfDeclarations: (tokens) ->
+  parse_list_of_declarations: (tokens) ->
     #> Note: Despite the name, this actually parses a mixed list of declarations and at-rules, as CSS 2.1 does for @page. Unexpected at-rules (which could be all of them, in a given context) are invalid and should be ignored by the consumer.
     @init(tokens)
     return @consume_list_of_declarations()
 
-  parseComponentValue: (tokens) ->
+  parse_component_value: (tokens) ->
     @init(tokens)
     @consume_next()
     while @current instanceof WhitespaceToken
       @consume_next()
     if @current instanceof EOFToken
-      return "syntax error"
+      return new SyntaxError
     @reconsume_current()
     value = @consume_component_value()
     if not value?
-      return "syntax error"
+      return new SyntaxError
+    @consume_next()
     while @current instanceof WhitespaceToken
       @consume_next()
     if @current instanceof EOFToken
       return value
     else
-      return "syntax error"
+      return new SyntaxError
 
 
 
-  parseListOfComponentValues: (tokens) ->
+  parse_list_of_component_values: (tokens) ->
     @init(tokens)
     result = []
     value = @consume_component_value()
@@ -193,7 +207,7 @@ class Parser
         when @current instanceof OpeningCurlyToken
           block = @consume_simple_block()
           return new AtRule(name, prelude, block)
-        when @current instanceof SimpleBlock and @current.token is OpeningCurlyToken
+        when @current instanceof SimpleBlock and @current.token instanceof OpeningCurlyToken
           return new AtRule(name, prelude, @current)
         else
           @reconsume_current()
@@ -209,7 +223,7 @@ class Parser
         when @current instanceof OpeningCurlyToken
           block = @consume_simple_block()
           return new QualifiedRule(prelude, block)
-        when @current instanceof SimpleBlock and @current.token is OpeningCurlyToken
+        when @current instanceof SimpleBlock and @current.token instanceof OpeningCurlyToken
           return new QualifiedRule(prelude, @current)
         else
           @reconsume_current()
@@ -231,10 +245,11 @@ class Parser
           @consume_next()
           while not (@current instanceof SemicolonToken or @current instanceof EOFToken)
             list.push @current
-            @consume_next
+            @consume_next()
           temp_stream = @stream
           try
             @stream = list
+            @consume_next()
             declaration = @consume_a_declaration()
           finally
             @stream = temp_stream
@@ -245,7 +260,7 @@ class Parser
             "do nothing"
 
   consume_a_declaration: () ->
-    name = @current
+    name = @current.value
     value =[]
     @consume_next()
     while @current instanceof WhitespaceToken
@@ -269,7 +284,12 @@ class Parser
 
   consume_simple_block: () ->
     starting = @current
-    ending = @current instanceof OpeningCurlyToken ? ClosingCurlyToken : @current instanceof OpeningSquareToken ? ClosingSquareToken : ClosingParenToken
+    ending = if @current instanceof OpeningCurlyToken
+      ClosingCurlyToken
+    else if @current instanceof OpeningSquareToken
+      ClosingSquareToken
+    else
+      ClosingParenToken
     value = []
     while true
       @consume_next()
@@ -287,7 +307,7 @@ class Parser
       @consume_next()
       switch
         when @current instanceof EOFToken or @current instanceof ClosingParenToken
-          return new FunctionToken(name, value)
+          return new Function(name, value)
         else
           @reconsume_current()
           value.push @consume_component_value()
@@ -301,6 +321,8 @@ for k,v of {
   Declaration
   Function
   SimpleBlock
+  SyntaxError
+  Stylesheet
 }
   Parser[k] = v
 

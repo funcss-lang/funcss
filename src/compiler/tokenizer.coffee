@@ -624,6 +624,7 @@ for k,v of {
   ClosingParenToken
   OpeningCurlyToken
   ClosingCurlyToken
+  EOFToken
 }
   Tokenizer[k] = v
 
