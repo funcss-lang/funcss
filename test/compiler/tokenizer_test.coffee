@@ -34,11 +34,6 @@ Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
 } = Tokenizer
 
 describe 'Tokenizer', ->
-  it "exists", ->
-    Tokenizer.should.be.ok
-    tokenizer = new Tokenizer
-    tokenizer.should.be.instanceOf Tokenizer
-
   it "has token classes", ->
     Tokenizer.UrlToken.should.be.ok
     urlToken = new Tokenizer.UrlToken("hello")
@@ -48,7 +43,7 @@ describe 'Tokenizer', ->
     columnToken.should.be.instanceOf Tokenizer.ColumnToken
 
   check = (input, tokens...) ->
-    result = new Tokenizer().tokenize(input)
+    result = Tokenizer.tokenize(input)
     unless tokens.length % 2 is 0
       throw new Error("Please provide a list of pairs of tokens and objects for check()")
     result.should.have.length(tokens.length/2)

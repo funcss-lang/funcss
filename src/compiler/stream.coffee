@@ -1,22 +1,16 @@
+class EOFToken
 
 class Stream
-  init: (tokens) ->
-    @stream = (t for t in tokens)
-    @current = undefined
-
+  constructor: (items) ->
+    (@items = (t for t in items)).push new EOFToken
+    @position = -1
   consume_next: ->
-    if @stream.length
-      @current = @stream.shift()
-    else
-      @current = new EOFToken
-
+    @current = @items[++@position]
   next: ->
-    if @stream.length
-      @stream[0]
-    else
-      new EOFToken
-
+    @items[@position+1]
   reconsume_current: ->
-    @stream.unshift(@current)
+    @items.unshift(@current)
+
+Stream.EOFToken = EOFToken
 
 module.exports = Stream

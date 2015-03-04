@@ -35,23 +35,35 @@
 class IdentToken
   constructor : (value) ->
     @value = value
+  toString : ->
+    @value
 class FunctionToken
   constructor : (value) ->
     @value = value
+  toString : ->
+    @value + "("
 class AtKeywordToken
   constructor : (value) ->
     @value = value
+  toString : ->
+    "@" + @value
 class HashToken
   constructor : (value, type) ->
     @value = value
     @type = type ? "unrestricted"
+  toString : ->
+    "#" + @value
 class StringToken
   constructor : (value) ->
     @value = value
+  toString : ->
+    JSON.stringify(@value)
 class BadStringToken
 class UrlToken
   constructor : (value) ->
     @value = value
+  toString : ->
+    "url(" + JSON.stringify(@value) + ")"
 class BadUrlToken
 class DelimToken
   constructor : (value) ->
@@ -61,39 +73,63 @@ class NumberToken
     @repr = repr
     @value = value
     @type = type ? "integer"
+  toString : ->
+    @repr
 class PercentageToken
   constructor : (repr, value) ->
     @repr = repr
     @value = value
+  toString : ->
+    @repr+"%"
 class DimensionToken
   constructor : (repr, value, type, unit) ->
     @repr = repr
     @value = value
     @type = type ? "integer"
     @unit = unit
+  toString : ->
+    @repr+@unit
 class UnicodeRangeToken
   constructor : (start, end) ->
     @start = start
     @end = end
 class IncludeMatchToken
+  toString: -> "~="
 class DashMatchToken
+  toString: -> "|="
 class PrefixMatchToken
+  toString: -> "^="
 class SuffixMatchToken
+  toString: -> "$="
 class SubstringMatchToken
+  toString: -> "*="
 class ColumnToken
+  toString: -> "||"
 class WhitespaceToken
+  toString: -> " "
 class CDOToken
+  toString: -> "<!--"
 class CDCToken
+  toString: -> "-->"
 class ColonToken
+  toString: -> ":"
 class SemicolonToken
+  toString: -> ";"
 class CommaToken
+  toString: -> ","
 class OpeningSquareToken
+  toString: -> "["
 class ClosingSquareToken
+  toString: -> "]"
 class OpeningParenToken
+  toString: -> "("
 class ClosingParenToken
+  toString: -> ")"
 class OpeningCurlyToken
+  toString: -> "{"
 class ClosingCurlyToken
-class EOFToken
+  toString: -> "}"
+{EOFToken} = Stream = require "#{__dirname}/stream"
 
 class Tokenizer
   tokenize: (string) ->
@@ -589,7 +625,7 @@ class Tokenizer
 
 
       
-
+module.exports = new Tokenizer
       
 # export token classes
 for k,v of {
@@ -626,9 +662,8 @@ for k,v of {
   ClosingCurlyToken
   EOFToken
 }
-  Tokenizer[k] = v
+  module.exports[k] = v
 
-module.exports = Tokenizer
     
 
 

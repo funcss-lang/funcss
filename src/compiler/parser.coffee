@@ -67,7 +67,7 @@ class Stylesheet
 class Parser
   init: (tokens) ->
     if typeof tokens is "string" or tokens instanceof String
-      @stream = new Tokenizer().tokenize(tokens)
+      @stream = Tokenizer.tokenize(tokens)
     else
       @stream = (t for t in tokens)
     @current = undefined
@@ -314,7 +314,7 @@ class Parser
 
 
 
-module.exports = Parser
+module.exports = new Parser
 for k,v of {
   AtRule
   QualifiedRule
@@ -324,7 +324,7 @@ for k,v of {
   SyntaxError
   Stylesheet
 }
-  Parser[k] = v
+  module.exports[k] = v
 
 
 

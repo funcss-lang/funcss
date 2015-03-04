@@ -45,40 +45,93 @@ Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
 } = Parser
 
 class NoMatch extends Error
-  constructor: (exptected, found) ->
-    @exptected = exptected
+  constructor: (expected, found) ->
+    @expected = expected
     @found = found
+    @name = "No match"
+    @message = "expected #{expected} but #{found} found"
+  toString: () ->
+    @name+  ": "+@message
 
-TokenType = (msg, clazz, props={}) -> (name) -> (s) ->
-  unless s.current instanceof clazz
-    throw new NoMatch(msg, s.current)
+
+
+TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
+  next = s.next()
+  unless next instanceof clazz
+    throw new NoMatch(msg, "'#{next}'")
   for k,v of props
-    unless s.current[k] is v
-      throw new NoMatch(msg, s.current)
-  return s.current
+    unless next[k] is v
+      throw new NoMatch(msg, next)
+  return semantic s.consume_next()
 
-IdentType = (value) -> TokenType("identifier", IdentType, {value})
+IdentType = (value) -> TokenType("'#{value}'", IdentToken, {value})
 DelimType = (value) -> TokenType("'#{value}'", DelimToken, {value})
-IntegerType = TokenType("integer", NumberToken, type:"integer")
-NumberType = TokenType("number", NumberToken)
-StringType = TokenType("string", StringToken)
+Ident = TokenType("identifier", IdentToken)
+Integer = TokenType("integer", NumberToken, type:"integer")
+Number = TokenType("number", NumberToken)
+String = TokenType("string", StringToken)
+WhitespaceType = TokenType("whitespace", WhitespaceToken)
 
-JuxtapositionType = (name) -> (a,b) -> (s) ->
-  a(s)
-  b(s)
-
-OrType = (a,b) -> (s) ->
+backtrack = (s, f) ->
   try
-    s.push_position()
-    return a(i)
+    p = s.position
+    return f()
   catch e
     if e instanceof NoMatch
-      return b(i)
-  finally
-    s.pop_position()
+      s.position = p
+    throw e
 
-ColumnType = ->
-BothType = ->
+Optional = (a) -> (semantic) -> (s) ->
+  semantic backtrack s, -> a(s)
+OptionalWhitespace = Optional(WhitespaceType(->))(->)
+
+# semantic = (a,b) -> [a,b]
+Juxtaposition = (a,b) -> (semantic) -> (s) ->
+  x = a(s)
+  OptionalWhitespace(s)
+  y = b(s)
+  return semantic x,y
+
+# semantic = (a,b) -> [a,b]
+DoubleAmpersand = (a,b) -> (semantic) -> (s) ->
+  try
+    backtrack s, ->
+      x = a(s)
+      OptionalWhitespace(s)
+      y = b(s)
+      return semantic(x,y)
+  catch e
+    if e instanceof NoMatch
+      try
+        y = b(s)
+        OptionalWhitespace(s)
+        x = a(s)
+        return semantic(x,y)
+      catch f
+        if e.found is f.found
+          throw new NoMatch(e.expected + " or " + f.expected, e.found)
+        else
+          throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
+
+# semantic = (a,b) -> a ? b
+Bar = (a,b) -> (semantic) -> (s) ->
+  debugger
+  try
+    semantic(backtrack(s,-> a(s)), undefined)
+  catch e
+    if e instanceof NoMatch
+      try
+        semantic(undefined, backtrack(s,-> b(s)))
+      catch f
+        if f instanceof NoMatch
+          if e.found is f.found
+            throw new NoMatch(e.expected + " or " + f.expected, e.found)
+          else
+            throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
+        throw f
+
+# semantic = (a,b) -> {a:a,b:b}
+DoubleBar = (a,b) -> (semantic) -> (s) ->
 
 GroupType = ->
 StarType = ->
@@ -88,3 +141,15 @@ HashmarkType = ->
 
 AnyValueType = ->
 
+module.exports = {
+  IdentType
+  DelimType
+  Ident
+  Integer
+  Number
+  String
+  NoMatch
+  Juxtaposition
+  DoubleAmpersand
+  Bar
+}

@@ -44,20 +44,14 @@ Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
   Stylesheet
 } = Parser
 
+check = require "#{__dirname}/../check"
+
 describe 'Parser', ->
-  it "exists", ->
-    new Parser().should.be.instanceOf Parser
   it "has tree classes", ->
     new SimpleBlock().should.be.instanceOf SimpleBlock
 
-  check = (tree, clazz, data={}) ->
-    unless tree instanceof clazz
-      throw new Error(tree + " should be instance of " + clazz.name + " but it is of " + tree.__proto__.constructor.name)
-    for k,v of data
-      tree[k].should.be.equal(v)
-
   it "can parse a list of component values", ->
-    result = new Parser().parse_list_of_component_values("asdf 3.3 bc/2+f(x)")
+    result = Parser.parse_list_of_component_values("asdf 3.3 bc/2+f(x)")
     check result, Array, length: 9
     check result[0], IdentToken, value:"asdf"
     check result[1], WhitespaceToken
@@ -71,7 +65,7 @@ describe 'Parser', ->
     check result[8].value[0], IdentToken, value: "x"
 
   it "can parse a component value", ->
-    result = new Parser().parse_component_value("f(rgb 12!6)  ")
+    result = Parser.parse_component_value("f(rgb 12!6)  ")
     check result, Function, name: "f"
     check result.value, Array, length:5
     check result.value[0], IdentToken, value:"rgb"
@@ -81,11 +75,11 @@ describe 'Parser', ->
     check result.value[4], NumberToken, value: 6, repr: "6", type: "integer"
 
   it "can parse a bad component value", ->
-    result = new Parser().parse_component_value("f(rgb 12!6)  a")
+    result = Parser.parse_component_value("f(rgb 12!6)  a")
     check result, SyntaxError, {}
 
   it "can parse a qualified rule", ->
-    result = new Parser().parse_rule(".asdf { efg :   abcde }")
+    result = Parser.parse_rule(".asdf { efg :   abcde }")
     check result, QualifiedRule
     check result.prelude, Array, length: 3
     check result.prelude[0], DelimToken, value:"."
@@ -93,7 +87,7 @@ describe 'Parser', ->
     check result.prelude[2], WhitespaceToken
     check result.value, SimpleBlock
     check result.value.token, OpeningCurlyToken
-    result2 = new Parser().parse_list_of_declarations(result.value.value)
+    result2 = Parser.parse_list_of_declarations(result.value.value)
     check result2, Array, length: 1
     check result2[0], Declaration, name: "efg"
     check result2[0].value, Array, length: 3
@@ -102,7 +96,7 @@ describe 'Parser', ->
     check result2[0].value[2], WhitespaceToken
 
   it "can parse two qualified rules with two declarations", ->
-    result = new Parser().parse_list_of_rules(".asdf{efg:abcde;}#cgd  tf>b{basd:2px;urs:3px}")
+    result = Parser.parse_list_of_rules(".asdf{efg:abcde;}#cgd  tf>b{basd:2px;urs:3px}")
     check result, Array, length:2
     check result[0], QualifiedRule
     check result[0].prelude, Array, length: 2
@@ -119,12 +113,12 @@ describe 'Parser', ->
     check result[1].prelude[4], IdentToken, value:"b"
     check result[1].value, SimpleBlock
     check result[1].value.token, OpeningCurlyToken
-    result2 = new Parser().parse_list_of_declarations(result[0].value.value)
+    result2 = Parser.parse_list_of_declarations(result[0].value.value)
     check result2, Array, length: 1
     check result2[0], Declaration, name: "efg"
     check result2[0].value, Array, length: 1
     check result2[0].value[0], IdentToken, value:"abcde"
-    result3 = new Parser().parse_list_of_declarations(result[1].value.value)
+    result3 = Parser.parse_list_of_declarations(result[1].value.value)
     check result3, Array, length: 2
     check result3[0], Declaration, name: "basd"
     check result3[0].value, Array, length: 1
@@ -134,7 +128,7 @@ describe 'Parser', ->
     check result3[1].value[0], DimensionToken, value:3, unit:"px", repr:"3", type:"integer"
 
   it "can parse a stylesheet", ->
-    result = new Parser().parse_stylesheet(".asdf{efg:abcde;}#cgd  tf>b{basd:2px;urs:3px}")
+    result = Parser.parse_stylesheet(".asdf{efg:abcde;}#cgd  tf>b{basd:2px;urs:3px}")
     check result, Stylesheet
     check result.value, Array, length:2
     check result.value[0], QualifiedRule
@@ -152,12 +146,12 @@ describe 'Parser', ->
     check result.value[1].prelude[4], IdentToken, value:"b"
     check result.value[1].value, SimpleBlock
     check result.value[1].value.token, OpeningCurlyToken
-    result2 = new Parser().parse_list_of_declarations(result.value[0].value.value)
+    result2 = Parser.parse_list_of_declarations(result.value[0].value.value)
     check result2, Array, length: 1
     check result2[0], Declaration, name: "efg"
     check result2[0].value, Array, length: 1
     check result2[0].value[0], IdentToken, value:"abcde"
-    result3 = new Parser().parse_list_of_declarations(result.value[1].value.value)
+    result3 = Parser.parse_list_of_declarations(result.value[1].value.value)
     check result3, Array, length: 2
     check result3[0], Declaration, name: "basd"
     check result3[0].value, Array, length: 1
@@ -168,7 +162,7 @@ describe 'Parser', ->
 
 
   it "can parse an at-rule", ->
-    result = new Parser().parse_rule("@asdf { efg :   abcde;@ab{8} }")
+    result = Parser.parse_rule("@asdf { efg :   abcde;@ab{8} }")
     check result, AtRule, name: "asdf"
     check result.prelude, Array, length: 1
     check result.prelude[0], WhitespaceToken
@@ -188,7 +182,7 @@ describe 'Parser', ->
     check result.value.value[8].value, Array, length:1
     check result.value.value[8].value[0], NumberToken, value: 8, repr: "8", type:"integer"
     check result.value.value[9], WhitespaceToken
-    result2 = new Parser().parse_list_of_declarations(result.value.value)
+    result2 = Parser.parse_list_of_declarations(result.value.value)
     check result2, Array, length: 2
     check result2[0], Declaration, name:"efg"
     check result2[0].value, Array, length: 2
