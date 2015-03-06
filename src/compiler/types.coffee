@@ -49,11 +49,14 @@ class NoMatch extends Error
     @expected = expected
     @found = found
     @name = "No match"
-    @message = "expected #{expected} but #{found} found"
+    @message = "#{expected} expected but #{found} found"
   toString: () ->
     @name+  ": "+@message
 
 
+Id = (x) -> x
+Swap = (f) -> (x,y) -> debugger; f(y,x)
+Or = (x,y) -> x ? y
 
 TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
   next = s.next()
@@ -82,7 +85,12 @@ backtrack = (s, f) ->
     throw e
 
 Optional = (a) -> (semantic) -> (s) ->
-  semantic backtrack s, -> a(s)
+  try
+    return semantic backtrack s, -> a(s)
+  catch e
+    if e instanceof NoMatch
+      return semantic undefined
+    throw e
 OptionalWhitespace = Optional(WhitespaceType(->))(->)
 
 # semantic = (a,b) -> [a,b]
@@ -115,7 +123,6 @@ DoubleAmpersand = (a,b) -> (semantic) -> (s) ->
 
 # semantic = (a,b) -> a ? b
 Bar = (a,b) -> (semantic) -> (s) ->
-  debugger
   try
     semantic(backtrack(s,-> a(s)), undefined)
   catch e
@@ -132,6 +139,46 @@ Bar = (a,b) -> (semantic) -> (s) ->
 
 # semantic = (a,b) -> {a:a,b:b}
 DoubleBar = (a,b) -> (semantic) -> (s) ->
+  ar=undefined; br=undefined
+  try
+    return backtrack s, ->
+      ar = a(s)
+      OptionalWhitespace(s)
+      try
+        br = backtrack s, -> b(s)
+        return semantic(ar,br)
+      catch f
+        if f instanceof NoMatch
+          return semantic(ar, undefined)
+        else
+          throw f
+  catch e
+    if e instanceof NoMatch
+      try
+        return backtrack s, ->
+          br = b(s)
+          OptionalWhitespace(s)
+          try
+            ar = backtrack s, -> a(s)
+            return semantic(ar,br)
+          catch g
+            if g instanceof NoMatch
+              return semantic(undefined,br)
+            else
+              throw g
+      catch f
+        if f instanceof NoMatch
+          if e.found is f.found
+            throw new NoMatch(e.expected + " or " + f.expected, e.found)
+          else
+            throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
+    else
+      throw e
+
+DoubleBar = (a,b) -> (semantic) -> Bar(
+  Juxtaposition(a,Optional(b)(Id))(semantic),
+  Juxtaposition(b,Optional(a)(Id))(Swap semantic))(Or)
+
 
 GroupType = ->
 StarType = ->
@@ -152,4 +199,5 @@ module.exports = {
   Juxtaposition
   DoubleAmpersand
   Bar
+  DoubleBar
 }

@@ -1,4 +1,6 @@
 class EOFToken
+  toString: ->
+    ""
 
 class Stream
   constructor: (items) ->
