@@ -121,7 +121,7 @@ describe 'Types', ->
         )((x,y)->hello:x?.hello,number:y?.number,world:y?.world)
 
       it "can parse first second third", ->
-        #check tree("hello 3.3 world", t3), Object, hello:true, number:3.3, world:true
+        check tree("hello 3.3 world", t3), Object, hello:true, number:3.3, world:true
       it "can parse first third", ->
         check tree("hello world", t3), Object, hello:true, number:undefined, world:true
       it "can parse first second", ->

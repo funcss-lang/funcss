@@ -52,6 +52,12 @@ class NoMatch extends Error
     @message = "#{expected} expected but #{found} found"
   toString: () ->
     @name+  ": "+@message
+  merge: (f) ->
+    if @.found is f.found
+      new NoMatch(@.expected + " or " + f.expected, @.found)
+    else
+      new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found)
+
 
 
 Id = (x) -> x
@@ -73,35 +79,28 @@ Ident = TokenType("identifier", IdentToken)
 Integer = TokenType("integer", NumberToken, type:"integer")
 Number = TokenType("number", NumberToken)
 String = TokenType("string", StringToken)
-WhitespaceType = TokenType("whitespace", WhitespaceToken)
+Whitespace = TokenType("whitespace", WhitespaceToken)
 
-backtrack = (s, f) ->
+Stream = require "./stream"
+Stream.prototype.backtrack = (options) ->
   try
-    p = s.position
-    return f()
-  catch e
-    if e instanceof NoMatch
-      s.position = p
-    throw e
-
-branch = (options) ->
-  try
+    p = @position
     return options.try()
   catch e
     if e instanceof NoMatch
+      @position = p
       return options.fallback(e)
     else
       throw e
 
-
-
+# semantic = (a) -> a ? default
 Optional = (a) -> (semantic) -> (s) ->
-  branch
+  s.backtrack
     try: ->
-      semantic backtrack s, -> a(s)
+      semantic(a(s))
     fallback: ->
-      semantic undefined
-OptionalWhitespace = Optional(WhitespaceType(->))(->)
+      semantic(undefined)
+OptionalWhitespace = Optional(Whitespace(->))(->)
 
 # semantic = (a,b) -> [a,b]
 Juxtaposition = (a,b) -> (semantic) -> (s) ->
@@ -112,81 +111,35 @@ Juxtaposition = (a,b) -> (semantic) -> (s) ->
 
 # semantic = (a,b) -> [a,b]
 DoubleAmpersand = (a,b) -> (semantic) -> (s) ->
-  branch
+  s.backtrack
     try: ->
-      backtrack s, ->
-        x = a(s)
-        OptionalWhitespace(s)
-        y = b(s)
-        semantic(x,y)
+      x = a(s)
+      OptionalWhitespace(s)
+      y = b(s)
+      semantic(x,y)
     fallback: (e) ->
-      branch
+      s.backtrack
         try: ->
           y = b(s)
           OptionalWhitespace(s)
           x = a(s)
           semantic(x,y)
         fallback: (f)->
-          if e.found is f.found
-            throw new NoMatch(e.expected + " or " + f.expected, e.found)
-          else
-            throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
+          throw e.merge(f)
 
 # semantic = (a,b) -> a ? b
 Bar = (a,b) -> (semantic) -> (s) ->
-  branch
+  s.backtrack
     try: ->
-      semantic(backtrack(s,-> a(s)), undefined)
+      semantic(a(s), undefined)
     fallback: (e)->
-      branch
+      s.backtrack
         try: ->
-          semantic(undefined, backtrack(s,-> b(s)))
+          semantic(undefined, b(s))
         fallback: (f)->
-          if e.found is f.found
-            throw new NoMatch(e.expected + " or " + f.expected, e.found)
-          else
-            throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
+          throw e.merge(f)
 
 # semantic = (a,b) -> {a:a,b:b}
-DoubleBar = (a,b) -> (semantic) -> (s) ->
-  ar=undefined; br=undefined
-  try
-    return backtrack s, ->
-      ar = a(s)
-      OptionalWhitespace(s)
-      try
-        br = backtrack s, -> b(s)
-        return semantic(ar,br)
-      catch f
-        if f instanceof NoMatch
-          return semantic(ar, undefined)
-        else
-          throw f
-  catch e
-    if e instanceof NoMatch
-      try
-        return backtrack s, ->
-          br = b(s)
-          OptionalWhitespace(s)
-          try
-            ar = backtrack s, -> a(s)
-            return semantic(ar,br)
-          catch g
-            if g instanceof NoMatch
-              return semantic(undefined,br)
-            else
-              throw g
-      catch f
-        if f instanceof NoMatch
-          if e.found is f.found
-            throw new NoMatch(e.expected + " or " + f.expected, e.found)
-          else
-            throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
-        else
-          throw f
-    else
-      throw e
-
 DoubleBar = (a,b) -> (semantic) -> Bar(
   Juxtaposition(a,Optional(b)(Id))(semantic),
   Juxtaposition(b,Optional(a)(Id))(Swap semantic))(Or)
