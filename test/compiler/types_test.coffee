@@ -8,6 +8,8 @@ tree = (str, type) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   type(s)
 
+Value = (x)->x.value
+
 describe 'Types', ->
   describe 'IdentType', ->
     asdf = Types.IdentType("asdf")((x)->x)
@@ -41,7 +43,7 @@ describe 'Types', ->
         tree("3.3", integer)
 
   describe 'Juxtaposition', ->
-    jp = Types.Juxtaposition(Types.IdentType('black')((x)->x.value), Types.Number((x)->x.value))((x,y)->{x,y})
+    jp = Types.Juxtaposition(Types.IdentType('black')(Value), Types.Number(Value))((x,y)->{x,y})
     
     it "works", ->
       check tree("black 3.3", jp), Object, x:"black", y:3.3
@@ -61,25 +63,22 @@ describe 'Types', ->
       check.error Types.NoMatch, message: "number expected but 'green' found", ->
         tree("black green", jp)
 
-  it "can parse double ampersand", ->
-    result = Types.DoubleAmpersand(Types.Ident((x)->x),
-      Types.Number((x)->x))((x,y)->[x,y])(new Stream(Parser.parse_list_of_component_values("black 3.3")))
-    check result, Array, length: 2
-    check result[0], Tokenizer.IdentToken, value: "black"
-    check result[1], Tokenizer.NumberToken, value: 3.3
-    result = Types.DoubleAmpersand(Types.Ident((x)->x),
-      Types.Number((x)->x))((x,y)->[x,y])(new Stream(Parser.parse_list_of_component_values("3.3 black")))
-    check result, Array, length: 2
-    check result[0], Tokenizer.IdentToken, value: "black"
-    check result[1], Tokenizer.NumberToken, value: 3.3
+  describe "DoubleAmpersand", ->
+    da = Types.DoubleAmpersand(Types.Ident(Value),Types.Number(Value))((x,y)->{x,y})
     
-  it "can parse bar", ->
-    result = Types.Bar(Types.Ident((x)->x),
-      Types.Number((x)->x))((x,y)->x || y)(new Stream(Parser.parse_list_of_component_values("black")))
-    check result, Tokenizer.IdentToken, value: "black"
-    result = Types.Bar(Types.Ident((x)->x),
-      Types.Number((x)->x))((x,y)->x || y)(new Stream(Parser.parse_list_of_component_values("3.3")))
-    check result, Tokenizer.NumberToken, value: 3.3
+    it "can parse first second", ->
+      check tree("black 3.3", da), Object, x:"black", y:3.3
+    it "can parse second first", ->
+      check tree("3.3 black", da), Object, x:"black", y:3.3
+    
+  describe "Bar", ->
+    bar = Types.Bar(Types.Ident(Value), Types.Number(Value))((x,y)->{value: x ? y})
+
+    it "can parse first", ->
+      check tree("black", bar), Object, value: "black"
+
+    it "can parse second", ->
+      check tree("3.3", bar), Object, value: 3.3
 
   describe 'DoubleBar', ->
     it "can parse first branch", ->
@@ -118,12 +117,11 @@ describe 'Types', ->
           Types.DoubleBar(
             Types.Number((x)->number:x.value),
             Types.IdentType("world")(->world:true)
-          )((x,y)->number:x.number,world:y.world)
+          )((x,y)->number:x?.number,world:y?.world)
         )((x,y)->hello:x?.hello,number:y?.number,world:y?.world)
 
-      ###
       it "can parse first second third", ->
-        check tree("hello 3.3 world", t3), Object, hello:true, number:3.3, world:true
+        #check tree("hello 3.3 world", t3), Object, hello:true, number:3.3, world:true
       it "can parse first third", ->
         check tree("hello world", t3), Object, hello:true, number:undefined, world:true
       it "can parse first second", ->
@@ -132,7 +130,6 @@ describe 'Types', ->
         check tree("hello ", t3), Object, hello:true, number:undefined, world:undefined
       it "can parse first", ->
         check tree("hello", t3), Object, hello:true, number:undefined, world:undefined
-      ###
 
     it "can fail for invalid", ->
       err = undefined

@@ -84,13 +84,23 @@ backtrack = (s, f) ->
       s.position = p
     throw e
 
-Optional = (a) -> (semantic) -> (s) ->
+branch = (options) ->
   try
-    return semantic backtrack s, -> a(s)
+    return options.try()
   catch e
     if e instanceof NoMatch
-      return semantic undefined
-    throw e
+      return options.fallback(e)
+    else
+      throw e
+
+
+
+Optional = (a) -> (semantic) -> (s) ->
+  branch
+    try: ->
+      semantic backtrack s, -> a(s)
+    fallback: ->
+      semantic undefined
 OptionalWhitespace = Optional(WhitespaceType(->))(->)
 
 # semantic = (a,b) -> [a,b]
@@ -98,44 +108,44 @@ Juxtaposition = (a,b) -> (semantic) -> (s) ->
   x = a(s)
   OptionalWhitespace(s)
   y = b(s)
-  return semantic x,y
+  semantic(x,y)
 
 # semantic = (a,b) -> [a,b]
 DoubleAmpersand = (a,b) -> (semantic) -> (s) ->
-  try
-    backtrack s, ->
-      x = a(s)
-      OptionalWhitespace(s)
-      y = b(s)
-      return semantic(x,y)
-  catch e
-    if e instanceof NoMatch
-      try
-        y = b(s)
-        OptionalWhitespace(s)
+  branch
+    try: ->
+      backtrack s, ->
         x = a(s)
-        return semantic(x,y)
-      catch f
-        if e.found is f.found
-          throw new NoMatch(e.expected + " or " + f.expected, e.found)
-        else
-          throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
-
-# semantic = (a,b) -> a ? b
-Bar = (a,b) -> (semantic) -> (s) ->
-  try
-    semantic(backtrack(s,-> a(s)), undefined)
-  catch e
-    if e instanceof NoMatch
-      try
-        semantic(undefined, backtrack(s,-> b(s)))
-      catch f
-        if f instanceof NoMatch
+        OptionalWhitespace(s)
+        y = b(s)
+        semantic(x,y)
+    fallback: (e) ->
+      branch
+        try: ->
+          y = b(s)
+          OptionalWhitespace(s)
+          x = a(s)
+          semantic(x,y)
+        fallback: (f)->
           if e.found is f.found
             throw new NoMatch(e.expected + " or " + f.expected, e.found)
           else
             throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
-        throw f
+
+# semantic = (a,b) -> a ? b
+Bar = (a,b) -> (semantic) -> (s) ->
+  branch
+    try: ->
+      semantic(backtrack(s,-> a(s)), undefined)
+    fallback: (e)->
+      branch
+        try: ->
+          semantic(undefined, backtrack(s,-> b(s)))
+        fallback: (f)->
+          if e.found is f.found
+            throw new NoMatch(e.expected + " or " + f.expected, e.found)
+          else
+            throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
 
 # semantic = (a,b) -> {a:a,b:b}
 DoubleBar = (a,b) -> (semantic) -> (s) ->
@@ -172,6 +182,8 @@ DoubleBar = (a,b) -> (semantic) -> (s) ->
             throw new NoMatch(e.expected + " or " + f.expected, e.found)
           else
             throw new NoMatch(e.expected + " or " + f.expected, e.found + " and " + f.found)
+        else
+          throw f
     else
       throw e
 
