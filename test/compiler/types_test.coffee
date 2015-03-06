@@ -72,7 +72,7 @@ describe 'Types', ->
       check tree("3.3 black", da), Object, x:"black", y:3.3
     
   describe "Bar", ->
-    bar = Types.Bar(Types.Ident(Value), Types.Number(Value))((x,y)->{value: x ? y})
+    bar = Types.Bar(Types.Ident(Value), Types.Number(Value))((x)->{value: x})
 
     it "can parse first", ->
       check tree("black", bar), Object, value: "black"

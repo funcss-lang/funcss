@@ -109,43 +109,31 @@ Juxtaposition = (a,b) -> (semantic) -> (s) ->
   y = b(s)
   semantic(x,y)
 
-# semantic = (a,b) -> [a,b]
-DoubleAmpersand = (a,b) -> (semantic) -> (s) ->
-  s.backtrack
-    try: ->
-      x = a(s)
-      OptionalWhitespace(s)
-      y = b(s)
-      semantic(x,y)
-    fallback: (e) ->
-      s.backtrack
-        try: ->
-          y = b(s)
-          OptionalWhitespace(s)
-          x = a(s)
-          semantic(x,y)
-        fallback: (f)->
-          throw e.merge(f)
-
 # semantic = (a,b) -> a ? b
 Bar = (a,b) -> (semantic) -> (s) ->
   s.backtrack
     try: ->
-      semantic(a(s), undefined)
+      semantic(a(s))
     fallback: (e)->
       s.backtrack
         try: ->
-          semantic(undefined, b(s))
+          semantic(b(s))
         fallback: (f)->
           throw e.merge(f)
+
+# semantic = (a,b) -> [a,b]
+DoubleAmpersand = (a,b) -> (semantic) -> Bar(
+  Juxtaposition(a,b)(semantic),
+  Juxtaposition(b,a)(Swap semantic)
+)(Id)
+
 
 # semantic = (a,b) -> {a:a,b:b}
 DoubleBar = (a,b) -> (semantic) -> Bar(
   Juxtaposition(a,Optional(b)(Id))(semantic),
-  Juxtaposition(b,Optional(a)(Id))(Swap semantic))(Or)
+  Juxtaposition(b,Optional(a)(Id))(Swap semantic)
+)(Id)
 
-
-GroupType = ->
 StarType = ->
 PlusType = ->
 QuestionmarkType = ->
