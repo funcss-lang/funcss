@@ -1,4 +1,4 @@
-module.exports = (tree, clazz, data={}) ->
+module.exports = check = (tree, clazz, data={}) ->
   if not tree?
     throw new Error("tree is undefined")
   unless tree instanceof clazz
@@ -12,3 +12,16 @@ module.exports = (tree, clazz, data={}) ->
         throw new Error("#{tree}.#{k} is undefined")
       else
         tree[k].should.be.equal(v)
+
+check.error = (clazz, data, fn) ->
+  err = null
+  try
+    fn()
+  catch e
+    err = e
+  if not e?
+    throw new Error("#{clazz.name} was not thrown")
+  if e instanceof clazz
+    check e, clazz, data
+    return
+  throw e
