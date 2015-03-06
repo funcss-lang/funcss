@@ -64,7 +64,7 @@ TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
     throw new NoMatch(msg, "'#{next}'")
   for k,v of props
     unless next[k] is v
-      throw new NoMatch(msg, next)
+      throw new NoMatch(msg, "'#{next}'")
   return semantic s.consume_next()
 
 IdentType = (value) -> TokenType("'#{value}'", IdentToken, {value})
