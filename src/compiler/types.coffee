@@ -90,6 +90,7 @@ TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
 IdentType = (value) -> TokenType("'#{value}'", IdentToken, {value})
 DelimType = (value) -> TokenType("'#{value}'", DelimToken, {value})
 Ident = TokenType("identifier", IdentToken)
+Percentage = TokenType("percentage", PercentageToken)
 Integer = TokenType("integer", NumberToken, type:"integer")
 Number = TokenType("number", NumberToken)
 String = TokenType("string", StringToken)
@@ -136,19 +137,7 @@ DoubleBar = (a,b) -> (semantic) -> Bar(
   Juxtaposition(b,Optional(a)(Id))(Swap semantic)
 )(Id)
 
-Plus = (a) -> (s) ->
-  head = a(s)
-  tail = []
-  OptionalWhitespace(s)
-  s.backtrack
-    try: ->
-      tail = Plus(a)(s)
-    fallback: (e)->
-  tail.unshift head
-  tail
-
-Star = (a) -> Optional(Plus(a))(Opt [])
-
+# m optional elements of type a
 Max = (m) -> (a) -> (s) ->
   if m <= 0
     # no more needed
@@ -164,8 +153,6 @@ Max = (m) -> (a) -> (s) ->
       # no more available
       []
 
-Star = Max(Infinity)
-
 Range = (n,m) -> (a) -> (s) ->
   result = []
   i = 0
@@ -178,6 +165,7 @@ Range = (n,m) -> (a) -> (s) ->
     result.push i
   result
 
+Star = Max(Infinity)
 Plus = Range(1,Infinity)
 
 Hash = ->
@@ -190,6 +178,7 @@ module.exports = {
   Ident
   Integer
   Number
+  Percentage
   String
   NoMatch
   Juxtaposition

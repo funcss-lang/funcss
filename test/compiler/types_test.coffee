@@ -18,6 +18,7 @@ check_error = (str, type, pos, message) ->
   (s.position+1).should.be.equal(pos)
 
 Value = (x)->x.value
+Value100 = (x)->x.value/100
 Id = (x)->x
 
 describe 'Types', ->
@@ -241,6 +242,25 @@ describe 'Types', ->
       specify "for 12", -> check_tree "hello world/**/haha/**/1", r12, 3, Array, length:2, 0:"hello", 1:"world"
       specify "for 13", -> check_tree "hello world/**/haha/**/1", r13, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
       specify "for 22", -> check_tree "hello world/**/haha/**/1", r22, 3, Array, length:2, 0:"hello", 1:"world"
+
+    describe "combinations", ->
+      describe "of Range", ->
+        describe "and Juxtaposition", ->
+          c = Types.Range(0,3)(Types.Juxtaposition(Types.Ident(Value),Types.Percentage(Value100))((i,p)->"#{p}=#{i}"))
+          it "can parse none", ->
+            check_tree "", c, 0, Array, length:0
+          it "can parse sth", ->
+            check_tree "3px", c, 0, Array, length:0
+          it "can parse one", ->
+            check_tree "hello 11%", c, 3, Array, length:1, 0:"0.11=hello"
+          it "can parse two", ->
+            check_tree "hello 5% world 30%", c, 7, Array, length:2, 0:"0.05=hello", 1:"0.3=world"
+          it "can parse two sth", ->
+            check_tree "hello 5% world 30% 40%", c, 8, Array, length:2, 0:"0.05=hello", 1:"0.3=world"
+          it "can parse three", ->
+            check_tree "hello 5% world 30%/**/haha 40%", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
+          it "can parse three sth", ->
+            check_tree "hello 5% world 30%/**/haha 40%/**/1", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
 
 
     
