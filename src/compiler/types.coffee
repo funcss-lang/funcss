@@ -58,11 +58,25 @@ class NoMatch extends Error
     else
       new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found)
 
+Stream = require "./stream"
+Stream.prototype.backtrack = (options) ->
+  try
+    p = @position
+    return options.try()
+  catch e
+    if e instanceof NoMatch
+      @position = p
+      return options.fallback(e)
+    else
+      throw e
+
 
 
 Id = (x) -> x
-Swap = (f) -> (x,y) -> debugger; f(y,x)
+Swap = (f) -> (x,y) -> f(y,x)
 Or = (x,y) -> x ? y
+Cons = (x,y) -> (y ? []).unshift x; y
+Opt = (y) -> (x) -> x ? y
 
 TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
   next = s.next()
@@ -80,18 +94,6 @@ Integer = TokenType("integer", NumberToken, type:"integer")
 Number = TokenType("number", NumberToken)
 String = TokenType("string", StringToken)
 Whitespace = TokenType("whitespace", WhitespaceToken)
-
-Stream = require "./stream"
-Stream.prototype.backtrack = (options) ->
-  try
-    p = @position
-    return options.try()
-  catch e
-    if e instanceof NoMatch
-      @position = p
-      return options.fallback(e)
-    else
-      throw e
 
 # semantic = (a) -> a ? default
 Optional = (a) -> (semantic) -> (s) ->
@@ -134,12 +136,53 @@ DoubleBar = (a,b) -> (semantic) -> Bar(
   Juxtaposition(b,Optional(a)(Id))(Swap semantic)
 )(Id)
 
-StarType = ->
-PlusType = ->
-QuestionmarkType = ->
-HashmarkType = ->
+Plus = (a) -> (s) ->
+  head = a(s)
+  tail = []
+  OptionalWhitespace(s)
+  s.backtrack
+    try: ->
+      tail = Plus(a)(s)
+    fallback: (e)->
+  tail.unshift head
+  tail
 
-AnyValueType = ->
+Star = (a) -> Optional(Plus(a))(Opt [])
+
+Max = (m) -> (a) -> (s) ->
+  if m <= 0
+    # no more needed
+    return []
+  s.backtrack
+    try: ->
+      head = a(s)
+      OptionalWhitespace(s)
+      tail = Max(m-1)(a)(s)
+      tail.unshift head
+      tail
+    fallback: (e)->
+      # no more available
+      []
+
+Star = Max(Infinity)
+
+Range = (n,m) -> (a) -> (s) ->
+  result = []
+  i = 0
+  while i < n
+    result.push a(s)
+    OptionalWhitespace(s)
+    ++i
+  tail = Max(m-n)(a)(s)
+  for i in tail
+    result.push i
+  result
+
+Plus = Range(1,Infinity)
+
+Hash = ->
+
+AnyValue = ->
 
 module.exports = {
   IdentType
@@ -153,4 +196,9 @@ module.exports = {
   DoubleAmpersand
   Bar
   DoubleBar
+  Plus
+  Star
+  Range
+  Hash
+  AnyValue
 }
