@@ -178,6 +178,33 @@ describe 'Types', ->
     it "can parse three sth", ->
       check_tree "hello world/**/haha/**/1", st, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
+  describe "Hash", ->
+    hs = Types.Hash(Types.Ident(Value))
+    it "cannot parse none", ->
+      check_error "", hs, 0, "identifier expected but '' found"
+    it "cannot parse sth", ->
+      check_error "3px", hs, 0, "identifier expected but '3px' found"
+    it "can parse one", ->
+      check_tree "hello", hs, 1, Array, length:1, 0:"hello"
+    it "can parse one sth", ->
+      check_tree "hello world", hs, 2, Array, length:1, 0:"hello"
+    it "can parse two", ->
+      check_tree "hello,world", hs, 3, Array, length:2, 0:"hello", 1:"world"
+    it "can parse _two", ->
+      check_tree "hello ,world", hs, 4, Array, length:2, 0:"hello", 1:"world"
+    it "can parse two_", ->
+      check_tree "hello, world", hs, 4, Array, length:2, 0:"hello", 1:"world"
+    it "can parse _two_", ->
+      check_tree "hello , world", hs, 5, Array, length:2, 0:"hello", 1:"world"
+    it "can parse two sth", ->
+      check_tree "hello, world 3px", hs, 5, Array, length:2, 0:"hello", 1:"world"
+    it "can parse two, sth", ->
+      check_tree "hello, world, 3px", hs, 4, Array, length:2, 0:"hello", 1:"world"
+    it "can parse three", ->
+      check_tree "hello, world,haha", hs, 6, Array, length:3, 0:"hello", 1:"world", 2:"haha"
+    it "can parse three sth", ->
+      check_tree "hello, world,haha,1", hs, 6, Array, length:3, 0:"hello", 1:"world", 2:"haha"
+
   describe "Range", ->
     r00 = Types.Range(0,0)(Types.Ident(Value))
     r01 = Types.Range(0,1)(Types.Ident(Value))

@@ -75,8 +75,9 @@ Stream.prototype.backtrack = (options) ->
 Id = (x) -> x
 Swap = (f) -> (x,y) -> f(y,x)
 Or = (x,y) -> x ? y
-Cons = (x,y) -> (y ? []).unshift x; y
+Cons = (x,y) -> y.unshift x; y
 Opt = (y) -> (x) -> x ? y
+Snd = (x,y) -> y
 
 TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
   next = s.next()
@@ -89,12 +90,14 @@ TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
 
 IdentType = (value) -> TokenType("'#{value}'", IdentToken, {value})
 DelimType = (value) -> TokenType("'#{value}'", DelimToken, {value})
+
 Ident = TokenType("identifier", IdentToken)
 Percentage = TokenType("percentage", PercentageToken)
 Integer = TokenType("integer", NumberToken, type:"integer")
 Number = TokenType("number", NumberToken)
 String = TokenType("string", StringToken)
 Whitespace = TokenType("whitespace", WhitespaceToken)
+Comma = TokenType(",", CommaToken)(->)
 
 # semantic = (a) -> a ? default
 Optional = (a) -> (semantic) -> (s) ->
@@ -168,7 +171,7 @@ Range = (n,m) -> (a) -> (s) ->
 Star = Max(Infinity)
 Plus = Range(1,Infinity)
 
-Hash = ->
+Hash = (a) -> Juxtaposition(a,Star(Juxtaposition(Comma,a)(Snd)))(Cons)
 
 AnyValue = ->
 
@@ -179,6 +182,7 @@ module.exports = {
   Integer
   Number
   Percentage
+  Comma
   String
   NoMatch
   Juxtaposition
