@@ -89,7 +89,12 @@ class exports.SimpleBlock
   constructor : (@token, @value) ->
 class exports.SyntaxError
 
+class exports.RuleList
+  @prototype: []
+class exports.DeclarationList
+  @prototype: []
 class exports.ComponentValueList
+  @prototype: []
   @commentNeeded :
     IdentToken:
       IdentToken: yes
@@ -199,16 +204,6 @@ class exports.ComponentValueList
       '|': yes
     '/':
       '*': yes
-
-        
-    
-
-
-
-
-
-
-  constructor : (@value) ->
   toString: ->
     
 class exports.Stylesheet

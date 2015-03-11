@@ -102,7 +102,7 @@ class Parser
 
   parse_list_of_component_values: (tokens) ->
     @init(tokens)
-    result = []
+    result = new N.ComponentValueList
     value = @consume_component_value()
     until value instanceof N.EOFToken
       result.push value
@@ -110,7 +110,7 @@ class Parser
     return result
 
   consume_list_of_rules: (toplevel) ->
-    result = []
+    result = new N.RuleList
     while true
       @consume_next()
       switch
@@ -137,7 +137,7 @@ class Parser
 
   consume_at_rule: ()->
     name = @current.value
-    prelude = []
+    prelude = new N.ComponentValueList
     while true
       @consume_next()
       switch
@@ -153,7 +153,7 @@ class Parser
           prelude.push @consume_component_value()
 
   consume_qualified_rule: () ->
-    prelude = []
+    prelude = new N.ComponentValueList
     while true
       @consume_next()
       switch
@@ -169,7 +169,7 @@ class Parser
           prelude.push @consume_component_value()
 
   consume_list_of_declarations: () ->
-    result = []
+    result = new N.DeclarationList
     while true
       @consume_next()
       switch
@@ -189,18 +189,18 @@ class Parser
           try
             @stream = list
             @consume_next()
-            N.declaration = @consume_a_declaration()
+            declaration = @consume_a_declaration()
           finally
             @stream = temp_stream
-          if N.declaration?
-            result.push N.declaration
+          if declaration?
+            result.push declaration
         else
           while (c = @consume_component_value()) instanceof N.SemicolonToken or c instanceof N.EOFToken
             "do nothing"
 
   consume_a_declaration: () ->
     name = @current.value
-    value =[]
+    value = new N.ComponentValueList
     @consume_next()
     while @current instanceof N.WhitespaceToken
       @consume_next()
@@ -229,7 +229,7 @@ class Parser
       N.ClosingSquareToken
     else
       N.ClosingParenToken
-    value = []
+    value = new N.ComponentValueList
     while true
       @consume_next()
       switch
@@ -241,7 +241,7 @@ class Parser
 
   consume_function: () ->
     name = @current.value
-    value = []
+    value = new N.ComponentValueList
     while true
       @consume_next()
       switch
