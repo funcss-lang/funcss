@@ -3,66 +3,38 @@
 
 
 class exports.IdentToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    @value
+  constructor : (@value) ->
+  toString : -> @value
 class exports.FunctionToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    @value + "("
+  constructor : (@value) ->
+  toString : -> @value + "("
 class exports.AtKeywordToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    "@" + @value
+  constructor : (@value) ->
+  toString : -> "@" + @value
 class exports.HashToken
-  constructor : (value, type) ->
-    @value = value
-    @type = type ? "unrestricted"
-  toString : ->
-    "#" + @value
+  constructor : (@value, @type = "unrestricted") ->
+  toString : -> "#" + @value
 class exports.StringToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    JSON.stringify(@value)
+  constructor : (@value) ->
+  toString : -> JSON.stringify(@value)
 class exports.BadStringToken
 class exports.UrlToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    "url(" + JSON.stringify(@value) + ")"
+  constructor : (@value) ->
+  toString : -> "url(" + JSON.stringify(@value) + ")"
 class exports.BadUrlToken
 class exports.DelimToken
-  constructor : (value) ->
-    @value = value
+  constructor : (@value) ->
 class exports.NumberToken
-  constructor : (repr, value, type) ->
-    @repr = repr
-    @value = value
-    @type = type ? "integer"
-  toString : ->
-    @repr
+  constructor : (@repr, @value, @type = "integer") ->
+  toString : -> @repr
 class exports.PercentageToken
-  constructor : (repr, value) ->
-    @repr = repr
-    @value = value
-  toString : ->
-    @repr+"%"
+  constructor : (@repr, @value) ->
+  toString : -> @repr+"%"
 class exports.DimensionToken
-  constructor : (repr, value, type, unit) ->
-    @repr = repr
-    @value = value
-    @type = type ? "integer"
-    @unit = unit
-  toString : ->
-    @repr+@unit
+  constructor : (@repr, @value, @type = "integer", @unit) ->
+  toString : -> @repr+@unit
 class exports.UnicodeRangeToken
-  constructor : (start, end) ->
-    @start = start
-    @end = end
+  constructor : (@start, @end) ->
 class exports.IncludeMatchToken
   toString: -> "~="
 class exports.DashMatchToken
@@ -102,34 +74,144 @@ class exports.ClosingCurlyToken
 class exports.EOFToken
   toString: -> ""
 
-# ## Parser output nodes
+#### Parser output nodes
 # These nodes come from the parser
 
 class exports.AtRule
-  constructor : (name, prelude, value = undefined) ->
-    @name = name
-    @prelude = prelude
-    @value = value
+  constructor : (@name, @prelude, @value = undefined) ->
 class exports.QualifiedRule
-  constructor : (prelude, value = undefined) ->
-    @prelude = prelude
-    @value = value
+  constructor : (@prelude, @value = undefined) ->
 class exports.Declaration
-  constructor : (name, value, important = false) ->
-    @name = name
-    @value = value
-    @important = important
+  constructor : (@name, @value, @important = false) ->
 class exports.Function
-  constructor : (name, value) ->
-    @name = name
-    @value = value
+  constructor : (@name, @value) ->
 class exports.SimpleBlock
-  constructor : (token, value) ->
-    @token = token
-    @value = value
+  constructor : (@token, @value) ->
 class exports.SyntaxError
+
+class exports.ComponentValueList
+  @commentNeeded :
+    IdentToken:
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      '-': yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+      CDCToken: yes
+      OpeningParenToken: yes
+    AtKeywordToken:
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      '-': yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+      CDCToken: yes
+    HashToken:
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      '-': yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+      CDCToken: yes
+    DimensionToken:
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      '-': yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+      CDCToken: yes
+    '#':
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      '-': yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+    '-':
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+    NumberToken:
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      UnicodeRangeToken: yes
+    '@':
+      IdentToken: yes
+      FunctionToken: yes
+      UrlToken: yes
+      BadUrlToken: yes
+      '-': yes
+      UnicodeRangeToken: yes
+    UnicodeRangeToken:
+      IdentToken: yes
+      FunctionToken: yes
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+      '?': yes
+    '.':
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+    '+':
+      NumberToken: yes
+      PercentageToken: yes
+      DimensionToken: yes
+    '$':
+      '=': yes
+    '*':
+      '=': yes
+    '^':
+      '=': yes
+    '~':
+      '=': yes
+    '|':
+      '=': yes
+      '|': yes
+    '/':
+      '*': yes
+
+        
+    
+
+
+
+
+
+
+  constructor : (@value) ->
+  toString: ->
+    
 class exports.Stylesheet
-  constructor : (value) ->
-    @value = value
+  constructor : (@value) ->
 
 

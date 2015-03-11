@@ -120,8 +120,16 @@ describe 'Tokenizer', ->
     check "3", N.NumberToken,{value:3,type:"integer",repr:"3"}
   it "can tokenize a number", ->
     check "3.12", N.NumberToken,{value:3.12,type:"number",repr:"3.12"}
-  it "can tokenize a number with a sign", ->
+  it "can tokenize a number with a +sign", ->
     check "+3.12", N.NumberToken,{value:3.12,type:"number",repr:"+3.12"}
+  it "can tokenize a number with a -sign", ->
+    check "-3.12", N.NumberToken,{value:-3.12,type:"number",repr:"-3.12"}
+  it "can tokenize a number with a dot", ->
+    check ".12", N.NumberToken,{value:.12,type:"number",repr:".12"}
+  it "can tokenize a number with a +sign and a dot", ->
+    check "+.12", N.NumberToken,{value:.12,type:"number",repr:"+.12"}
+  it "can tokenize a number with a -sign and a dot", ->
+    check "-.12", N.NumberToken,{value:-.12,type:"number",repr:"-.12"}
   it "can tokenize a number in exponential form", ->
     check "3e11", N.NumberToken,{value:3e11,type:"number",repr:"3e11"}
   it "can tokenize a number with a sign in the exponential form", ->
