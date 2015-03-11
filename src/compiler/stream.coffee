@@ -1,10 +1,8 @@
-class EOFToken
-  toString: ->
-    ""
+N = require "./nodes"
 
 class Stream
   constructor: (items) ->
-    (@items = (t for t in items)).push new EOFToken
+    (@items = (t for t in items)).push new N.EOFToken
     @position = 0
   consume_next: ->
     @current = @items[@position++]
@@ -12,7 +10,5 @@ class Stream
     @items[@position]
   reconsume_current: ->
     @items.unshift(@current)
-
-Stream.EOFToken = EOFToken
 
 module.exports = Stream

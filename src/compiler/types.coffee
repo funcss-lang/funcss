@@ -1,6 +1,6 @@
 Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
-
 Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
+N = require "./nodes"
 
 # helper error class to use for parsing
 class NoMatch extends Error
@@ -49,15 +49,15 @@ TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
   return semantic s.consume_next()
 
 # helper function to create a type for a token for a specific ident 
-IdentType = (value) -> TokenType("'#{value}'", Tokenizer.IdentToken, {value})
+IdentType = (value) -> TokenType("'#{value}'", N.IdentToken, {value})
 
-Ident = TokenType("identifier", Tokenizer.IdentToken)
-Percentage = TokenType("percentage", Tokenizer.PercentageToken)
-Integer = TokenType("integer", Tokenizer.NumberToken, type:"integer")
-Number = TokenType("number", Tokenizer.NumberToken)
-String = TokenType("string", Tokenizer.StringToken)
-Whitespace = TokenType("whitespace", Tokenizer.WhitespaceToken)
-Comma = TokenType(",", Tokenizer.CommaToken)(->)
+Ident = TokenType("identifier", N.IdentToken)
+Percentage = TokenType("percentage", N.PercentageToken)
+Integer = TokenType("integer", N.NumberToken, type:"integer")
+Number = TokenType("number", N.NumberToken)
+String = TokenType("string", N.StringToken)
+Whitespace = TokenType("whitespace", N.WhitespaceToken)
+Comma = TokenType(",", N.CommaToken)(->)
 
 # semantic = (a) -> a ? default
 Optional = (a) -> (semantic) -> (s) ->

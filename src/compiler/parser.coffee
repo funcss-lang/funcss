@@ -1,32 +1,5 @@
 Tokenizer = require("#{__dirname}/tokenizer")
-
-class AtRule
-  constructor : (name, prelude, value = undefined) ->
-    @name = name
-    @prelude = prelude
-    @value = value
-class QualifiedRule
-  constructor : (prelude, value = undefined) ->
-    @prelude = prelude
-    @value = value
-class Declaration
-  constructor : (name, value, important = false) ->
-    @name = name
-    @value = value
-    @important = important
-class Function
-  constructor : (name, value) ->
-    @name = name
-    @value = value
-class SimpleBlock
-  constructor : (token, value) ->
-    @token = token
-    @value = value
-class SyntaxError
-class Stylesheet
-  constructor : (value) ->
-    @value = value
-
+N = require "./nodes"
 
 
 
@@ -42,13 +15,13 @@ class Parser
     if @stream.length
       @current = @stream.shift()
     else
-      @current = new Tokenizer.EOFToken
+      @current = new N.EOFToken
 
   next: ->
     if @stream.length
       @stream[0]
     else
-      new Tokenizer.EOFToken
+      new N.EOFToken
 
   reconsume_current: ->
     @stream.unshift(@current)
@@ -56,7 +29,7 @@ class Parser
 
   parse_stylesheet: (tokens) ->
     @init(tokens)
-    return new Stylesheet(@consume_list_of_rules(true))
+    return new N.Stylesheet(@consume_list_of_rules(true))
 
 
   parse_list_of_rules: (tokens) ->
@@ -66,38 +39,38 @@ class Parser
   parse_rule: (tokens) ->
     @init(tokens)
     @consume_next()
-    while @current instanceof Tokenizer.WhitespaceToken
+    while @current instanceof N.WhitespaceToken
       @consume_next()
-    if @current instanceof Tokenizer.EOFToken
-      return new SyntaxError
-    if @current instanceof Tokenizer.AtKeywordToken
+    if @current instanceof N.EOFToken
+      return new N.SyntaxError
+    if @current instanceof N.AtKeywordToken
       result = @consume_at_rule()
     else
       @reconsume_current()
       result = @consume_qualified_rule()
       if not result?
-        return new SyntaxError
+        return new N.SyntaxError
     @consume_next()
-    while @current instanceof Tokenizer.WhitespaceToken
+    while @current instanceof N.WhitespaceToken
       @consume_next()
-    if @current instanceof Tokenizer.EOFToken
+    if @current instanceof N.EOFToken
       return result
-    return new SyntaxError
+    return new N.SyntaxError
 
 
   parse_declaration: (tokens) ->
-    #> Note: Unlike "Parse a list of declarations", this parses only a declaration and not an at-rule.
+    #> Note: Unlike "Parse a list of declarations", this parses only a N.declaration and not an at-rule.
     @init(tokens)
     @consume_next()
-    while @current instanceof Tokenizer.WhitespaceToken
+    while @current instanceof N.WhitespaceToken
       @consume_next()
-    unless @current instanceof Tokenizer.IdentToken
-      return new SyntaxError
+    unless @current instanceof N.IdentToken
+      return new N.SyntaxError
     result = @consume_a_declaration
     if result?
       return result
     else
-      return new SyntaxError
+      return new N.SyntaxError
     
 
 
@@ -109,21 +82,21 @@ class Parser
   parse_component_value: (tokens) ->
     @init(tokens)
     @consume_next()
-    while @current instanceof Tokenizer.WhitespaceToken
+    while @current instanceof N.WhitespaceToken
       @consume_next()
-    if @current instanceof Tokenizer.EOFToken
-      return new SyntaxError
+    if @current instanceof N.EOFToken
+      return new N.SyntaxError
     @reconsume_current()
     value = @consume_component_value()
     if not value?
-      return new SyntaxError
+      return new N.SyntaxError
     @consume_next()
-    while @current instanceof Tokenizer.WhitespaceToken
+    while @current instanceof N.WhitespaceToken
       @consume_next()
-    if @current instanceof Tokenizer.EOFToken
+    if @current instanceof N.EOFToken
       return value
     else
-      return new SyntaxError
+      return new N.SyntaxError
 
 
 
@@ -131,7 +104,7 @@ class Parser
     @init(tokens)
     result = []
     value = @consume_component_value()
-    until value instanceof Tokenizer.EOFToken
+    until value instanceof N.EOFToken
       result.push value
       value = @consume_component_value()
     return result
@@ -141,18 +114,18 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof Tokenizer.WhitespaceToken
+        when @current instanceof N.WhitespaceToken
           "do nothing"
-        when @current instanceof Tokenizer.EOFToken
+        when @current instanceof N.EOFToken
           return result
-        when @current instanceof Tokenizer.CDOToken or @current instanceof Tokenizer.CDCToken
+        when @current instanceof N.CDOToken or @current instanceof N.CDCToken
           if toplevel
           else
             @reconsume_current()
             rule = @consume_qualified_rule()
             if rule?
               result.push rule
-        when @current instanceof Tokenizer.AtKeywordToken
+        when @current instanceof N.AtKeywordToken
           rule = @consume_at_rule()
           if rule?
             result.push rule
@@ -168,13 +141,13 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof Tokenizer.SemicolonToken or @current instanceof Tokenizer.EOFToken
-          return new AtRule(name, prelude)
-        when @current instanceof Tokenizer.OpeningCurlyToken
+        when @current instanceof N.SemicolonToken or @current instanceof N.EOFToken
+          return new N.AtRule(name, prelude)
+        when @current instanceof N.OpeningCurlyToken
           block = @consume_simple_block()
-          return new AtRule(name, prelude, block)
-        when @current instanceof SimpleBlock and @current.token instanceof Tokenizer.OpeningCurlyToken
-          return new AtRule(name, prelude, @current)
+          return new N.AtRule(name, prelude, block)
+        when @current instanceof N.SimpleBlock and @current.token instanceof N.OpeningCurlyToken
+          return new N.AtRule(name, prelude, @current)
         else
           @reconsume_current()
           prelude.push @consume_component_value()
@@ -184,13 +157,13 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof Tokenizer.EOFToken
+        when @current instanceof N.EOFToken
           return
-        when @current instanceof Tokenizer.OpeningCurlyToken
+        when @current instanceof N.OpeningCurlyToken
           block = @consume_simple_block()
-          return new QualifiedRule(prelude, block)
-        when @current instanceof SimpleBlock and @current.token instanceof Tokenizer.OpeningCurlyToken
-          return new QualifiedRule(prelude, @current)
+          return new N.QualifiedRule(prelude, block)
+        when @current instanceof N.SimpleBlock and @current.token instanceof N.OpeningCurlyToken
+          return new N.QualifiedRule(prelude, @current)
         else
           @reconsume_current()
           prelude.push @consume_component_value()
@@ -200,68 +173,68 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof Tokenizer.WhitespaceToken or @current instanceof Tokenizer.SemicolonToken
+        when @current instanceof N.WhitespaceToken or @current instanceof N.SemicolonToken
           "do nothing"
-        when @current instanceof Tokenizer.EOFToken
+        when @current instanceof N.EOFToken
           return result
-        when @current instanceof Tokenizer.AtKeywordToken
+        when @current instanceof N.AtKeywordToken
           result.push @consume_at_rule()
-        when @current instanceof Tokenizer.IdentToken
+        when @current instanceof N.IdentToken
           list = [@current]
           @consume_next()
-          while not (@current instanceof Tokenizer.SemicolonToken or @current instanceof Tokenizer.EOFToken)
+          while not (@current instanceof N.SemicolonToken or @current instanceof N.EOFToken)
             list.push @current
             @consume_next()
           temp_stream = @stream
           try
             @stream = list
             @consume_next()
-            declaration = @consume_a_declaration()
+            N.declaration = @consume_a_declaration()
           finally
             @stream = temp_stream
-          if declaration?
-            result.push declaration
+          if N.declaration?
+            result.push N.declaration
         else
-          while (c = @consume_component_value()) instanceof Tokenizer.SemicolonToken or c instanceof Tokenizer.EOFToken
+          while (c = @consume_component_value()) instanceof N.SemicolonToken or c instanceof N.EOFToken
             "do nothing"
 
   consume_a_declaration: () ->
     name = @current.value
     value =[]
     @consume_next()
-    while @current instanceof Tokenizer.WhitespaceToken
+    while @current instanceof N.WhitespaceToken
       @consume_next()
-    unless @current instanceof Tokenizer.ColonToken
+    unless @current instanceof N.ColonToken
       return null
     @consume_next()
-    until @current instanceof Tokenizer.EOFToken
+    until @current instanceof N.EOFToken
       value.push @current
       @consume_next()
     # TODO !important check
-    return new Declaration(name, value, false)
+    return new N.Declaration(name, value, false)
 
   consume_component_value: () ->
     @consume_next()
-    if @current instanceof Tokenizer.OpeningCurlyToken or @current instanceof Tokenizer.OpeningSquareToken or @current instanceof Tokenizer.OpeningParenToken
+    if @current instanceof N.OpeningCurlyToken or @current instanceof N.OpeningSquareToken or @current instanceof N.OpeningParenToken
       return @consume_simple_block()
-    if @current instanceof Tokenizer.FunctionToken
+    if @current instanceof N.FunctionToken
       return @consume_function()
     return @current
 
   consume_simple_block: () ->
     starting = @current
-    ending = if @current instanceof Tokenizer.OpeningCurlyToken
-      Tokenizer.ClosingCurlyToken
-    else if @current instanceof Tokenizer.OpeningSquareToken
-      Tokenizer.ClosingSquareToken
+    ending = if @current instanceof N.OpeningCurlyToken
+      N.ClosingCurlyToken
+    else if @current instanceof N.OpeningSquareToken
+      N.ClosingSquareToken
     else
-      Tokenizer.ClosingParenToken
+      N.ClosingParenToken
     value = []
     while true
       @consume_next()
       switch
-        when @current instanceof Tokenizer.EOFToken or @current instanceof ending
-          return new SimpleBlock(starting, value)
+        when @current instanceof N.EOFToken or @current instanceof ending
+          return new N.SimpleBlock(starting, value)
         else
           @reconsume_current()
           value.push @consume_component_value()
@@ -272,8 +245,8 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof Tokenizer.EOFToken or @current instanceof Tokenizer.ClosingParenToken
-          return new Function(name, value)
+        when @current instanceof N.EOFToken or @current instanceof N.ClosingParenToken
+          return new N.Function(name, value)
         else
           @reconsume_current()
           value.push @consume_component_value()
@@ -281,16 +254,6 @@ class Parser
 
 
 module.exports = new Parser
-for k,v of {
-  AtRule
-  QualifiedRule
-  Declaration
-  Function
-  SimpleBlock
-  SyntaxError
-  Stylesheet
-}
-  module.exports[k] = v
 
 
 

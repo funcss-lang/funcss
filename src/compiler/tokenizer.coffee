@@ -32,110 +32,14 @@
 # usage.
 
 
-class IdentToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    @value
-class FunctionToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    @value + "("
-class AtKeywordToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    "@" + @value
-class HashToken
-  constructor : (value, type) ->
-    @value = value
-    @type = type ? "unrestricted"
-  toString : ->
-    "#" + @value
-class StringToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    JSON.stringify(@value)
-class BadStringToken
-class UrlToken
-  constructor : (value) ->
-    @value = value
-  toString : ->
-    "url(" + JSON.stringify(@value) + ")"
-class BadUrlToken
-class DelimToken
-  constructor : (value) ->
-    @value = value
-class NumberToken
-  constructor : (repr, value, type) ->
-    @repr = repr
-    @value = value
-    @type = type ? "integer"
-  toString : ->
-    @repr
-class PercentageToken
-  constructor : (repr, value) ->
-    @repr = repr
-    @value = value
-  toString : ->
-    @repr+"%"
-class DimensionToken
-  constructor : (repr, value, type, unit) ->
-    @repr = repr
-    @value = value
-    @type = type ? "integer"
-    @unit = unit
-  toString : ->
-    @repr+@unit
-class UnicodeRangeToken
-  constructor : (start, end) ->
-    @start = start
-    @end = end
-class IncludeMatchToken
-  toString: -> "~="
-class DashMatchToken
-  toString: -> "|="
-class PrefixMatchToken
-  toString: -> "^="
-class SuffixMatchToken
-  toString: -> "$="
-class SubstringMatchToken
-  toString: -> "*="
-class ColumnToken
-  toString: -> "||"
-class WhitespaceToken
-  toString: -> " "
-class CDOToken
-  toString: -> "<!--"
-class CDCToken
-  toString: -> "-->"
-class ColonToken
-  toString: -> ":"
-class SemicolonToken
-  toString: -> ";"
-class CommaToken
-  toString: -> ","
-class OpeningSquareToken
-  toString: -> "["
-class ClosingSquareToken
-  toString: -> "]"
-class OpeningParenToken
-  toString: -> "("
-class ClosingParenToken
-  toString: -> ")"
-class OpeningCurlyToken
-  toString: -> "{"
-class ClosingCurlyToken
-  toString: -> "}"
-{EOFToken} = Stream = require "#{__dirname}/stream"
+Stream = require "./stream"
+N = require "./nodes"
 
 class Tokenizer
   tokenize: (string) ->
     @init(string)
     tokens = []
-    while not ((token = @consume_a_token()) instanceof EOFToken)
+    while not ((token = @consume_a_token()) instanceof N.EOFToken)
       tokens.push token
     return tokens
 
@@ -219,7 +123,7 @@ class Tokenizer
       when @is_whitespace(@current)
         while @is_whitespace(@next())
           @consume_next()
-        new WhitespaceToken()
+        new N.WhitespaceToken()
 
       when @current is "\""
         @consume_a_string_token("\"")
@@ -227,42 +131,42 @@ class Tokenizer
       when @current is "#"
         if @is_name_code_point(@next()) or @next_2_valid_escape()
           is_id = @next_3_starts_identifier() # FIXME needed?
-          new HashToken(@consume_a_name(), if is_id then "id" else undefined)
+          new N.HashToken(@consume_a_name(), if is_id then "id" else undefined)
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "$"
         if @next() is "="
           @consume_next()
-          new SuffixMatchToken()
+          new N.SuffixMatchToken()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "'"
         @consume_a_string_token("'")
 
       when @current is "("
-        new OpeningParenToken
+        new N.OpeningParenToken
 
       when @current is ")"
-        new ClosingParenToken
+        new N.ClosingParenToken
 
       when @current is "*"
         if @next() is "="
           @consume_next()
-          new SubstringMatchToken()
+          new N.SubstringMatchToken()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "+"
         if @starts_with_number()
           @reconsume_current()
           @consume_a_numeric_token()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is ","
-        new CommaToken()
+        new N.CommaToken()
 
       when @current is "-"
         if @starts_with_number()
@@ -271,19 +175,19 @@ class Tokenizer
         else if @next() is "-" and @next2() is ">"
           @consume_next()
           @consume_next()
-          new CDCToken()
+          new N.CDCToken()
         else if @starts_with_ident()
           @reconsume_current()
           @consume_an_ident_like_token()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "."
         if @starts_with_number()
           @reconsume_current()
           @consume_a_numeric_token()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "/"
         if @next() is "*" # comment
@@ -295,54 +199,54 @@ class Tokenizer
             @consume_next()
           @consume_a_token()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is ":"
-        new ColonToken()
+        new N.ColonToken()
 
       when @current is ";"
-        new SemicolonToken()
+        new N.SemicolonToken()
 
       when @current is "<"
         if @next() is "!" and @next2() is "-" and @next3() is "-"
           @consume_next()
           @consume_next()
           @consume_next()
-          new CDOToken()
+          new N.CDOToken()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "@"
         if @next_3_starts_identifier()
-          new AtKeywordToken(@consume_a_name())
+          new N.AtKeywordToken(@consume_a_name())
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "["
-        new OpeningSquareToken
+        new N.OpeningSquareToken
 
       when @current is "\\"
         if @starts_with_valid_escape()
           @reconsume_current()
           @consume_an_ident_like_token()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "]"
-        new ClosingSquareToken
+        new N.ClosingSquareToken
 
       when @current is "^"
         if @next() is "="
           @consume_next()
-          new PrefixMatchToken()
+          new N.PrefixMatchToken()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "{"
-        new OpeningCurlyToken
+        new N.OpeningCurlyToken
 
       when @current is "}"
-        new ClosingCurlyToken
+        new N.ClosingCurlyToken
 
 
       when "0" <= @current <= "9"
@@ -356,35 +260,35 @@ class Tokenizer
       when @current is "|"
         if @next() is "="
           @consume_next()
-          new DashMatchToken()
+          new N.DashMatchToken()
         else if @next() is "|"
           @consume_next()
-          new ColumnToken()
+          new N.ColumnToken()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "~"
         if @next() is "="
           @consume_next()
-          new IncludeMatchToken()
+          new N.IncludeMatchToken()
         else
-          new DelimToken(@current)
+          new N.DelimToken(@current)
 
       when @current is "EOF"
-        return new EOFToken()
+        return new N.EOFToken()
 
       else
-        new DelimToken(@current)
+        new N.DelimToken(@current)
         
   consume_a_numeric_token: ->
     number = @consume_a_number()
     if @next_3_starts_identifier()
-      new DimensionToken(number.repr, number.value, number.type, @consume_a_name())
+      new N.DimensionToken(number.repr, number.value, number.type, @consume_a_name())
     else if @next() is "%"
       @consume_next()
-      new PercentageToken(number.repr, number.value)
+      new N.PercentageToken(number.repr, number.value)
     else
-      new NumberToken(number.repr, number.value, number.type)
+      new N.NumberToken(number.repr, number.value, number.type)
 
   consume_an_ident_like_token: ->
     name = @consume_a_name()
@@ -394,9 +298,9 @@ class Tokenizer
       @consume_a_url_token()
     else if @next() is "("
       @consume_next()
-      new FunctionToken(name)
+      new N.FunctionToken(name)
     else
-      new IdentToken(name)
+      new N.IdentToken(name)
 
   consume_a_string_token: (delim) ->
     s = []
@@ -404,10 +308,10 @@ class Tokenizer
       @consume_next()
       switch
         when @current is delim or @current is "EOF"
-          return new StringToken(s.join(""))
+          return new N.StringToken(s.join(""))
         when @current is "\n"
           @reconsume_current()
-          return new BadStringToken
+          return new N.BadStringToken
         when @current is "\\"
           if @next() is "EOF"
           else if @next() is "\n"
@@ -423,43 +327,43 @@ class Tokenizer
     while @is_whitespace(@next())
       @consume_next()
     if @next() is "EOF"
-      return new UrlToken(s.join(''))
+      return new N.UrlToken(s.join(''))
     if @next() in ["'", '"']
       @consume_next()
-      stringToken = @consume_a_string_token(@current)
-      if stringToken instanceof BadStringToken
-        return new BadUrlToken
+      N.stringToken = @consume_a_string_token(@current)
+      if N.stringToken instanceof N.BadStringToken
+        return new N.BadUrlToken
       while @is_whitespace(@next())
         @consume_next()
       if @next() in [")", "EOF"]
         @consume_next()
-        return new UrlToken(stringToken.value)
+        return new N.UrlToken(N.stringToken.value)
       else
         @consume_the_remnants_of_a_bad_url()
-        return new BadUrlToken
+        return new N.BadUrlToken
     while true
       @consume_next()
       switch
         when @current in [")", "EOF"]
-          return new UrlToken(s.join(''))
+          return new N.UrlToken(s.join(''))
         when @is_whitespace(@current)
           while @is_whitespace(@next())
             @consume_next()
           if @next() in [")", "EOF"]
             @consume_next()
-            return new UrlToken(s.join(''))
+            return new N.UrlToken(s.join(''))
           else
             @consume_the_remnants_of_a_bad_url()
-            return new BadUrlToken
+            return new N.BadUrlToken
         when @current in ['"', "'", "("] or @is_non_printable(@current)
           @consume_the_remnants_of_a_bad_url()
-          return new BadUrlToken
+          return new N.BadUrlToken
         when @current is "\\"
           if @starts_with_valid_escape()
             s.push @consume_an_escaped_code_point()
           else
             @consume_the_remnants_of_a_bad_url()
-            return new UrlToken(s.join(''))
+            return new N.UrlToken(s.join(''))
         else
           s.push @current
 
@@ -626,48 +530,6 @@ class Tokenizer
 
       
 module.exports = new Tokenizer
-      
-# export token classes
-for k,v of {
-  IdentToken
-  FunctionToken
-  AtKeywordToken
-  HashToken
-  StringToken
-  BadStringToken
-  UrlToken
-  BadUrlToken
-  DelimToken
-  NumberToken
-  PercentageToken
-  DimensionToken
-  UnicodeRangeToken
-  IncludeMatchToken
-  DashMatchToken
-  PrefixMatchToken
-  SuffixMatchToken
-  SubstringMatchToken
-  ColumnToken
-  WhitespaceToken
-  CDOToken
-  CDCToken
-  ColonToken
-  SemicolonToken
-  CommaToken
-  OpeningSquareToken
-  ClosingSquareToken
-  OpeningParenToken
-  ClosingParenToken
-  OpeningCurlyToken
-  ClosingCurlyToken
-  EOFToken
-}
-  module.exports[k] = v
-
-    
-
-
-
 
 
 
