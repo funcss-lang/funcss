@@ -5,11 +5,11 @@ class EOFToken
 class Stream
   constructor: (items) ->
     (@items = (t for t in items)).push new EOFToken
-    @position = -1
+    @position = 0
   consume_next: ->
-    @current = @items[++@position]
+    @current = @items[@position++]
   next: ->
-    @items[@position+1]
+    @items[@position]
   reconsume_current: ->
     @items.unshift(@current)
 

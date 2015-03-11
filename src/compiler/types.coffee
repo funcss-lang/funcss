@@ -1,49 +1,8 @@
 Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
-{
-  IdentToken
-  FunctionToken
-  AtKeywordToken
-  HashToken
-  StringToken
-  BadStringToken
-  UrlToken
-  BadUrlToken
-  DelimToken
-  NumberToken
-  PercentageToken
-  DimensionToken
-  UnicodeRangeToken
-  IncludeMatchToken
-  DashMatchToken
-  PrefixMatchToken
-  SuffixMatchToken
-  SubstringMatchToken
-  ColumnToken
-  WhitespaceToken
-  CDOToken
-  CDCToken
-  ColonToken
-  SemicolonToken
-  CommaToken
-  OpeningSquareToken
-  ClosingSquareToken
-  OpeningParenToken
-  ClosingParenToken
-  OpeningCurlyToken
-  ClosingCurlyToken
-} = Tokenizer
 
 Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
-{
-  AtRule
-  QualifiedRule
-  Declaration
-  Function
-  SimpleBlock
-  SyntaxError
-  Stylesheet
-} = Parser
 
+# helper error class to use for parsing
 class NoMatch extends Error
   constructor: (expected, found) ->
     @expected = expected
@@ -58,6 +17,7 @@ class NoMatch extends Error
     else
       new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found)
 
+# backtrack algorithm for the stream
 Stream = require "./stream"
 Stream.prototype.backtrack = (options) ->
   try
@@ -70,8 +30,7 @@ Stream.prototype.backtrack = (options) ->
     else
       throw e
 
-
-
+# helper functions
 Id = (x) -> x
 Swap = (f) -> (x,y) -> f(y,x)
 Or = (x,y) -> x ? y
@@ -79,6 +38,7 @@ Cons = (x,y) -> y.unshift x; y
 Opt = (y) -> (x) -> x ? y
 Snd = (x,y) -> y
 
+# a type which matches a single token of a single class, with optional property restrictions
 TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
   next = s.next()
   unless next instanceof clazz
@@ -88,16 +48,16 @@ TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
       throw new NoMatch(msg, "'#{next}'")
   return semantic s.consume_next()
 
-IdentType = (value) -> TokenType("'#{value}'", IdentToken, {value})
-DelimType = (value) -> TokenType("'#{value}'", DelimToken, {value})
+# helper function to create a type for a token for a specific ident 
+IdentType = (value) -> TokenType("'#{value}'", Tokenizer.IdentToken, {value})
 
-Ident = TokenType("identifier", IdentToken)
-Percentage = TokenType("percentage", PercentageToken)
-Integer = TokenType("integer", NumberToken, type:"integer")
-Number = TokenType("number", NumberToken)
-String = TokenType("string", StringToken)
-Whitespace = TokenType("whitespace", WhitespaceToken)
-Comma = TokenType(",", CommaToken)(->)
+Ident = TokenType("identifier", Tokenizer.IdentToken)
+Percentage = TokenType("percentage", Tokenizer.PercentageToken)
+Integer = TokenType("integer", Tokenizer.NumberToken, type:"integer")
+Number = TokenType("number", Tokenizer.NumberToken)
+String = TokenType("string", Tokenizer.StringToken)
+Whitespace = TokenType("whitespace", Tokenizer.WhitespaceToken)
+Comma = TokenType(",", Tokenizer.CommaToken)(->)
 
 # semantic = (a) -> a ? default
 Optional = (a) -> (semantic) -> (s) ->
@@ -171,13 +131,12 @@ Range = (n,m) -> (a) -> (s) ->
 Star = Max(Infinity)
 Plus = Range(1,Infinity)
 
-Hash = (a) -> Juxtaposition(a,Star(Juxtaposition(Comma,a)(Snd)))(Cons)
-
-AnyValue = ->
+DelimitedBy = (delim) -> (a) -> Juxtaposition(a, Star(Juxtaposition(delim,a)(Snd)))(Cons)
+Hash = DelimitedBy Comma
 
 module.exports = {
+  TokenType
   IdentType
-  DelimType
   Ident
   Integer
   Number
@@ -189,9 +148,9 @@ module.exports = {
   DoubleAmpersand
   Bar
   DoubleBar
+  Optional
   Plus
   Star
   Range
   Hash
-  AnyValue
 }

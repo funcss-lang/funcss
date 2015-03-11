@@ -1,38 +1,4 @@
 Tokenizer = require("#{__dirname}/tokenizer")
-{
-  IdentToken
-  FunctionToken
-  AtKeywordToken
-  HashToken
-  StringToken
-  BadStringToken
-  UrlToken
-  BadUrlToken
-  DelimToken
-  NumberToken
-  PercentageToken
-  DimensionToken
-  UnicodeRangeToken
-  IncludeMatchToken
-  DashMatchToken
-  PrefixMatchToken
-  SuffixMatchToken
-  SubstringMatchToken
-  ColumnToken
-  WhitespaceToken
-  CDOToken
-  CDCToken
-  ColonToken
-  SemicolonToken
-  CommaToken
-  OpeningSquareToken
-  ClosingSquareToken
-  OpeningParenToken
-  ClosingParenToken
-  OpeningCurlyToken
-  ClosingCurlyToken
-  EOFToken
-} = Tokenizer
 
 class AtRule
   constructor : (name, prelude, value = undefined) ->
@@ -76,13 +42,13 @@ class Parser
     if @stream.length
       @current = @stream.shift()
     else
-      @current = new EOFToken
+      @current = new Tokenizer.EOFToken
 
   next: ->
     if @stream.length
       @stream[0]
     else
-      new EOFToken
+      new Tokenizer.EOFToken
 
   reconsume_current: ->
     @stream.unshift(@current)
@@ -100,11 +66,11 @@ class Parser
   parse_rule: (tokens) ->
     @init(tokens)
     @consume_next()
-    while @current instanceof WhitespaceToken
+    while @current instanceof Tokenizer.WhitespaceToken
       @consume_next()
-    if @current instanceof EOFToken
+    if @current instanceof Tokenizer.EOFToken
       return new SyntaxError
-    if @current instanceof AtKeywordToken
+    if @current instanceof Tokenizer.AtKeywordToken
       result = @consume_at_rule()
     else
       @reconsume_current()
@@ -112,9 +78,9 @@ class Parser
       if not result?
         return new SyntaxError
     @consume_next()
-    while @current instanceof WhitespaceToken
+    while @current instanceof Tokenizer.WhitespaceToken
       @consume_next()
-    if @current instanceof EOFToken
+    if @current instanceof Tokenizer.EOFToken
       return result
     return new SyntaxError
 
@@ -123,9 +89,9 @@ class Parser
     #> Note: Unlike "Parse a list of declarations", this parses only a declaration and not an at-rule.
     @init(tokens)
     @consume_next()
-    while @current instanceof WhitespaceToken
+    while @current instanceof Tokenizer.WhitespaceToken
       @consume_next()
-    unless @current instanceof IdentToken
+    unless @current instanceof Tokenizer.IdentToken
       return new SyntaxError
     result = @consume_a_declaration
     if result?
@@ -143,18 +109,18 @@ class Parser
   parse_component_value: (tokens) ->
     @init(tokens)
     @consume_next()
-    while @current instanceof WhitespaceToken
+    while @current instanceof Tokenizer.WhitespaceToken
       @consume_next()
-    if @current instanceof EOFToken
+    if @current instanceof Tokenizer.EOFToken
       return new SyntaxError
     @reconsume_current()
     value = @consume_component_value()
     if not value?
       return new SyntaxError
     @consume_next()
-    while @current instanceof WhitespaceToken
+    while @current instanceof Tokenizer.WhitespaceToken
       @consume_next()
-    if @current instanceof EOFToken
+    if @current instanceof Tokenizer.EOFToken
       return value
     else
       return new SyntaxError
@@ -165,7 +131,7 @@ class Parser
     @init(tokens)
     result = []
     value = @consume_component_value()
-    until value instanceof EOFToken
+    until value instanceof Tokenizer.EOFToken
       result.push value
       value = @consume_component_value()
     return result
@@ -175,18 +141,18 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof WhitespaceToken
+        when @current instanceof Tokenizer.WhitespaceToken
           "do nothing"
-        when @current instanceof EOFToken
+        when @current instanceof Tokenizer.EOFToken
           return result
-        when @current instanceof CDOToken or @current instanceof CDCToken
+        when @current instanceof Tokenizer.CDOToken or @current instanceof Tokenizer.CDCToken
           if toplevel
           else
             @reconsume_current()
             rule = @consume_qualified_rule()
             if rule?
               result.push rule
-        when @current instanceof AtKeywordToken
+        when @current instanceof Tokenizer.AtKeywordToken
           rule = @consume_at_rule()
           if rule?
             result.push rule
@@ -202,12 +168,12 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof SemicolonToken or @current instanceof EOFToken
+        when @current instanceof Tokenizer.SemicolonToken or @current instanceof Tokenizer.EOFToken
           return new AtRule(name, prelude)
-        when @current instanceof OpeningCurlyToken
+        when @current instanceof Tokenizer.OpeningCurlyToken
           block = @consume_simple_block()
           return new AtRule(name, prelude, block)
-        when @current instanceof SimpleBlock and @current.token instanceof OpeningCurlyToken
+        when @current instanceof SimpleBlock and @current.token instanceof Tokenizer.OpeningCurlyToken
           return new AtRule(name, prelude, @current)
         else
           @reconsume_current()
@@ -218,12 +184,12 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof EOFToken
+        when @current instanceof Tokenizer.EOFToken
           return
-        when @current instanceof OpeningCurlyToken
+        when @current instanceof Tokenizer.OpeningCurlyToken
           block = @consume_simple_block()
           return new QualifiedRule(prelude, block)
-        when @current instanceof SimpleBlock and @current.token instanceof OpeningCurlyToken
+        when @current instanceof SimpleBlock and @current.token instanceof Tokenizer.OpeningCurlyToken
           return new QualifiedRule(prelude, @current)
         else
           @reconsume_current()
@@ -234,16 +200,16 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof WhitespaceToken or @current instanceof SemicolonToken
+        when @current instanceof Tokenizer.WhitespaceToken or @current instanceof Tokenizer.SemicolonToken
           "do nothing"
-        when @current instanceof EOFToken
+        when @current instanceof Tokenizer.EOFToken
           return result
-        when @current instanceof AtKeywordToken
+        when @current instanceof Tokenizer.AtKeywordToken
           result.push @consume_at_rule()
-        when @current instanceof IdentToken
+        when @current instanceof Tokenizer.IdentToken
           list = [@current]
           @consume_next()
-          while not (@current instanceof SemicolonToken or @current instanceof EOFToken)
+          while not (@current instanceof Tokenizer.SemicolonToken or @current instanceof Tokenizer.EOFToken)
             list.push @current
             @consume_next()
           temp_stream = @stream
@@ -256,19 +222,19 @@ class Parser
           if declaration?
             result.push declaration
         else
-          while (c = @consume_component_value()) instanceof SemicolonToken or c instanceof EOFToken
+          while (c = @consume_component_value()) instanceof Tokenizer.SemicolonToken or c instanceof Tokenizer.EOFToken
             "do nothing"
 
   consume_a_declaration: () ->
     name = @current.value
     value =[]
     @consume_next()
-    while @current instanceof WhitespaceToken
+    while @current instanceof Tokenizer.WhitespaceToken
       @consume_next()
-    unless @current instanceof ColonToken
+    unless @current instanceof Tokenizer.ColonToken
       return null
     @consume_next()
-    until @current instanceof EOFToken
+    until @current instanceof Tokenizer.EOFToken
       value.push @current
       @consume_next()
     # TODO !important check
@@ -276,25 +242,25 @@ class Parser
 
   consume_component_value: () ->
     @consume_next()
-    if @current instanceof OpeningCurlyToken or @current instanceof OpeningSquareToken or @current instanceof OpeningParenToken
+    if @current instanceof Tokenizer.OpeningCurlyToken or @current instanceof Tokenizer.OpeningSquareToken or @current instanceof Tokenizer.OpeningParenToken
       return @consume_simple_block()
-    if @current instanceof FunctionToken
+    if @current instanceof Tokenizer.FunctionToken
       return @consume_function()
     return @current
 
   consume_simple_block: () ->
     starting = @current
-    ending = if @current instanceof OpeningCurlyToken
-      ClosingCurlyToken
-    else if @current instanceof OpeningSquareToken
-      ClosingSquareToken
+    ending = if @current instanceof Tokenizer.OpeningCurlyToken
+      Tokenizer.ClosingCurlyToken
+    else if @current instanceof Tokenizer.OpeningSquareToken
+      Tokenizer.ClosingSquareToken
     else
-      ClosingParenToken
+      Tokenizer.ClosingParenToken
     value = []
     while true
       @consume_next()
       switch
-        when @current instanceof EOFToken or @current instanceof ending
+        when @current instanceof Tokenizer.EOFToken or @current instanceof ending
           return new SimpleBlock(starting, value)
         else
           @reconsume_current()
@@ -306,7 +272,7 @@ class Parser
     while true
       @consume_next()
       switch
-        when @current instanceof EOFToken or @current instanceof ClosingParenToken
+        when @current instanceof Tokenizer.EOFToken or @current instanceof Tokenizer.ClosingParenToken
           return new Function(name, value)
         else
           @reconsume_current()

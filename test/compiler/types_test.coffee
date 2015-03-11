@@ -9,13 +9,13 @@ check_tree = (str, type, next, args...) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   t = type(s)
   check t, args...
-  (s.position+1).should.be.equal(next)
+  s.position.should.be.equal(next)
 
 check_error = (str, type, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error Types.NoMatch, message: message, ->
     t = type(s)
-  (s.position+1).should.be.equal(pos)
+  s.position.should.be.equal(pos)
 
 Value = (x)->x.value
 Value100 = (x)->x.value/100
@@ -50,6 +50,15 @@ describe 'Types', ->
 
     it "cannot parse 3.3", ->
       check_error "3.3", integer, 0, "integer expected but '3.3' found"
+
+  describe 'Delimiters', ->
+    p = Types.TokenType("'+'", Tokenizer.DelimToken, value:'+')((x)->x)
+
+    it "can parse +", ->
+      check_tree "+", p, 1, Tokenizer.DelimToken, value: "+"
+
+    it "cannot parse 3.3", ->
+      check_error "3.3", p, 0, "'+' expected but '3.3' found"
 
   describe 'Juxtaposition', ->
     jp = Types.Juxtaposition(Types.IdentType('black')(Value), Types.Number(Value))((x,y)->{x,y})
