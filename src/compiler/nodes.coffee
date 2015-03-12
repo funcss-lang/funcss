@@ -6,100 +6,113 @@
 #
 # These are the tokens produced by the tokenizer.
 
-class exports.IdentToken
+exports.IdentToken = class IdentToken
   constructor : (@value) ->
   toString : -> @value
-class exports.FunctionToken
+exports.FunctionToken = class FunctionToken
   constructor : (@value) ->
   toString : -> @value + "("
-class exports.AtKeywordToken
+exports.AtKeywordToken = class AtKeywordToken
   constructor : (@value) ->
   toString : -> "@" + @value
-class exports.HashToken
+exports.HashToken = class HashToken
   constructor : (@value, @type = "unrestricted") ->
   toString : -> "#" + @value
-class exports.StringToken
+exports.StringToken = class StringToken
   constructor : (@value) ->
   toString : -> JSON.stringify(@value)
-class exports.BadStringToken
-class exports.UrlToken
+exports.BadStringToken = class BadStringToken
+exports.UrlToken = class UrlToken
   constructor : (@value) ->
   toString : -> "url(" + JSON.stringify(@value) + ")"
-class exports.BadUrlToken
-class exports.DelimToken
+exports.BadUrlToken = class BadUrlToken
+exports.DelimToken = class DelimToken
   constructor : (@value) ->
   toString : -> @value
-class exports.NumberToken
+exports.NumberToken = class NumberToken
   constructor : (@repr, @value, @type = "integer") ->
   toString : -> @repr
-class exports.PercentageToken
+exports.PercentageToken = class PercentageToken
   constructor : (@repr, @value) ->
   toString : -> @repr+"%"
-class exports.DimensionToken
+exports.DimensionToken = class DimensionToken
   constructor : (@repr, @value, @type = "integer", @unit) ->
   toString : -> @repr+@unit
-class exports.UnicodeRangeToken
+exports.UnicodeRangeToken = class UnicodeRangeToken
   constructor : (@start, @end) ->
-class exports.IncludeMatchToken
+exports.IncludeMatchToken = class IncludeMatchToken
   toString: -> "~="
-class exports.DashMatchToken
+exports.DashMatchToken = class DashMatchToken
   toString: -> "|="
-class exports.PrefixMatchToken
+exports.PrefixMatchToken = class PrefixMatchToken
   toString: -> "^="
-class exports.SuffixMatchToken
+exports.SuffixMatchToken = class SuffixMatchToken
   toString: -> "$="
-class exports.SubstringMatchToken
+exports.SubstringMatchToken = class SubstringMatchToken
   toString: -> "*="
-class exports.ColumnToken
+exports.ColumnToken = class ColumnToken
   toString: -> "||"
-class exports.WhitespaceToken
+exports.WhitespaceToken = class WhitespaceToken
   toString: -> " "
-class exports.CDOToken
+exports.CDOToken = class CDOToken
   toString: -> "<!--"
-class exports.CDCToken
+exports.CDCToken = class CDCToken
   toString: -> "-->"
-class exports.ColonToken
+exports.ColonToken = class ColonToken
   toString: -> ":"
-class exports.SemicolonToken
+exports.SemicolonToken = class SemicolonToken
   toString: -> ";"
-class exports.CommaToken
+exports.CommaToken = class CommaToken
   toString: -> ","
-class exports.OpeningSquareToken
+
+##### Block tokens
+# These tokens are the block separators. The opening versions have a `mirror()` instance
+# function which return the constructor of the closing version.
+
+exports.OpeningSquareToken = class OpeningSquareToken
   toString: -> "["
-class exports.ClosingSquareToken
+  mirror: -> ClosingSquareToken
+exports.ClosingSquareToken = class ClosingSquareToken
   toString: -> "]"
-class exports.OpeningParenToken
+exports.OpeningParenToken = class OpeningParenToken
   toString: -> "("
-class exports.ClosingParenToken
+  mirror: -> ClosingParenToken
+exports.ClosingParenToken = class ClosingParenToken
   toString: -> ")"
-class exports.OpeningCurlyToken
+exports.OpeningCurlyToken = class OpeningCurlyToken
   toString: -> "{"
-class exports.ClosingCurlyToken
+  mirror: -> ClosingCurlyToken
+exports.ClosingCurlyToken = class ClosingCurlyToken
   toString: -> "}"
-class exports.EOFToken
+exports.EOFToken = class EOFToken
   toString: -> ""
 
 #### Parser output nodes
 # These nodes come from the parser
 
-class exports.AtRule
+exports.AtRule = class AtRule
   constructor : (@name, @prelude, @value = undefined) ->
-class exports.QualifiedRule
+exports.QualifiedRule = class QualifiedRule
   constructor : (@prelude, @value = undefined) ->
-class exports.Declaration
+exports.Declaration = class Declaration
   constructor : (@name, @value, @important = false) ->
-class exports.Function
+exports.Function = class Function
   constructor : (@name, @value) ->
-class exports.SimpleBlock
+  toString : ->
+    "#{@name}(#{@value})"
+exports.SimpleBlock = class SimpleBlock
   constructor : (@token, @value) ->
-class exports.SyntaxError
+  toString : ->
+    "#{@token}#{@value}#{new(@token.mirror())}"
+exports.SyntaxError = class SyntaxError
 
-class exports.RuleList
+exports.RuleList = class RuleList
   @prototype: []
-class exports.DeclarationList
+exports.DeclarationList = class DeclarationList
   @prototype: []
-class exports.ComponentValueList
+exports.ComponentValueList = class ComponentValueList
   @prototype: []
+  # This table is the copy of the one in the CSS Syntax Level 3 CR spec.
   @commentNeededMap :
     IdentToken:
       IdentToken: yes
@@ -112,7 +125,7 @@ class exports.ComponentValueList
       DimensionToken: yes
       UnicodeRangeToken: yes
       CDCToken: yes
-      OpeningParenToken: yes
+      '(': yes
     AtKeywordToken:
       IdentToken: yes
       FunctionToken: yes
@@ -210,12 +223,27 @@ class exports.ComponentValueList
     '/':
       '*': yes
   @commentNeeded : (node1, node2) ->
-    debugger
+    debugger if node1 instanceof IdentToken and node2 instanceof SimpleBlock
     [name1, name2] = for node in arguments
-      if (name = node.constructor.name) is "DelimToken"
+      # Here we do some renaming to help the lookup in the table above.
+
+      # First, if the node is not a token but a parser-generated node which
+      # can occur in a component value list (namely, SimpleBlock or Function),
+      # we use its starting token.
+      if node instanceof SimpleBlock
+        node = node.token
+      else if node instanceof Function
+        node = new FunctionToken(node.name)
+
+      # Then for delimiters and (-tokens, we use the string representation,
+      # for others we use the token name (like in the spec)
+      
+      name = if node instanceof DelimToken
         node.value
+      else if node instanceof OpeningParenToken
+        '('
       else
-        name
+        node.constructor.name
     !! @commentNeededMap[name1]?[name2]
   toString: ->
     result = for node,i in @
@@ -227,7 +255,7 @@ class exports.ComponentValueList
 
       
     
-class exports.Stylesheet
+exports.Stylesheet = class Stylesheet
   constructor : (@value) ->
 
 

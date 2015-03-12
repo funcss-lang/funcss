@@ -223,12 +223,7 @@ class Parser
 
   consume_simple_block: () ->
     starting = @current
-    ending = if @current instanceof N.OpeningCurlyToken
-      N.ClosingCurlyToken
-    else if @current instanceof N.OpeningSquareToken
-      N.ClosingSquareToken
-    else
-      N.ClosingParenToken
+    ending = starting.mirror()
     value = new N.ComponentValueList
     while true
       @consume_next()
