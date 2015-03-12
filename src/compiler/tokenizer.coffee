@@ -63,13 +63,13 @@ class Tokenizer
     if @stream.length > 1
       @stream[1]
     else
-      undefined
+      "EOF"
 
   next3: ->
     if @stream.length > 2
       @stream[2]
     else
-      undefined
+      "EOF"
 
   reconsume_current: ->
     @stream.unshift(@current)
