@@ -2,6 +2,10 @@
 #
 
 
+#### Tokenizer nodes
+#
+# These are the tokens produced by the tokenizer.
+
 class exports.IdentToken
   constructor : (@value) ->
   toString : -> @value
@@ -24,6 +28,7 @@ class exports.UrlToken
 class exports.BadUrlToken
 class exports.DelimToken
   constructor : (@value) ->
+  toString : -> @value
 class exports.NumberToken
   constructor : (@repr, @value, @type = "integer") ->
   toString : -> @repr
@@ -95,7 +100,7 @@ class exports.DeclarationList
   @prototype: []
 class exports.ComponentValueList
   @prototype: []
-  @commentNeeded :
+  @commentNeededMap :
     IdentToken:
       IdentToken: yes
       FunctionToken: yes
@@ -204,7 +209,23 @@ class exports.ComponentValueList
       '|': yes
     '/':
       '*': yes
+  @commentNeeded : (node1, node2) ->
+    debugger
+    [name1, name2] = for node in arguments
+      if (name = node.constructor.name) is "DelimToken"
+        node.value
+      else
+        name
+    !! @commentNeededMap[name1]?[name2]
   toString: ->
+    result = for node,i in @
+      if i>0 and i<@length and ComponentValueList.commentNeeded(@[i-1],node)
+        "/**/" + node
+      else
+        node
+    result.join('')
+
+      
     
 class exports.Stylesheet
   constructor : (@value) ->
