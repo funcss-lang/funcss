@@ -4,6 +4,6 @@
 --ui bdd
 --compilers coffee:coffee-script/register
 --globals config
---watch test/compiler
---watch test/bdd/bdd.coffee
---watch src
+test/compiler
+test/bdd/bdd.coffee
+src

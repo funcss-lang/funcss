@@ -37,7 +37,7 @@ describe "FunCSS compiler", ->
       if fs.existsSync("#{basename}.verify")
         throw new Error "#{basename} needs manual verification"
       if fs.existsSync("#{basename}.fail")
-        fs.readFileSync("#{basename}.fail", encoding: 'utf-8')
+        message = fs.readFileSync("#{basename}.fail", encoding: 'utf-8')
         throw new Error "#{basename} failed manual verification: #{message}"
 
 
