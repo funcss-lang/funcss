@@ -284,11 +284,11 @@ exports.Stylesheet = class Stylesheet
 # `Script` is the main script class that outputs the target code.
 exports.Script = class Script
   @prototype: []
-  toString: -> """
+  toString: -> if @length then """
     !function(){
     #{@join('\n')}
     }();
-  """
+  """ else ""
 
 # Insert a stylesheet to the `head`
 #
