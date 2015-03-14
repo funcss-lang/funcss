@@ -1,4 +1,4 @@
-# This file contains the nodes used in the abstract syntax tree: tokens
+# This file contains the nodes used in the abstract syntax tree
 #
 
 
@@ -40,6 +40,10 @@ exports.DimensionToken = class DimensionToken
   toString : -> @repr+@unit
 exports.UnicodeRangeToken = class UnicodeRangeToken
   constructor : (@start, @end) ->
+
+##### Simple delim-like tokens
+# These tokens have a single representation
+
 exports.IncludeMatchToken = class IncludeMatchToken
   toString: -> "~="
 exports.DashMatchToken = class DashMatchToken
@@ -88,7 +92,12 @@ exports.EOFToken = class EOFToken
   toString: -> ""
 
 #### Parser output nodes
-# These nodes come from the parser
+# These nodes are created by the parser
+#
+# The parser in FunCSS needs to be exactly the same as the CSS parser 
+# (Except for tokens that are not in the CSS standard.) Any FunCSS-specific
+# modification needs to be coded in the upper levels, e.g. in the value 
+# definitions.
 
 exports.AtRule = class AtRule
   constructor : (@name, @prelude, @value = undefined) ->
@@ -106,6 +115,10 @@ exports.SimpleBlock = class SimpleBlock
     "#{@token}#{@value}#{new(@token.mirror())}"
 exports.SyntaxError = class SyntaxError
 
+##### List classes
+# These classes inherit from Array.
+  
+  
 exports.RuleList = class RuleList
   @prototype: []
 exports.DeclarationList = class DeclarationList
