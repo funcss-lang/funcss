@@ -1,6 +1,10 @@
+Tokenizer = require "./tokenizer"
+Parser = require "./parser"
 
-exports.compile = (s) ->
-  return s
+exports.compile = (input) ->
+  tokens = Tokenizer.tokenize(input)
+  stylesheet = Parser.parse_stylesheet(tokens)
+  return stylesheet.toString()
 
 
   

@@ -101,8 +101,12 @@ exports.EOFToken = class EOFToken
 
 exports.AtRule = class AtRule
   constructor : (@name, @prelude, @value = undefined) ->
+  toString: ->
+    "@#{@name}#{@prelude}#{@value ? ';'}"
 exports.QualifiedRule = class QualifiedRule
   constructor : (@prelude, @value = undefined) ->
+  toString: ->
+    "#{@prelude} { #{@value?.value ? ''} }"
 exports.Declaration = class Declaration
   constructor : (@name, @value, @important = false) ->
 exports.Function = class Function
@@ -270,5 +274,7 @@ exports.ComponentValueList = class ComponentValueList
     
 exports.Stylesheet = class Stylesheet
   constructor : (@value) ->
+  toString: ->
+    @value.join("\n")
 
 

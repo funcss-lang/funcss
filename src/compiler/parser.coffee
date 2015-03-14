@@ -1,4 +1,4 @@
-Tokenizer = require("#{__dirname}/tokenizer")
+Tokenizer = require "./tokenizer"
 N = require "./nodes"
 
 
