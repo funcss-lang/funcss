@@ -1,9 +1,9 @@
-Types = require "#{__dirname}/../../src/compiler/types"
-Stream = require "#{__dirname}/../../src/compiler/stream"
-Parser = require "#{__dirname}/../../src/compiler/parser"
-Tokenizer = require "#{__dirname}/../../src/compiler/tokenizer"
+Types = require "../../src/compiler/types"
+Stream = require "../../src/compiler/stream"
+Parser = require "../../src/compiler/parser"
+Tokenizer = require "../../src/compiler/tokenizer"
 N = require "../../src/compiler/nodes"
-check = require "#{__dirname}/../check"
+check = require "./check"
 
 
 check_tree = (str, type, next, args...) ->

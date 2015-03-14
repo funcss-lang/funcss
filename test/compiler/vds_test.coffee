@@ -1,9 +1,9 @@
 
-Types = require "#{__dirname}/../../src/compiler/types"
-Stream = require "#{__dirname}/../../src/compiler/stream"
-Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
-Vds = require "#{__dirname}/../../src/compiler/vds"
-check = require "#{__dirname}/../check"
+Types = require "../../src/compiler/types"
+Stream = require "../../src/compiler/stream"
+Parser = require "../../src/compiler/parser.coffee"
+Vds = require "../../src/compiler/vds"
+check = require "./check"
 
 check_value = (str, typeStr, next, value) ->
   s = new Stream(Parser.parse_list_of_component_values(str))

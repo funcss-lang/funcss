@@ -1,10 +1,11 @@
-Tokenizer = require "./tokenizer"
 Parser = require "./parser"
+N = require "./nodes"
 
 exports.compile = (input) ->
-  tokens = Tokenizer.tokenize(input)
-  stylesheet = Parser.parse_stylesheet(tokens)
-  return stylesheet.toString()
+  stylesheet = Parser.parse_stylesheet(input)
+  script = new N.Script()
+  script.push new N.InsertStylesheet(stylesheet)
+  return script.toString()
 
 
   

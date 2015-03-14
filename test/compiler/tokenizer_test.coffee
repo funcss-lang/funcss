@@ -1,4 +1,4 @@
-Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
+Tokenizer = require "../../src/compiler/tokenizer.coffee"
 N = require "../../src/compiler/nodes"
 
 describe 'Tokenizer', ->

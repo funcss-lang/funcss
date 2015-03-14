@@ -9,7 +9,7 @@ check_ser = (orig, result=orig) ->
   values = Parser.parse_list_of_component_values(orig)
   (""+values).should.equal(result)
 
-check_st = (orig, result) ->
+check_st = (orig, result=orig) ->
   value = Parser.parse_stylesheet(orig)
   (""+value).should.equal(result)
 
@@ -167,15 +167,15 @@ describe "Nodes", ->
       ]
 
     describe "stylesheet", ->
-      it "compiles an empty string", ->
-        check_st "", ""
-      it "compiles whitespace", ->
+      it "reserializes an empty string", ->
+        check_st ""
+      it "reserializes whitespace", ->
         check_st "  ", ""
-      it "compiles a single rule", ->
+      it "reserializes a single rule", ->
         check_st "a{color:black}", "a { color:black }"
-      it "compiles a single at-rule", ->
+      it "reserializes a single at-rule", ->
         check_st "@asdf ", "@asdf ;"
-      it "compiles a single at-rule", ->
+      it "reserializes a single at-rule", ->
         check_st "@asdf hello", "@asdf hello;"
-      it "compiles a single at-rule", ->
-        check_st "@asdf hello{asdf}", "@asdf hello{asdf}"
+      it "reserializes a single at-rule", ->
+        check_st "@asdf hello{asdf}"

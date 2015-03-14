@@ -278,3 +278,25 @@ exports.Stylesheet = class Stylesheet
     @value.join("\n")
 
 
+#### JavaScript nodes
+#
+# These nodes are mostly named as verbs, based on what they do.
+#
+# `Script` is the main script class that outputs the target code.
+exports.Script = class Script
+  @prototype: []
+  toString: -> """
+    !function(){
+    #{@join('\n')}
+    }();
+  """
+
+# Insert a stylesheet to the `head`
+#
+exports.InsertStylesheet = class InsertStylesheet
+  constructor: (@value) ->
+  toString: -> """
+    var S = document.createElement("style");
+    S.innerHTML=#{JSON.stringify("#{@value}")};
+    document.head.appendChild(S);
+  """

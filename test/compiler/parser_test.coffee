@@ -1,8 +1,8 @@
-Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
-Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
+Tokenizer = require("../../src/compiler/tokenizer.coffee")
+Parser = require("../../src/compiler/parser.coffee")
 N = require "../../src/compiler/nodes"
 
-check = require "#{__dirname}/../check"
+check = require "./check"
 
 describe 'Parser', ->
   it "has tree classes", ->
