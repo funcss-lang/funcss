@@ -9,7 +9,6 @@
   "dependencies": {
     "coffee-script": "^1.9.1",
     "mocha": "^2.2.1",
-    "quixote": "^0.6.1",
     "should": "^5.0.1"
   }
 }
