@@ -240,7 +240,6 @@ exports.ComponentValueList = class ComponentValueList
     '/':
       '*': yes
   @commentNeeded : (node1, node2) ->
-    debugger if node1 instanceof IdentToken and node2 instanceof SimpleBlock
     [name1, name2] = for node in arguments
       # Here we do some renaming to help the lookup in the table above.
 

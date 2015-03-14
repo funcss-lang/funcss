@@ -1,0 +1,32 @@
+#!/usr/bin/env coffee
+# vim: ft=coffee
+
+bdd = require "../test/bdd/bdd"
+FunCSS = require "../src/compiler/funcss"
+fs = require "fs"
+
+switch process.argv[2]
+  when "verify"
+    # We compile the .fcss file to the .js file
+    basename = bdd.find(process.argv[3]).replace(/\.fcss$/, "")
+    fcss = fs.readFileSync("#{basename}.fcss", encoding: 'utf-8')
+    output = FunCSS.compile(fcss)
+    fs.writeFileSync("#{basename}.js", output, encoding: 'utf-8')
+
+    # Touch the <test name>.verify file so that the bdd framework knows
+    # that the file needs manual verification
+    fs.writeFileSync("#{basename}.verify", "")
+  when "approve"
+    basename = bdd.find(process.argv[3]).replace(/\.fcss$/, "")
+    # We remove the .verify file to indicate that the test passed
+    fs.unlinkSync("#{basename}.verify", "")
+
+  when "fail"
+    basename = bdd.find(process.argv[3]).replace(/\.fcss$/, "")
+    # We write the message to the .fail file
+    fs.writeFileSync("#{basename}.fail", "#{process.argv[4]}\n", encoding: 'utf-8')
+
+    # We remove the .verify file to indicate that the test does not need to be
+    # verified.
+    fs.unlinkSync("#{basename}.verify")
+
