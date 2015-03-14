@@ -383,7 +383,7 @@ class Tokenizer
           ++count
         if @is_whitespace(@next())
           @consume_next()
-        number = Number.parseInt(digits.join(''),16)
+        number = parseInt(digits.join(''),16)
         if number is 0 or number in [MIN_SURROGATE_CODE_POINT..MAX_SURROGATE_CODE_POINT] or number > MAX_ALLOWED_CODE_POINT
           return "\ufffd"
 
@@ -490,7 +490,7 @@ class Tokenizer
 
 
   string_to_number: (s) ->
-    Number.parseFloat(s)
+    parseFloat(s)
 
   consume_the_remnants_of_a_bad_url: () ->
     while true
