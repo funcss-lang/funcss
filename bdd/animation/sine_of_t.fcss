@@ -1,0 +1,5 @@
+span {
+    position: absolute;
+    left: 
+    width: 50vw;
+}

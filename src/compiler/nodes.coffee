@@ -290,7 +290,7 @@ exports.Script = class Script
     }();
   """ else ""
 
-# Insert a stylesheet to the `head`
+# Insert a stylesheet to the `head`, and save it to `var S`
 #
 exports.InsertStylesheet = class InsertStylesheet
   constructor: (@value) ->
@@ -299,3 +299,7 @@ exports.InsertStylesheet = class InsertStylesheet
     S.innerHTML=#{JSON.stringify("#{@value}")};
     document.head.appendChild(S);
   """
+
+exports.InsertJQReact = class InsertJQReact
+  constructor: () ->
+  toString: ->

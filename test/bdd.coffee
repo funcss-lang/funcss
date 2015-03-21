@@ -4,7 +4,7 @@
 
 fs = require "fs"
 path = require "path"
-FunCSS = require "../../src/compiler/funcss"
+FunCSS = require "../src/compiler/funcss"
 
 exports.search = search = (dir) ->
   result = []
@@ -18,14 +18,14 @@ exports.search = search = (dir) ->
   result
 
 exports.find = find = (testName) ->
-  [file] = (f for f in search("test/bdd") when f.match(new RegExp "#{testName}\.fcss$"))
+  [file] = (f for f in search("bdd") when f.match(new RegExp "#{testName}\.fcss$"))
   throw new Error("Test #{testName} not found.") unless file?
   file
 
 return unless describe?
 
 describe "FunCSS compiler", ->
-  for filename in search(__dirname)
+  for filename in search("bdd")
     basename = filename.replace(/\.fcss$/, "")
     it "compiles #{basename}", do (basename) -> ->
       fcss = fs.readFileSync("#{basename}.fcss", encoding: 'utf-8')

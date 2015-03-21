@@ -1,5 +1,8 @@
 !function(){
 var S = document.createElement("style");
-S.innerHTML="body  {  background: yellow;  }";
+S.innerHTML="span  {  position: absolute; left : 0px;  }";
 document.head.appendChild(S);
+S.
+
 }();
+

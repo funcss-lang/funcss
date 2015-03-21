@@ -5,5 +5,5 @@
 --compilers coffee:coffee-script/register
 --globals config
 test/compiler
-test/bdd/bdd.coffee
+test/bdd.coffee
 src
