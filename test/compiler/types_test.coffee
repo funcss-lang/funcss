@@ -2,7 +2,7 @@ Types = require "../../src/compiler/types"
 Stream = require "../../src/compiler/stream"
 Parser = require "../../src/compiler/parser"
 Tokenizer = require "../../src/compiler/tokenizer"
-N = require "../../src/compiler/nodes"
+SS = require "../../src/compiler/stylesheet"
 check = require "./check"
 
 
@@ -27,19 +27,19 @@ describe 'Types', ->
     asdf = Types.IdentType("asdf")((x)->x)
 
     it "can parse ident", ->
-      check_tree "asdf", asdf, 1, N.IdentToken, value: "asdf"
+      check_tree "asdf", asdf, 1, SS.IdentToken, value: "asdf"
 
     it "can parse $x:ident", ->
       result = Types.IdentType("asdf")((x)->{x:x})(new Stream(Parser.parse_list_of_component_values("asdf")))
       check result, Object
-      check result.x, N.IdentToken, value: "asdf"
+      check result.x, SS.IdentToken, value: "asdf"
 
   describe 'Number', ->
     number =  Types.Number((x)->x)
     it "can parse 3", ->
-      check_tree "3", number, 1, N.NumberToken, value: 3, type: "integer"
+      check_tree "3", number, 1, SS.NumberToken, value: 3, type: "integer"
     it "can parse 3.0", ->
-      check_tree "3.0", number, 1, N.NumberToken, value: 3, type: "number"
+      check_tree "3.0", number, 1, SS.NumberToken, value: 3, type: "number"
     it "cannot parse 'str'", ->
       check_error "'str'", number, 0, "number expected but '\"str\"' found"
 
@@ -47,16 +47,16 @@ describe 'Types', ->
     integer = Types.Integer((x)->x)
 
     it "can parse 3", ->
-      check_tree "3", integer, 1, N.NumberToken, value: 3, type:"integer"
+      check_tree "3", integer, 1, SS.NumberToken, value: 3, type:"integer"
 
     it "cannot parse 3.3", ->
       check_error "3.3", integer, 0, "integer expected but '3.3' found"
 
   describe 'Delimiters', ->
-    p = Types.TokenType("'+'", N.DelimToken, value:'+')((x)->x)
+    p = Types.TokenType("'+'", SS.DelimToken, value:'+')((x)->x)
 
     it "can parse +", ->
-      check_tree "+", p, 1, N.DelimToken, value: "+"
+      check_tree "+", p, 1, SS.DelimToken, value: "+"
 
     it "cannot parse 3.3", ->
       check_error "3.3", p, 0, "'+' expected but '3.3' found"

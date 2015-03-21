@@ -1,8 +1,8 @@
-N = require "./nodes"
+SS = require "./stylesheet"
 
 class Stream
   constructor: (items) ->
-    (@items = (t for t in items)).push new N.EOFToken
+    (@items = (t for t in items)).push new SS.EOFToken
     @position = 0
   consume_next: ->
     @current = @items[@position++]

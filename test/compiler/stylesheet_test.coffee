@@ -1,7 +1,7 @@
 # These are the tests for the code generator.
 #
 
-N = require "../../src/compiler/nodes"
+SS = require "../../src/compiler/stylesheet"
 Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
 
 

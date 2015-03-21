@@ -33,13 +33,13 @@
 
 
 Stream = require "./stream"
-N = require "./nodes"
+SS = require "./stylesheet"
 
 class Tokenizer
   tokenize: (string) ->
     @init(string)
     tokens = []
-    while not ((token = @consume_a_token()) instanceof N.EOFToken)
+    while not ((token = @consume_a_token()) instanceof SS.EOFToken)
       tokens.push token
     return tokens
 
@@ -123,7 +123,7 @@ class Tokenizer
       when @is_whitespace(@current)
         while @is_whitespace(@next())
           @consume_next()
-        new N.WhitespaceToken()
+        new SS.WhitespaceToken()
 
       when @current is "\""
         @consume_a_string_token("\"")
@@ -131,42 +131,42 @@ class Tokenizer
       when @current is "#"
         if @is_name_code_point(@next()) or @next_2_valid_escape()
           is_id = @next_3_starts_identifier() # FIXME needed?
-          new N.HashToken(@consume_a_name(), if is_id then "id" else undefined)
+          new SS.HashToken(@consume_a_name(), if is_id then "id" else undefined)
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "$"
         if @next() is "="
           @consume_next()
-          new N.SuffixMatchToken()
+          new SS.SuffixMatchToken()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "'"
         @consume_a_string_token("'")
 
       when @current is "("
-        new N.OpeningParenToken
+        new SS.OpeningParenToken
 
       when @current is ")"
-        new N.ClosingParenToken
+        new SS.ClosingParenToken
 
       when @current is "*"
         if @next() is "="
           @consume_next()
-          new N.SubstringMatchToken()
+          new SS.SubstringMatchToken()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "+"
         if @starts_with_number()
           @reconsume_current()
           @consume_a_numeric_token()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is ","
-        new N.CommaToken()
+        new SS.CommaToken()
 
       when @current is "-"
         if @starts_with_number()
@@ -175,19 +175,19 @@ class Tokenizer
         else if @next() is "-" and @next2() is ">"
           @consume_next()
           @consume_next()
-          new N.CDCToken()
+          new SS.CDCToken()
         else if @starts_with_ident()
           @reconsume_current()
           @consume_an_ident_like_token()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "."
         if @starts_with_number()
           @reconsume_current()
           @consume_a_numeric_token()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "/"
         if @next() is "*" # comment
@@ -199,54 +199,54 @@ class Tokenizer
             @consume_next()
           @consume_a_token()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is ":"
-        new N.ColonToken()
+        new SS.ColonToken()
 
       when @current is ";"
-        new N.SemicolonToken()
+        new SS.SemicolonToken()
 
       when @current is "<"
         if @next() is "!" and @next2() is "-" and @next3() is "-"
           @consume_next()
           @consume_next()
           @consume_next()
-          new N.CDOToken()
+          new SS.CDOToken()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "@"
         if @next_3_starts_identifier()
-          new N.AtKeywordToken(@consume_a_name())
+          new SS.AtKeywordToken(@consume_a_name())
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "["
-        new N.OpeningSquareToken
+        new SS.OpeningSquareToken
 
       when @current is "\\"
         if @starts_with_valid_escape()
           @reconsume_current()
           @consume_an_ident_like_token()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "]"
-        new N.ClosingSquareToken
+        new SS.ClosingSquareToken
 
       when @current is "^"
         if @next() is "="
           @consume_next()
-          new N.PrefixMatchToken()
+          new SS.PrefixMatchToken()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "{"
-        new N.OpeningCurlyToken
+        new SS.OpeningCurlyToken
 
       when @current is "}"
-        new N.ClosingCurlyToken
+        new SS.ClosingCurlyToken
 
 
       when "0" <= @current <= "9"
@@ -260,35 +260,35 @@ class Tokenizer
       when @current is "|"
         if @next() is "="
           @consume_next()
-          new N.DashMatchToken()
+          new SS.DashMatchToken()
         else if @next() is "|"
           @consume_next()
-          new N.ColumnToken()
+          new SS.ColumnToken()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "~"
         if @next() is "="
           @consume_next()
-          new N.IncludeMatchToken()
+          new SS.IncludeMatchToken()
         else
-          new N.DelimToken(@current)
+          new SS.DelimToken(@current)
 
       when @current is "EOF"
-        return new N.EOFToken()
+        return new SS.EOFToken()
 
       else
-        new N.DelimToken(@current)
+        new SS.DelimToken(@current)
         
   consume_a_numeric_token: ->
     number = @consume_a_number()
     if @next_3_starts_identifier()
-      new N.DimensionToken(number.repr, number.value, number.type, @consume_a_name())
+      new SS.DimensionToken(number.repr, number.value, number.type, @consume_a_name())
     else if @next() is "%"
       @consume_next()
-      new N.PercentageToken(number.repr, number.value)
+      new SS.PercentageToken(number.repr, number.value)
     else
-      new N.NumberToken(number.repr, number.value, number.type)
+      new SS.NumberToken(number.repr, number.value, number.type)
 
   consume_an_ident_like_token: ->
     name = @consume_a_name()
@@ -298,9 +298,9 @@ class Tokenizer
       @consume_a_url_token()
     else if @next() is "("
       @consume_next()
-      new N.FunctionToken(name)
+      new SS.FunctionToken(name)
     else
-      new N.IdentToken(name)
+      new SS.IdentToken(name)
 
   consume_a_string_token: (delim) ->
     s = []
@@ -308,10 +308,10 @@ class Tokenizer
       @consume_next()
       switch
         when @current is delim or @current is "EOF"
-          return new N.StringToken(s.join(""))
+          return new SS.StringToken(s.join(""))
         when @current is "\n"
           @reconsume_current()
-          return new N.BadStringToken
+          return new SS.BadStringToken
         when @current is "\\"
           if @next() is "EOF"
           else if @next() is "\n"
@@ -327,43 +327,43 @@ class Tokenizer
     while @is_whitespace(@next())
       @consume_next()
     if @next() is "EOF"
-      return new N.UrlToken(s.join(''))
+      return new SS.UrlToken(s.join(''))
     if @next() in ["'", '"']
       @consume_next()
-      N.stringToken = @consume_a_string_token(@current)
-      if N.stringToken instanceof N.BadStringToken
-        return new N.BadUrlToken
+      SS.stringToken = @consume_a_string_token(@current)
+      if SS.stringToken instanceof SS.BadStringToken
+        return new SS.BadUrlToken
       while @is_whitespace(@next())
         @consume_next()
       if @next() in [")", "EOF"]
         @consume_next()
-        return new N.UrlToken(N.stringToken.value)
+        return new SS.UrlToken(SS.stringToken.value)
       else
         @consume_the_remnants_of_a_bad_url()
-        return new N.BadUrlToken
+        return new SS.BadUrlToken
     while true
       @consume_next()
       switch
         when @current in [")", "EOF"]
-          return new N.UrlToken(s.join(''))
+          return new SS.UrlToken(s.join(''))
         when @is_whitespace(@current)
           while @is_whitespace(@next())
             @consume_next()
           if @next() in [")", "EOF"]
             @consume_next()
-            return new N.UrlToken(s.join(''))
+            return new SS.UrlToken(s.join(''))
           else
             @consume_the_remnants_of_a_bad_url()
-            return new N.BadUrlToken
+            return new SS.BadUrlToken
         when @current in ['"', "'", "("] or @is_non_printable(@current)
           @consume_the_remnants_of_a_bad_url()
-          return new N.BadUrlToken
+          return new SS.BadUrlToken
         when @current is "\\"
           if @starts_with_valid_escape()
             s.push @consume_an_escaped_code_point()
           else
             @consume_the_remnants_of_a_bad_url()
-            return new N.UrlToken(s.join(''))
+            return new SS.UrlToken(s.join(''))
         else
           s.push @current
 

@@ -1,5 +1,5 @@
 Tokenizer = require "./tokenizer"
-N = require "./nodes"
+SS = require "./stylesheet"
 
 
 
@@ -15,13 +15,13 @@ class Parser
     if @stream.length
       @current = @stream.shift()
     else
-      @current = new N.EOFToken
+      @current = new SS.EOFToken
 
   next: ->
     if @stream.length
       @stream[0]
     else
-      new N.EOFToken
+      new SS.EOFToken
 
   reconsume_current: ->
     @stream.unshift(@current)
@@ -29,7 +29,7 @@ class Parser
 
   parse_stylesheet: (tokens) ->
     @init(tokens)
-    return new N.Stylesheet(@consume_list_of_rules(true))
+    return new SS.Stylesheet(@consume_list_of_rules(true))
 
 
   parse_list_of_rules: (tokens) ->
@@ -39,38 +39,38 @@ class Parser
   parse_rule: (tokens) ->
     @init(tokens)
     @consume_next()
-    while @current instanceof N.WhitespaceToken
+    while @current instanceof SS.WhitespaceToken
       @consume_next()
-    if @current instanceof N.EOFToken
-      return new N.SyntaxError
-    if @current instanceof N.AtKeywordToken
+    if @current instanceof SS.EOFToken
+      return new SS.SyntaxError
+    if @current instanceof SS.AtKeywordToken
       result = @consume_at_rule()
     else
       @reconsume_current()
       result = @consume_qualified_rule()
       if not result?
-        return new N.SyntaxError
+        return new SS.SyntaxError
     @consume_next()
-    while @current instanceof N.WhitespaceToken
+    while @current instanceof SS.WhitespaceToken
       @consume_next()
-    if @current instanceof N.EOFToken
+    if @current instanceof SS.EOFToken
       return result
-    return new N.SyntaxError
+    return new SS.SyntaxError
 
 
   parse_declaration: (tokens) ->
-    #> Note: Unlike "Parse a list of declarations", this parses only a N.declaration and not an at-rule.
+    #> Note: Unlike "Parse a list of declarations", this parses only a SS.declaration and not an at-rule.
     @init(tokens)
     @consume_next()
-    while @current instanceof N.WhitespaceToken
+    while @current instanceof SS.WhitespaceToken
       @consume_next()
-    unless @current instanceof N.IdentToken
-      return new N.SyntaxError
+    unless @current instanceof SS.IdentToken
+      return new SS.SyntaxError
     result = @consume_a_declaration
     if result?
       return result
     else
-      return new N.SyntaxError
+      return new SS.SyntaxError
     
 
 
@@ -82,50 +82,50 @@ class Parser
   parse_component_value: (tokens) ->
     @init(tokens)
     @consume_next()
-    while @current instanceof N.WhitespaceToken
+    while @current instanceof SS.WhitespaceToken
       @consume_next()
-    if @current instanceof N.EOFToken
-      return new N.SyntaxError
+    if @current instanceof SS.EOFToken
+      return new SS.SyntaxError
     @reconsume_current()
     value = @consume_component_value()
     if not value?
-      return new N.SyntaxError
+      return new SS.SyntaxError
     @consume_next()
-    while @current instanceof N.WhitespaceToken
+    while @current instanceof SS.WhitespaceToken
       @consume_next()
-    if @current instanceof N.EOFToken
+    if @current instanceof SS.EOFToken
       return value
     else
-      return new N.SyntaxError
+      return new SS.SyntaxError
 
 
 
   parse_list_of_component_values: (tokens) ->
     @init(tokens)
-    result = new N.ComponentValueList
+    result = new SS.ComponentValueList
     value = @consume_component_value()
-    until value instanceof N.EOFToken
+    until value instanceof SS.EOFToken
       result.push value
       value = @consume_component_value()
     return result
 
   consume_list_of_rules: (toplevel) ->
-    result = new N.RuleList
+    result = new SS.RuleList
     while true
       @consume_next()
       switch
-        when @current instanceof N.WhitespaceToken
+        when @current instanceof SS.WhitespaceToken
           "do nothing"
-        when @current instanceof N.EOFToken
+        when @current instanceof SS.EOFToken
           return result
-        when @current instanceof N.CDOToken or @current instanceof N.CDCToken
+        when @current instanceof SS.CDOToken or @current instanceof SS.CDCToken
           if toplevel
           else
             @reconsume_current()
             rule = @consume_qualified_rule()
             if rule?
               result.push rule
-        when @current instanceof N.AtKeywordToken
+        when @current instanceof SS.AtKeywordToken
           rule = @consume_at_rule()
           if rule?
             result.push rule
@@ -137,52 +137,52 @@ class Parser
 
   consume_at_rule: ()->
     name = @current.value
-    prelude = new N.ComponentValueList
+    prelude = new SS.ComponentValueList
     while true
       @consume_next()
       switch
-        when @current instanceof N.SemicolonToken or @current instanceof N.EOFToken
-          return new N.AtRule(name, prelude)
-        when @current instanceof N.OpeningCurlyToken
+        when @current instanceof SS.SemicolonToken or @current instanceof SS.EOFToken
+          return new SS.AtRule(name, prelude)
+        when @current instanceof SS.OpeningCurlyToken
           block = @consume_simple_block()
-          return new N.AtRule(name, prelude, block)
-        when @current instanceof N.SimpleBlock and @current.token instanceof N.OpeningCurlyToken
-          return new N.AtRule(name, prelude, @current)
+          return new SS.AtRule(name, prelude, block)
+        when @current instanceof SS.SimpleBlock and @current.token instanceof SS.OpeningCurlyToken
+          return new SS.AtRule(name, prelude, @current)
         else
           @reconsume_current()
           prelude.push @consume_component_value()
 
   consume_qualified_rule: () ->
-    prelude = new N.ComponentValueList
+    prelude = new SS.ComponentValueList
     while true
       @consume_next()
       switch
-        when @current instanceof N.EOFToken
+        when @current instanceof SS.EOFToken
           return
-        when @current instanceof N.OpeningCurlyToken
+        when @current instanceof SS.OpeningCurlyToken
           block = @consume_simple_block()
-          return new N.QualifiedRule(prelude, block)
-        when @current instanceof N.SimpleBlock and @current.token instanceof N.OpeningCurlyToken
-          return new N.QualifiedRule(prelude, @current)
+          return new SS.QualifiedRule(prelude, block)
+        when @current instanceof SS.SimpleBlock and @current.token instanceof SS.OpeningCurlyToken
+          return new SS.QualifiedRule(prelude, @current)
         else
           @reconsume_current()
           prelude.push @consume_component_value()
 
   consume_list_of_declarations: () ->
-    result = new N.DeclarationList
+    result = new SS.DeclarationList
     while true
       @consume_next()
       switch
-        when @current instanceof N.WhitespaceToken or @current instanceof N.SemicolonToken
+        when @current instanceof SS.WhitespaceToken or @current instanceof SS.SemicolonToken
           "do nothing"
-        when @current instanceof N.EOFToken
+        when @current instanceof SS.EOFToken
           return result
-        when @current instanceof N.AtKeywordToken
+        when @current instanceof SS.AtKeywordToken
           result.push @consume_at_rule()
-        when @current instanceof N.IdentToken
+        when @current instanceof SS.IdentToken
           list = [@current]
           @consume_next()
-          while not (@current instanceof N.SemicolonToken or @current instanceof N.EOFToken)
+          while not (@current instanceof SS.SemicolonToken or @current instanceof SS.EOFToken)
             list.push @current
             @consume_next()
           temp_stream = @stream
@@ -195,53 +195,53 @@ class Parser
           if declaration?
             result.push declaration
         else
-          while (c = @consume_component_value()) instanceof N.SemicolonToken or c instanceof N.EOFToken
+          while (c = @consume_component_value()) instanceof SS.SemicolonToken or c instanceof SS.EOFToken
             "do nothing"
 
   consume_a_declaration: () ->
     name = @current.value
-    value = new N.ComponentValueList
+    value = new SS.ComponentValueList
     @consume_next()
-    while @current instanceof N.WhitespaceToken
+    while @current instanceof SS.WhitespaceToken
       @consume_next()
-    unless @current instanceof N.ColonToken
+    unless @current instanceof SS.ColonToken
       return null
     @consume_next()
-    until @current instanceof N.EOFToken
+    until @current instanceof SS.EOFToken
       value.push @current
       @consume_next()
     # TODO !important check
-    return new N.Declaration(name, value, false)
+    return new SS.Declaration(name, value, false)
 
   consume_component_value: () ->
     @consume_next()
-    if @current instanceof N.OpeningCurlyToken or @current instanceof N.OpeningSquareToken or @current instanceof N.OpeningParenToken
+    if @current instanceof SS.OpeningCurlyToken or @current instanceof SS.OpeningSquareToken or @current instanceof SS.OpeningParenToken
       return @consume_simple_block()
-    if @current instanceof N.FunctionToken
+    if @current instanceof SS.FunctionToken
       return @consume_function()
     return @current
 
   consume_simple_block: () ->
     starting = @current
     ending = starting.mirror()
-    value = new N.ComponentValueList
+    value = new SS.ComponentValueList
     while true
       @consume_next()
       switch
-        when @current instanceof N.EOFToken or @current instanceof ending
-          return new N.SimpleBlock(starting, value)
+        when @current instanceof SS.EOFToken or @current instanceof ending
+          return new SS.SimpleBlock(starting, value)
         else
           @reconsume_current()
           value.push @consume_component_value()
 
   consume_function: () ->
     name = @current.value
-    value = new N.ComponentValueList
+    value = new SS.ComponentValueList
     while true
       @consume_next()
       switch
-        when @current instanceof N.EOFToken or @current instanceof N.ClosingParenToken
-          return new N.Function(name, value)
+        when @current instanceof SS.EOFToken or @current instanceof SS.ClosingParenToken
+          return new SS.Function(name, value)
         else
           @reconsume_current()
           value.push @consume_component_value()

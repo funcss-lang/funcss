@@ -1,14 +1,14 @@
 Tokenizer = require "../../src/compiler/tokenizer.coffee"
-N = require "../../src/compiler/nodes"
+SS = require "../../src/compiler/stylesheet"
 
 describe 'Tokenizer', ->
   it "has token classes", ->
-    N.UrlToken.should.be.ok
-    urlToken = new N.UrlToken("hello")
-    urlToken.should.be.instanceOf N.UrlToken
-    N.ColumnToken.should.be.ok
-    columnToken = new N.ColumnToken()
-    columnToken.should.be.instanceOf N.ColumnToken
+    SS.UrlToken.should.be.ok
+    urlToken = new SS.UrlToken("hello")
+    urlToken.should.be.instanceOf SS.UrlToken
+    SS.ColumnToken.should.be.ok
+    columnToken = new SS.ColumnToken()
+    columnToken.should.be.instanceOf SS.ColumnToken
 
   check = (input, tokens...) ->
     result = Tokenizer.tokenize(input)
@@ -31,170 +31,170 @@ describe 'Tokenizer', ->
   it "can tokenize a comment", ->
     check "/* hello */"
   it "can tokenize two comments with a whitespace after them", ->
-    check "/* hello *//* hallo */ ", N.WhitespaceToken,{}
+    check "/* hello *//* hallo */ ", SS.WhitespaceToken,{}
 
   it "can tokenize an ident", ->
-    check "hello", N.IdentToken,{value:"hello",}
+    check "hello", SS.IdentToken,{value:"hello",}
   it "can tokenize an -ident", ->
-    check "-hello", N.IdentToken,{value:"-hello",}
+    check "-hello", SS.IdentToken,{value:"-hello",}
   it "can tokenize an --ident", ->
-    check "--hello", N.IdentToken,{value:"--hello",}
+    check "--hello", SS.IdentToken,{value:"--hello",}
     
   it "can tokenize a function", ->
-    check "f()", N.FunctionToken,{value:"f",}, N.ClosingParenToken,{}
+    check "f()", SS.FunctionToken,{value:"f",}, SS.ClosingParenToken,{}
     
   it "can tokenize an at-keyword", ->
-    check "@asdf", N.AtKeywordToken,{value:"asdf",}
+    check "@asdf", SS.AtKeywordToken,{value:"asdf",}
   it "can tokenize an -at-keyword", ->
-    check "@-asdf", N.AtKeywordToken,{value:"-asdf",}
+    check "@-asdf", SS.AtKeywordToken,{value:"-asdf",}
   it "can tokenize an --at-keyword", ->
-    check "@--asdf", N.AtKeywordToken,{value:"--asdf",}
+    check "@--asdf", SS.AtKeywordToken,{value:"--asdf",}
   it "can tokenize an -9-not-at-keyword", ->
-    check "@-9asdf", N.DelimToken,{value:"@",}, N.DimensionToken,{value:-9,type:"integer",unit:"asdf",}
+    check "@-9asdf", SS.DelimToken,{value:"@",}, SS.DimensionToken,{value:-9,type:"integer",unit:"asdf",}
 
   it "can tokenize a hash", ->
-    check "#asdf", N.HashToken,{value:"asdf",type:"id",}
+    check "#asdf", SS.HashToken,{value:"asdf",type:"id",}
   it "can tokenize a -hash", ->
-    check "#-asdf", N.HashToken,{value:"-asdf",type:"id",}
+    check "#-asdf", SS.HashToken,{value:"-asdf",type:"id",}
   it "can tokenize a --hash", ->
-    check "#--asdf", N.HashToken,{value:"--asdf",type:"id",}
+    check "#--asdf", SS.HashToken,{value:"--asdf",type:"id",}
   it "can tokenize a non-ident 1hash", ->
-    check "#4asd", N.HashToken,{value:"4asd",type:"unrestricted",}
+    check "#4asd", SS.HashToken,{value:"4asd",type:"unrestricted",}
   it "can tokenize a non-ident -1hash", ->
-    check "#-4asd", N.HashToken,{value:"-4asd",type:"unrestricted",}
+    check "#-4asd", SS.HashToken,{value:"-4asd",type:"unrestricted",}
 
   it "can tokenize a string", ->
-    check "'hello'", N.StringToken,{value:"hello",}
+    check "'hello'", SS.StringToken,{value:"hello",}
   it "can tokenize a bad string", ->
-    check "'hello\n", N.BadStringToken,{}, N.WhitespaceToken,{}
+    check "'hello\n", SS.BadStringToken,{}, SS.WhitespaceToken,{}
   it "can tokenize string with escaped linebreak", ->
-    check "'hello\\\nasdf'", N.StringToken,{value:"helloasdf",}
+    check "'hello\\\nasdf'", SS.StringToken,{value:"helloasdf",}
 
   it "can tokenize a url", ->
-    check "url()", N.UrlToken,{value:"",}
+    check "url()", SS.UrlToken,{value:"",}
   it "can tokenize a quoted url", ->
-    check "url(    'hello ' )", N.UrlToken,{value:"hello ",}
+    check "url(    'hello ' )", SS.UrlToken,{value:"hello ",}
   it "can tokenize a bad url(\\)", ->
-    check "url( hi(\\) )", N.BadUrlToken,{}
+    check "url( hi(\\) )", SS.BadUrlToken,{}
   it "can tokenize an escaped url\\(\\)", ->
-    check "url( hi\\(\\) )", N.UrlToken,{value:"hi()",}
+    check "url( hi\\(\\) )", SS.UrlToken,{value:"hi()",}
     
   it "can tokenize a #", ->
-    check "#", N.DelimToken,{value:"#",}
+    check "#", SS.DelimToken,{value:"#",}
   it "can tokenize a *", ->
-    check "*", N.DelimToken,{value:"*",}
+    check "*", SS.DelimToken,{value:"*",}
   it "can tokenize a -", ->
-    check "-", N.DelimToken,{value:"-",}
+    check "-", SS.DelimToken,{value:"-",}
   it "can tokenize a .", ->
-    check ".", N.DelimToken,{value:".",}
+    check ".", SS.DelimToken,{value:".",}
   it "can tokenize a !", ->
-    check "!", N.DelimToken,{value:"!",}
+    check "!", SS.DelimToken,{value:"!",}
   it "can tokenize a <", ->
-    check "<", N.DelimToken,{value:"<",}
+    check "<", SS.DelimToken,{value:"<",}
   it "can tokenize a >", ->
-    check ">", N.DelimToken,{value:">",}
+    check ">", SS.DelimToken,{value:">",}
   it "can tokenize a &", ->
-    check "&", N.DelimToken,{value:"&",}
+    check "&", SS.DelimToken,{value:"&",}
   it "can tokenize a $", ->
-    check "$", N.DelimToken,{value:"$",}
+    check "$", SS.DelimToken,{value:"$",}
   it "can tokenize a @", ->
-    check "@", N.DelimToken,{value:"@",}
+    check "@", SS.DelimToken,{value:"@",}
   it "can tokenize a |", ->
-    check "|", N.DelimToken,{value:"|",}
+    check "|", SS.DelimToken,{value:"|",}
   it "can tokenize a +", ->
-    check "+", N.DelimToken,{value:"+",}
+    check "+", SS.DelimToken,{value:"+",}
   it "can tokenize a §", ->
-    check "§", N.IdentToken,{value:"§",}
+    check "§", SS.IdentToken,{value:"§",}
   it "can tokenize a ¬", ->
-    check "¬", N.IdentToken,{value:"¬",}
+    check "¬", SS.IdentToken,{value:"¬",}
   it "can tokenize a /", ->
-    check "/", N.DelimToken,{value:"/",}
+    check "/", SS.DelimToken,{value:"/",}
   it "can tokenize a =", ->
-    check "=", N.DelimToken,{value:"=",}
+    check "=", SS.DelimToken,{value:"=",}
   it "can tokenize a %", ->
-    check "%", N.DelimToken,{value:"%",}
+    check "%", SS.DelimToken,{value:"%",}
   it "can tokenize a #delim", ->
-    check "#/**/asf", N.DelimToken,{value:"#",}, N.IdentToken,{value:"asf",}
+    check "#/**/asf", SS.DelimToken,{value:"#",}, SS.IdentToken,{value:"asf",}
 
   it "can tokenize an integer", ->
-    check "3", N.NumberToken,{value:3,type:"integer",repr:"3"}
+    check "3", SS.NumberToken,{value:3,type:"integer",repr:"3"}
   it "can tokenize a number", ->
-    check "3.12", N.NumberToken,{value:3.12,type:"number",repr:"3.12"}
+    check "3.12", SS.NumberToken,{value:3.12,type:"number",repr:"3.12"}
   it "can tokenize a number with a +sign", ->
-    check "+3.12", N.NumberToken,{value:3.12,type:"number",repr:"+3.12"}
+    check "+3.12", SS.NumberToken,{value:3.12,type:"number",repr:"+3.12"}
   it "can tokenize a number with a -sign", ->
-    check "-3.12", N.NumberToken,{value:-3.12,type:"number",repr:"-3.12"}
+    check "-3.12", SS.NumberToken,{value:-3.12,type:"number",repr:"-3.12"}
   it "can tokenize a number with a dot", ->
-    check ".12", N.NumberToken,{value:.12,type:"number",repr:".12"}
+    check ".12", SS.NumberToken,{value:.12,type:"number",repr:".12"}
   it "can tokenize a number with a +sign and a dot", ->
-    check "+.12", N.NumberToken,{value:.12,type:"number",repr:"+.12"}
+    check "+.12", SS.NumberToken,{value:.12,type:"number",repr:"+.12"}
   it "can tokenize a number with a -sign and a dot", ->
-    check "-.12", N.NumberToken,{value:-.12,type:"number",repr:"-.12"}
+    check "-.12", SS.NumberToken,{value:-.12,type:"number",repr:"-.12"}
   it "can tokenize a number in exponential form", ->
-    check "3e11", N.NumberToken,{value:3e11,type:"number",repr:"3e11"}
+    check "3e11", SS.NumberToken,{value:3e11,type:"number",repr:"3e11"}
   it "can tokenize a number with a sign in the exponential form", ->
-    check "-3.12e-112", N.NumberToken,{value:-3.12e-112,type:"number",repr:"-3.12e-112"}
+    check "-3.12e-112", SS.NumberToken,{value:-3.12e-112,type:"number",repr:"-3.12e-112"}
 
   it "can tokenize an integer percentage", ->
-    check "3%", N.PercentageToken,{value:3,repr:"3",}
+    check "3%", SS.PercentageToken,{value:3,repr:"3",}
   it "can tokenize a percentage", ->
-    check "3.12%", N.PercentageToken,{value:3.12,repr:"3.12"}
+    check "3.12%", SS.PercentageToken,{value:3.12,repr:"3.12"}
   it "can tokenize a percentage with a sign", ->
-    check "+3.12%", N.PercentageToken,{value:3.12,repr:"+3.12"}
+    check "+3.12%", SS.PercentageToken,{value:3.12,repr:"+3.12"}
   it "can tokenize a percentage in exponential form", ->
-    check "3e11%", N.PercentageToken,{value:3e11,repr:"3e11"}
+    check "3e11%", SS.PercentageToken,{value:3e11,repr:"3e11"}
   it "can tokenize a percentage with a sign in the exponential form", ->
-    check "-3.12e-112%", N.PercentageToken,{value:-3.12e-112,repr:"-3.12e-112"}
+    check "-3.12e-112%", SS.PercentageToken,{value:-3.12e-112,repr:"-3.12e-112"}
 
   it "can tokenize an integer dimension", ->
-    check "3cm", N.DimensionToken,{value:3,repr:"3",unit:"cm"}
+    check "3cm", SS.DimensionToken,{value:3,repr:"3",unit:"cm"}
   it "can tokenize a dimension", ->
-    check "3.12cm", N.DimensionToken,{value:3.12,repr:"3.12",unit:"cm"}
+    check "3.12cm", SS.DimensionToken,{value:3.12,repr:"3.12",unit:"cm"}
   it "can tokenize a dimension with a sign", ->
-    check "+3.12cm", N.DimensionToken,{value:3.12,repr:"+3.12",unit:"cm"}
+    check "+3.12cm", SS.DimensionToken,{value:3.12,repr:"+3.12",unit:"cm"}
   it "can tokenize a dimension in exponential form", ->
-    check "3e11cm", N.DimensionToken,{value:3e11,repr:"3e11",unit:"cm"}
+    check "3e11cm", SS.DimensionToken,{value:3e11,repr:"3e11",unit:"cm"}
   it "can tokenize a dimension with a sign in the exponential form", ->
-    check "-3.12e-112cm", N.DimensionToken,{value:-3.12e-112,repr:"-3.12e-112",unit:"cm"}
+    check "-3.12e-112cm", SS.DimensionToken,{value:-3.12e-112,repr:"-3.12e-112",unit:"cm"}
 
-  it "can tokenize N.IncludeMatchToken", ->
-    check "~=", N.IncludeMatchToken,{}
-  it "can tokenize N.DashMatchToken", ->
-    check "|=", N.DashMatchToken,{}
-  it "can tokenize N.PrefixMatchToken", ->
-    check "^=", N.PrefixMatchToken,{}
-  it "can tokenize N.SuffixMatchToken", ->
-    check "$=", N.SuffixMatchToken,{}
-  it "can tokenize N.SubstringMatchToken", ->
-    check "*=", N.SubstringMatchToken,{}
-  it "can tokenize N.ColumnToken", ->
-    check "||", N.ColumnToken,{}
+  it "can tokenize SS.IncludeMatchToken", ->
+    check "~=", SS.IncludeMatchToken,{}
+  it "can tokenize SS.DashMatchToken", ->
+    check "|=", SS.DashMatchToken,{}
+  it "can tokenize SS.PrefixMatchToken", ->
+    check "^=", SS.PrefixMatchToken,{}
+  it "can tokenize SS.SuffixMatchToken", ->
+    check "$=", SS.SuffixMatchToken,{}
+  it "can tokenize SS.SubstringMatchToken", ->
+    check "*=", SS.SubstringMatchToken,{}
+  it "can tokenize SS.ColumnToken", ->
+    check "||", SS.ColumnToken,{}
 
   it "can tokenize whitespace", ->
-    check "\n\n    \t\n  \t", N.WhitespaceToken,{}
+    check "\n\n    \t\n  \t", SS.WhitespaceToken,{}
   it "can tokenize whitespace", ->
-    check "\n\n    /**/\t\n  \t", N.WhitespaceToken,{}, N.WhitespaceToken,{}
+    check "\n\n    /**/\t\n  \t", SS.WhitespaceToken,{}, SS.WhitespaceToken,{}
 
-  it "can tokenize N.CDOToken", ->
-    check "<!--", N.CDOToken,{}
-  it "can tokenize N.CDCToken", ->
-    check "-->", N.CDCToken,{}
+  it "can tokenize SS.CDOToken", ->
+    check "<!--", SS.CDOToken,{}
+  it "can tokenize SS.CDCToken", ->
+    check "-->", SS.CDCToken,{}
 
   it "can tokenize a ,", ->
-    check ",", N.CommaToken,{}
+    check ",", SS.CommaToken,{}
   it "can tokenize a :", ->
-    check ":", N.ColonToken,{}
+    check ":", SS.ColonToken,{}
   it "can tokenize a ;", ->
-    check ";", N.SemicolonToken,{}
+    check ";", SS.SemicolonToken,{}
   it "can tokenize a [", ->
-    check "[", N.OpeningSquareToken,{}
+    check "[", SS.OpeningSquareToken,{}
   it "can tokenize a ]", ->
-    check "]", N.ClosingSquareToken,{}
+    check "]", SS.ClosingSquareToken,{}
   it "can tokenize a (", ->
-    check "(", N.OpeningParenToken,{}
+    check "(", SS.OpeningParenToken,{}
   it "can tokenize a )", ->
-    check ")", N.ClosingParenToken,{}
+    check ")", SS.ClosingParenToken,{}
   it "can tokenize a {", ->
-    check "{", N.OpeningCurlyToken,{}
+    check "{", SS.OpeningCurlyToken,{}
   it "can tokenize a }", ->
-    check "}", N.ClosingCurlyToken,{}
+    check "}", SS.ClosingCurlyToken,{}

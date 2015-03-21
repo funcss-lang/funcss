@@ -1,11 +1,11 @@
 Parser = require "./parser"
 Optimizer = require "./optimizer"
-N = require "./nodes"
+SS = require "./stylesheet"
 
 exports.compile = (input) ->
   stylesheet = Parser.parse_stylesheet(input)
-  script = new N.Script()
-  script.push new N.InsertStylesheet(stylesheet)
+  script = new SS.Script()
+  script.push new SS.InsertStylesheet(stylesheet)
 
   script = Optimizer(script)
 
