@@ -1,4 +1,4 @@
-SS = require "./stylesheet"
+JS = require "./javascript"
 walk = require "./walk"
 
 module.exports = Optimizer = (script) ->
@@ -6,7 +6,7 @@ module.exports = Optimizer = (script) ->
   script
 
 remove_empty_stylesheets = walk ->
-  if @ instanceof SS.InsertStylesheet
+  if @ instanceof JS.InsertStylesheet
     if ! @value.value.length
       remove: true
     else
