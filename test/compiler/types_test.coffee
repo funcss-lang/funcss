@@ -316,5 +316,9 @@ describe 'TP', ->
     it "cannot parse asdf sth", ->
       check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
 
+  describe "annotation", ->
+    a = new TP.AnnotationRoot(new TP.Annotation("hello", new TP.IdentType("world")))
+    it "works", ->
+      check_tree "world", a, 1, Object, hello:"world"
 
     

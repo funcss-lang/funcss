@@ -125,17 +125,17 @@ class Comma extends TokenType
 #
 # semantic = (a) -> a ? default
 class Optional extends Type
-  constructor: (@value, @semantic = @semantic) ->
+  constructor: (@a, @semantic = @semantic) ->
   parse: (s) ->
     s.backtrack
       try: =>
-        @semantic(@value.parse(s))
+        @semantic(@a.parse(s))
       fallback: =>
         @semantic(undefined)
   semantic: Id
 
 # semantic = (a,b) -> [a,b]
-class Juxtaposition
+class Juxtaposition extends Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
     x = @a.parse(s)
@@ -243,17 +243,61 @@ class Eof extends TokenType
     
 class Full extends Type
   semantic: (x)->x
-  constructor: (@value, @semantic = @semantic) ->
+  constructor: (@a, @semantic = @semantic) ->
   parse: (s) ->
     s.optionalWhitespace()
-    result = @value.parse(s)
+    result = @a.parse(s)
     s.optionalWhitespace()
     new Eof().parse(s)
-    result
+    @semantic result
+
+class AnnotationRoot extends Type
+  semantic: Id
+  hasAnnotations: false
+  constructor: (@a, @semantic = @semantic) ->
+    @prepareMappings(@a)
+  prepareMappings: (node) ->
+    debugger
+    if node instanceof AnnotationRoot
+      if node instanceof Annotation
+        @hasAnnotations = true
+        node.root = @
+      else
+        throw new Error "AnnotationRoot in another AnnotationRoot"
+      node.prepareMappings(node.a)
+    else
+      if node.a
+        @prepareMappings(node.a)
+        if node.b
+          @prepareMappings(node.b)
+    
+  parse: (s) ->
+    if @hasAnnotations
+      @results = {}
+      @a.parse(s)
+      @semantic @results
+    else
+      @semantic @a.parse(s)
+
+class Annotation extends AnnotationRoot
+  root: undefined
+  constructor: (@name, @a, @semantic = @semantic) ->
+  parse: (s) ->
+    if @root
+      @root.results[@name] = if @hasAnnotations
+        @results = {}
+        @a.parse(s)
+        @semantic @results
+      else
+        @semantic @a.parse(s)
+    else
+      throw new Error "Annotation used without an AnnotationRoot correctly configured"
+
 
 
 
 module.exports = {
+  Type
   TokenType
   IdentType
   DelimLike
@@ -275,4 +319,6 @@ module.exports = {
   Hash
   Eof
   Full
+  Annotation
+  AnnotationRoot
 }

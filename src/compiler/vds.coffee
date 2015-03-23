@@ -27,6 +27,7 @@ PairsOf = (t, list, pair=undefined, cons=undefined) ->
 # helpers
 OpeningAngle = new TP.DelimLike(new SS.DelimToken('<'))
 ClosingAngle = new TP.DelimLike(new SS.DelimToken('>'))
+Colon = new TP.DelimLike(new SS.ColonToken)
 
 # simple types
 Ident = new TP.Ident
@@ -59,11 +60,22 @@ ComponentValueType = PairsOf TP.Bar, [
   Comma
 ]
 
+class PLACEHOLDER extends TP.Type
+  parse: -> throw new Error "PLACEHOLDER not replaced"
+
+
+# Annotations
+AnnotatedValueType = new TP.Bar \
+  new TP.Juxtaposition(Ident, new TP.Juxtaposition(Colon, new PLACEHOLDER, Pair), (name,[_,a])->
+    new TP.Annotation(name, a)),
+  ComponentValueType
+AnnotatedValueType.a.b.b = AnnotatedValueType
+
 # Juxtaposition
-Juxtaposition = new TP.Plus(ComponentValueType, (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
+Juxtaposition = new TP.Plus(AnnotatedValueType, (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
 
 
-module.exports = new TP.Full(Juxtaposition)
+module.exports = new TP.Full(Juxtaposition, (x)->new TP.AnnotationRoot(x))
 
 TYPES.ident = Ident
 TYPES.number = Number

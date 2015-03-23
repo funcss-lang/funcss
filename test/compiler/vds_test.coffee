@@ -8,7 +8,6 @@ check = require "./check"
 check_value = (str, typeStr, next, value) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  debugger
   t = type.parse(s)
   t.should.equal(value) unless t is undefined and value is undefined
   s.position.should.be.equal(next)
@@ -19,6 +18,7 @@ check_tree = (str, typeStr, next, args...) ->
   t = type.parse(s)
   check t, args...
   s.position.should.be.equal(next)
+  t
 
 check_nomatch = (str, typeStr, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
@@ -117,6 +117,17 @@ describe "Value Definition Syntax", ->
       check_nomatch "black 3.3 sdf", "black <number> <percentage>", 4, "percentage expected but 'sdf' found"
     it "fails for third EOF", ->
       check_nomatch "black 3.3 ", "black <number> <percentage>", 4, "percentage expected but '' found"
+
+  describe "annotations", ->
+    it "works for x:hello", ->
+      check_tree "black", "color:<ident>", 1, Object, color:"black"
+    it "works for x:y:hello", ->
+      t = check_tree "hello", "x:y:<ident>", 1, Object
+      check t.x, Object, y:"hello"
+
+
+
+
 
 
 
