@@ -30,6 +30,10 @@ Stream.prototype.backtrack = (options) ->
     else
       throw e
 
+Stream.prototype.optionalWhitespace = () ->
+  while @next() instanceof SS.WhitespaceToken
+    @consume_next()
+
 # helper functions
 Id = (x) -> x
 Swap = (f) -> (x,y) -> f(y,x)
@@ -38,105 +42,198 @@ Cons = (x,y) -> y.unshift x; y
 Opt = (y) -> (x) -> x ? y
 Snd = (x,y) -> y
 
+
+# base class for all types
+class Type
+  constructor: (@semantic = @semantic) ->
+
 # a type which matches a single token of a single class, with optional property restrictions
-TokenType = (msg, clazz, props={}) -> (semantic) -> (s) ->
-  next = s.next()
-  unless next instanceof clazz
-    throw new NoMatch(msg, "'#{next}'")
-  for k,v of props
-    unless next[k] is v
-      throw new NoMatch(msg, "'#{next}'")
-  return semantic s.consume_next()
+class TokenType extends Type
+  props: {}
+  parse: (s) ->
+    next = s.next()
+    unless next instanceof @tokenClass
+      throw new NoMatch(@expected, "'#{next}'")
+    for k,v of @props
+      unless next[k] is v
+        throw new NoMatch(@expected, "'#{next}'")
+    debugger
+    return @semantic s.consume_next()
+  semantic: (token) ->
 
 # helper function to create a type for a token for a specific ident 
-IdentType = (value) -> TokenType("'#{value}'", SS.IdentToken, {value})
+class IdentType extends TokenType
+  tokenClass: SS.IdentToken
+  constructor: (@value, @semantic = @semantic) ->
+    @expected = "'#{@value}'"
+    @props = {@value}
+  semantic: (token) ->
+    token.value
+    
+class Ident extends TokenType
+  expected: "identifier"
+  tokenClass: SS.IdentToken
+  semantic: (token) ->
+    token.value
 
-Ident = TokenType("identifier", SS.IdentToken)
-Percentage = TokenType("percentage", SS.PercentageToken)
-Integer = TokenType("integer", SS.NumberToken, type:"integer")
-Number = TokenType("number", SS.NumberToken)
-String = TokenType("string", SS.StringToken)
-Whitespace = TokenType("whitespace", SS.WhitespaceToken)
-Comma = TokenType(",", SS.CommaToken)(->)
 
+class Percentage extends TokenType
+  expected: "percentage"
+  tokenClass: SS.PercentageToken
+  semantic: (token) ->
+    token.value / 100
+
+class Number extends TokenType
+  expected: "number"
+  tokenClass: SS.NumberToken
+  semantic: (token) ->
+    token.value
+
+class Integer extends Number
+  expected: "integer"
+  props: {type: "integer"}
+
+class String extends TokenType
+  expected: "string"
+  tokenClass: SS.StringToken
+  semantic: (token) ->
+    token.value
+
+class Whitespace extends TokenType
+  expected: "whitespace"
+  tokenClass: SS.WhitespaceToken
+
+class DelimLike extends TokenType
+  constructor: (@token, @semantic = @semantic) ->
+    @tokenClass = @token.constructor
+    @expected = "'#{@token}'"
+    if token instanceof SS.DelimToken
+      @tokenClass = SS.DelimToken
+      @props = {value: token.value}
+    else if token instanceof SS.SimpleToken
+      return
+    else
+      throw new Error "DelimLike expects a DelimToken or a SimpleToken, #{@token.constructor.name} got instead"
+
+
+
+
+class Comma extends TokenType
+  expected: "','"
+  tokenClass: SS.CommaToken
+
+#### Parser combinators
+#
 # semantic = (a) -> a ? default
-Optional = (a) -> (semantic) -> (s) ->
-  s.backtrack
-    try: ->
-      semantic(a(s))
-    fallback: ->
-      semantic(undefined)
-OptionalWhitespace = Optional(Whitespace(->))(->)
+class Optional extends Type
+  constructor: (@value, @semantic = @semantic) ->
+  parse: (s) ->
+    s.backtrack
+      try: =>
+        @semantic(@value.parse(s))
+      fallback: =>
+        @semantic(undefined)
+  semantic: Id
 
 # semantic = (a,b) -> [a,b]
-Juxtaposition = (a,b) -> (semantic) -> (s) ->
-  x = a(s)
-  OptionalWhitespace(s)
-  y = b(s)
-  semantic(x,y)
+class Juxtaposition
+  constructor: (@a, @b, @semantic = @semantic) ->
+  parse: (s) ->
+    x = @a.parse(s)
+    s.optionalWhitespace()
+    y = @b.parse(s)
+    @semantic(x,y)
+  semantic: Cons
+    
 
-# semantic = (a,b) -> a ? b
-Bar = (a,b) -> (semantic) -> (s) ->
-  s.backtrack
-    try: ->
-      semantic(a(s))
-    fallback: (e)->
-      s.backtrack
-        try: ->
-          semantic(b(s))
-        fallback: (f)->
-          throw e.merge(f)
+# semantic = (a) -> a
+class Bar extends Type
+  constructor: (@a, @b, @semantic = @semantic) ->
+  parse: (s) ->
+    s.backtrack
+      try: =>
+        @semantic(@a.parse(s))
+      fallback: (e)=>
+        s.backtrack
+          try: =>
+            @semantic(@b.parse(s))
+          fallback: (f)=>
+            throw e.merge(f)
+  semantic: Id
 
-# semantic = (a,b) -> [a,b]
-DoubleAmpersand = (a,b) -> (semantic) -> Bar(
-  Juxtaposition(a,b)(semantic),
-  Juxtaposition(b,a)(Swap semantic)
-)(Id)
+class DoubleAmpersand extends Type
+  constructor: (@a, @b, @semantic = @semantic) ->
+  parse: (s) ->
+    new Bar(new Juxtaposition(@a,@b,@semantic),
+            new Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
+  semantic: Cons
+
+class DoubleBar extends Type
+  constructor: (@a, @b, @semantic = @semantic) ->
+  parse: (s) ->
+    new Bar(new Juxtaposition(@a,new Optional(@b),@semantic),
+            new Juxtaposition(@b,new Optional(@a),Swap(@semantic))).parse(s)
+  semantic: Cons
 
 
-# semantic = (a,b) -> {a:a,b:b}
-DoubleBar = (a,b) -> (semantic) -> Bar(
-  Juxtaposition(a,Optional(b)(Id))(semantic),
-  Juxtaposition(b,Optional(a)(Id))(Swap semantic)
-)(Id)
+# `m` optional elements of type `a`
+class Max extends Type
+  constructor: (@m, @a) ->
+  parse: (s) ->
+    if @m <= 0
+      # no more needed
+      return []
+    s.backtrack
+      try: =>
+        head = @a.parse(s)
+        s.optionalWhitespace()
+        tail = new Max(@m-1, @a).parse(s)
+        tail.unshift head
+        tail
+      fallback: (e)=>
+        # no more available
+        []
+    
+class Range extends Type
+  constructor: (@n,@m,@a) ->
+  parse: (s) ->
+    result = []
+    i = 0
+    while i < @n
+      result.push @a.parse(s)
+      s.optionalWhitespace()
+      ++i
+    tail = new Max(@m-@n, @a).parse(s)
+    for i in tail
+      result.push i
+    result
 
-# m optional elements of type a
-Max = (m) -> (a) -> (s) ->
-  if m <= 0
-    # no more needed
-    return []
-  s.backtrack
-    try: ->
-      head = a(s)
-      OptionalWhitespace(s)
-      tail = Max(m-1)(a)(s)
-      tail.unshift head
-      tail
-    fallback: (e)->
-      # no more available
-      []
+class Star extends Max
+  constructor: (@a) ->
+    @m = Infinity
 
-Range = (n,m) -> (a) -> (s) ->
-  result = []
-  i = 0
-  while i < n
-    result.push a(s)
-    OptionalWhitespace(s)
-    ++i
-  tail = Max(m-n)(a)(s)
-  for i in tail
-    result.push i
-  result
+class Plus extends Range
+  constructor: (@a) ->
+    @n = 1
+    @m = Infinity
 
-Star = Max(Infinity)
-Plus = Range(1,Infinity)
+class DelimitedBy extends Type
+  constructor: (@delim, @a) ->
+  parse: (s) ->
+    new Juxtaposition(@a, new Star(new Juxtaposition(@delim, @a, Snd)), Cons).parse(s)
 
-DelimitedBy = (delim) -> (a) -> Juxtaposition(a, Star(Juxtaposition(delim,a)(Snd)))(Cons)
-Hash = DelimitedBy Comma
+class Hash extends DelimitedBy
+  constructor: (@a) ->
+    @delim = new Comma
+
+
+
+
 
 module.exports = {
   TokenType
   IdentType
+  DelimLike
   Ident
   Integer
   Number

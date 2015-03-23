@@ -5,88 +5,93 @@
 #### Tokenizer nodes
 #
 # These are the tokens produced by the tokenizer.
+#
 
-exports.IdentToken = class IdentToken
+exports.Token = class Token
+
+exports.IdentToken = class IdentToken extends Token
   constructor : (@value) ->
   toString : -> @value
-exports.FunctionToken = class FunctionToken
+exports.FunctionToken = class FunctionToken extends Token
   constructor : (@value) ->
   toString : -> @value + "("
-exports.AtKeywordToken = class AtKeywordToken
+exports.AtKeywordToken = class AtKeywordToken extends Token
   constructor : (@value) ->
   toString : -> "@" + @value
-exports.HashToken = class HashToken
+exports.HashToken = class HashToken extends Token
   constructor : (@value, @type = "unrestricted") ->
   toString : -> "#" + @value
-exports.StringToken = class StringToken
+exports.StringToken = class StringToken extends Token
   constructor : (@value) ->
   toString : -> JSON.stringify(@value)
-exports.BadStringToken = class BadStringToken
+exports.BadStringToken = class BadStringToken extends Token
 exports.UrlToken = class UrlToken
   constructor : (@value) ->
   toString : -> "url(" + JSON.stringify(@value) + ")"
-exports.BadUrlToken = class BadUrlToken
-exports.DelimToken = class DelimToken
+exports.BadUrlToken = class BadUrlToken extends Token
+exports.DelimToken = class DelimToken extends Token
   constructor : (@value) ->
   toString : -> @value
-exports.NumberToken = class NumberToken
+exports.NumberToken = class NumberToken extends Token
   constructor : (@repr, @value, @type = "integer") ->
   toString : -> @repr
-exports.PercentageToken = class PercentageToken
+exports.PercentageToken = class PercentageToken extends Token
   constructor : (@repr, @value) ->
   toString : -> @repr+"%"
-exports.DimensionToken = class DimensionToken
+exports.DimensionToken = class DimensionToken extends Token
   constructor : (@repr, @value, @type = "integer", @unit) ->
   toString : -> @repr+@unit
-exports.UnicodeRangeToken = class UnicodeRangeToken
+exports.UnicodeRangeToken = class UnicodeRangeToken extends Token
   constructor : (@start, @end) ->
 
 ##### Simple delim-like tokens
 # These tokens have a single representation
 
-exports.IncludeMatchToken = class IncludeMatchToken
+exports.SimpleToken = class SimpleToken extends Token
+
+exports.IncludeMatchToken = class IncludeMatchToken extends SimpleToken
   toString: -> "~="
-exports.DashMatchToken = class DashMatchToken
+exports.DashMatchToken = class DashMatchToken extends SimpleToken
   toString: -> "|="
-exports.PrefixMatchToken = class PrefixMatchToken
+exports.PrefixMatchToken = class PrefixMatchToken extends SimpleToken
   toString: -> "^="
-exports.SuffixMatchToken = class SuffixMatchToken
+exports.SuffixMatchToken = class SuffixMatchToken extends SimpleToken
   toString: -> "$="
-exports.SubstringMatchToken = class SubstringMatchToken
+exports.SubstringMatchToken = class SubstringMatchToken extends SimpleToken
   toString: -> "*="
-exports.ColumnToken = class ColumnToken
+exports.ColumnToken = class ColumnToken extends SimpleToken
   toString: -> "||"
-exports.WhitespaceToken = class WhitespaceToken
+exports.WhitespaceToken = class WhitespaceToken extends SimpleToken
   toString: -> " "
-exports.CDOToken = class CDOToken
+exports.CDOToken = class CDOToken extends SimpleToken
   toString: -> "<!--"
-exports.CDCToken = class CDCToken
+exports.CDCToken = class CDCToken extends SimpleToken
   toString: -> "-->"
-exports.ColonToken = class ColonToken
+exports.ColonToken = class ColonToken extends SimpleToken
   toString: -> ":"
-exports.SemicolonToken = class SemicolonToken
+exports.SemicolonToken = class SemicolonToken extends SimpleToken
   toString: -> ";"
-exports.CommaToken = class CommaToken
+exports.CommaToken = class CommaToken extends SimpleToken
   toString: -> ","
 
 ##### Block tokens
 # These tokens are the block separators. The opening versions have a `mirror()` instance
 # function which return the constructor of the closing version.
 
-exports.OpeningSquareToken = class OpeningSquareToken
+exports.OpeningSquareToken = class OpeningSquareToken extends Token
   toString: -> "["
   mirror: -> ClosingSquareToken
-exports.ClosingSquareToken = class ClosingSquareToken
+exports.ClosingSquareToken = class ClosingSquareToken extends Token
   toString: -> "]"
-exports.OpeningParenToken = class OpeningParenToken
+exports.OpeningParenToken = class OpeningParenToken extends Token
   toString: -> "("
   mirror: -> ClosingParenToken
-exports.ClosingParenToken = class ClosingParenToken
+exports.ClosingParenToken = class ClosingParenToken extends Token
   toString: -> ")"
-exports.OpeningCurlyToken = class OpeningCurlyToken
+exports.OpeningCurlyToken = class OpeningCurlyToken extends Token
   toString: -> "{"
   mirror: -> ClosingCurlyToken
-exports.ClosingCurlyToken = class ClosingCurlyToken
+exports.ClosingCurlyToken = class ClosingCurlyToken extends Token
   toString: -> "}"
 exports.EOFToken = class EOFToken
   toString: -> ""

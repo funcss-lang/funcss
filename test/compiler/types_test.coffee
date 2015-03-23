@@ -1,4 +1,4 @@
-Types = require "../../src/compiler/types"
+TP = require "../../src/compiler/types"
 Stream = require "../../src/compiler/stream"
 Parser = require "../../src/compiler/parser"
 Tokenizer = require "../../src/compiler/tokenizer"
@@ -8,34 +8,34 @@ check = require "./check"
 
 check_tree = (str, type, next, args...) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
-  t = type(s)
+  t = type.parse(s)
   check t, args...
   s.position.should.be.equal(next)
 
 check_error = (str, type, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
-  check.error Types.NoMatch, message: message, ->
-    t = type(s)
+  check.error TP.NoMatch, message: message, ->
+    t = type.parse(s)
   s.position.should.be.equal(pos)
 
 Value = (x)->x.value
 Value100 = (x)->x.value/100
 Id = (x)->x
 
-describe 'Types', ->
+describe 'TP', ->
   describe 'IdentType', ->
-    asdf = Types.IdentType("asdf")((x)->x)
+    asdf = new TP.IdentType("asdf", Id)
 
     it "can parse ident", ->
       check_tree "asdf", asdf, 1, SS.IdentToken, value: "asdf"
 
     it "can parse $x:ident", ->
-      result = Types.IdentType("asdf")((x)->{x:x})(new Stream(Parser.parse_list_of_component_values("asdf")))
+      result = new TP.IdentType("asdf", (x)->{x:x}).parse(new Stream(Parser.parse_list_of_component_values("asdf")))
       check result, Object
       check result.x, SS.IdentToken, value: "asdf"
 
   describe 'Number', ->
-    number =  Types.Number((x)->x)
+    number = new TP.Number(Id)
     it "can parse 3", ->
       check_tree "3", number, 1, SS.NumberToken, value: 3, type: "integer"
     it "can parse 3.0", ->
@@ -44,7 +44,7 @@ describe 'Types', ->
       check_error "'str'", number, 0, "number expected but '\"str\"' found"
 
   describe 'Integer', ->
-    integer = Types.Integer((x)->x)
+    integer = new TP.Integer((x)->x)
 
     it "can parse 3", ->
       check_tree "3", integer, 1, SS.NumberToken, value: 3, type:"integer"
@@ -53,7 +53,7 @@ describe 'Types', ->
       check_error "3.3", integer, 0, "integer expected but '3.3' found"
 
   describe 'Delimiters', ->
-    p = Types.TokenType("'+'", SS.DelimToken, value:'+')((x)->x)
+    p = new TP.DelimLike(new SS.DelimToken("+"), (x)->x)
 
     it "can parse +", ->
       check_tree "+", p, 1, SS.DelimToken, value: "+"
@@ -62,7 +62,7 @@ describe 'Types', ->
       check_error "3.3", p, 0, "'+' expected but '3.3' found"
 
   describe 'Juxtaposition', ->
-    jp = Types.Juxtaposition(Types.IdentType('black')(Value), Types.Number(Value))((x,y)->{x,y})
+    jp = new TP.Juxtaposition(new TP.IdentType('black', Value), new TP.Number(Value), (x,y)->{x,y})
     
     it "works", ->
       check_tree "black 3.3", jp, 3, Object, x:"black", y:3.3
@@ -78,7 +78,7 @@ describe 'Types', ->
       check_error "black green", jp, 2, "number expected but 'green' found"
 
   describe "DoubleAmpersand", ->
-    da = Types.DoubleAmpersand(Types.Ident(Value),Types.Number(Value))((x,y)->{x,y})
+    da = new TP.DoubleAmpersand(new TP.Ident(Value),new TP.Number(Value), (x,y)->{x,y})
     
     it "can parse first second", ->
       check_tree "black 3.3", da, 3, Object, x:"black", y:3.3
@@ -86,7 +86,7 @@ describe 'Types', ->
       check_tree "3.3 black", da, 3, Object, x:"black", y:3.3
     
   describe "Bar", ->
-    bar = Types.Bar(Types.Ident(Value), Types.Number(Value))((x)->{value: x})
+    bar = new TP.Bar(new TP.Ident(Value), new TP.Number(Value), (x)->{value: x})
 
     it "can parse first", ->
       check_tree "black", bar, 1, Object, value: "black"
@@ -96,43 +96,43 @@ describe 'Types', ->
 
   describe 'DoubleBar', ->
     it "can parse first branch", ->
-      result = Types.DoubleBar(Types.Ident((x)->x),
-        Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("black")))
+      result = new TP.DoubleBar(new TP.Ident((x)->x),
+        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black")))
       check result, Object, x:"black", y:undefined
 
     it "can parse the second branch", ->
-      result = Types.DoubleBar(Types.Ident((x)->x),
-        Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("3.3")))
+      result = new TP.DoubleBar(new TP.Ident((x)->x),
+        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3")))
       check result, Object, x:undefined, y:3.3
 
     it "can parse first second", ->
-      result = Types.DoubleBar(Types.Ident((x)->x),
-        Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("black 3.3")))
+      result = new TP.DoubleBar(new TP.Ident((x)->x),
+        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black 3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second first", ->
-      result = Types.DoubleBar(Types.Ident((x)->x),
-        Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("3.3 black")))
+      result = new TP.DoubleBar(new TP.Ident((x)->x),
+        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3 black")))
       check result, Object, x:"black", y:3.3
 
     it "can parse first/**/second", ->
-      result = Types.DoubleBar(Types.Ident((x)->x),
-        Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("black/**/3.3")))
+      result = new TP.DoubleBar(new TP.Ident((x)->x),
+        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black/**/3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second/**/first", ->
-      result = Types.DoubleBar(Types.Ident((x)->x),
-        Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("3.3/**/black")))
+      result = new TP.DoubleBar(new TP.Ident((x)->x),
+        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3/**/black")))
       check result, Object, x:"black", y:3.3
 
     describe "for three arguments", ->
-      t3 = Types.DoubleBar(
-          Types.IdentType("hello")(->hello:true),
-          Types.DoubleBar(
-            Types.Number((x)->number:x.value),
-            Types.IdentType("world")(->world:true)
-          )((x,y)->number:x?.number,world:y?.world)
-        )((x,y)->hello:x?.hello,number:y?.number,world:y?.world)
+      t3 = new TP.DoubleBar(
+          new TP.IdentType("hello", ->hello:true),
+          new TP.DoubleBar(
+            new TP.Number((x)->number:x.value),
+            new TP.IdentType("world", ->world:true),
+            (x,y)->number:x?.number,world:y?.world),
+          (x,y)->hello:x?.hello,number:y?.number,world:y?.world)
 
       it "can parse first second third", ->
         check_tree "hello 3.3 world", t3, 5, Object, hello:true, number:3.3, world:true
@@ -148,14 +148,14 @@ describe 'Types', ->
     it "can fail for invalid", ->
       err = undefined
       try
-        result = Types.DoubleBar(Types.Ident((x)->x),
-          Types.Number((x)->x))((x,y)->{x:x?.value,y:y?.value})(new Stream(Parser.parse_list_of_component_values("2px")))
+        result = new TP.DoubleBar(new TP.Ident((x)->x),
+          new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("2px")))
       catch e
         err = e
-      check err, Types.NoMatch, message:"identifier or number expected but '2px' found"
+      check err, TP.NoMatch, message:"identifier or number expected but '2px' found"
 
   describe "Plus", ->
-    pl = Types.Plus(Types.Ident(Value))
+    pl = new TP.Plus(new TP.Ident(Value))
     it "cannot parse none", ->
       check_error "", pl, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
@@ -172,7 +172,7 @@ describe 'Types', ->
       check_tree "hello world/**/haha/**/1", pl, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
   describe "Star", ->
-    st = Types.Star(Types.Ident(Value))
+    st = new TP.Star(new TP.Ident(Value))
     it "can parse none", ->
       check_tree "", st, 0, Array, length:0
     it "can parse sth", ->
@@ -189,7 +189,7 @@ describe 'Types', ->
       check_tree "hello world/**/haha/**/1", st, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
   describe "Hash", ->
-    hs = Types.Hash(Types.Ident(Value))
+    hs = new TP.Hash(new TP.Ident(Value))
     it "cannot parse none", ->
       check_error "", hs, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
@@ -216,13 +216,13 @@ describe 'Types', ->
       check_tree "hello, world,haha,1", hs, 6, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
   describe "Range", ->
-    r00 = Types.Range(0,0)(Types.Ident(Value))
-    r01 = Types.Range(0,1)(Types.Ident(Value))
-    r02 = Types.Range(0,2)(Types.Ident(Value))
-    r11 = Types.Range(1,1)(Types.Ident(Value))
-    r12 = Types.Range(1,2)(Types.Ident(Value))
-    r13 = Types.Range(1,3)(Types.Ident(Value))
-    r22 = Types.Range(2,2)(Types.Ident(Value))
+    r00 = new TP.Range(0,0, new TP.Ident(Value))
+    r01 = new TP.Range(0,1, new TP.Ident(Value))
+    r02 = new TP.Range(0,2, new TP.Ident(Value))
+    r11 = new TP.Range(1,1, new TP.Ident(Value))
+    r12 = new TP.Range(1,2, new TP.Ident(Value))
+    r13 = new TP.Range(1,3, new TP.Ident(Value))
+    r22 = new TP.Range(2,2, new TP.Ident(Value))
     describe "can parse none", ->
       specify "for 00", -> check_tree "", r00, 0, Array, length:0
       specify "for 01", -> check_tree "", r01, 0, Array, length:0
@@ -283,7 +283,7 @@ describe 'Types', ->
     describe "combinations", ->
       describe "of Range", ->
         describe "and Juxtaposition", ->
-          c = Types.Range(0,3)(Types.Juxtaposition(Types.Ident(Value),Types.Percentage(Value100))((i,p)->"#{p}=#{i}"))
+          c = new TP.Range(0,3, new TP.Juxtaposition(new TP.Ident(Value),new TP.Percentage(Value100), (i,p)->"#{p}=#{i}"))
           it "can parse none", ->
             check_tree "", c, 0, Array, length:0
           it "can parse sth", ->
