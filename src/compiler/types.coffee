@@ -108,7 +108,7 @@ class DelimLike extends TokenType
     @expected = "'#{@token}'"
     if @token instanceof SS.DelimToken
       @tokenClass = SS.DelimToken
-      @props = {value: token.value}
+      @props = {value: @token.value}
     else if @token instanceof SS.SimpleToken
       return
     else
