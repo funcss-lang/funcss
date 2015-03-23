@@ -57,7 +57,6 @@ class TokenType extends Type
     for k,v of @props
       unless next[k] is v
         throw new NoMatch(@expected, "'#{next}'")
-    debugger
     return @semantic s.consume_next()
   semantic: (token) ->
 
@@ -107,10 +106,10 @@ class DelimLike extends TokenType
   constructor: (@token, @semantic = @semantic) ->
     @tokenClass = @token.constructor
     @expected = "'#{@token}'"
-    if token instanceof SS.DelimToken
+    if @token instanceof SS.DelimToken
       @tokenClass = SS.DelimToken
       @props = {value: token.value}
-    else if token instanceof SS.SimpleToken
+    else if @token instanceof SS.SimpleToken
       return
     else
       throw new Error "DelimLike expects a DelimToken or a SimpleToken, #{@token.constructor.name} got instead"
@@ -177,25 +176,24 @@ class DoubleBar extends Type
 
 
 # `m` optional elements of type `a`
-class Max extends Type
-  constructor: (@m, @a) ->
-  parse: (s) ->
-    if @m <= 0
-      # no more needed
-      return []
-    s.backtrack
-      try: =>
-        head = @a.parse(s)
-        s.optionalWhitespace()
-        tail = new Max(@m-1, @a).parse(s)
-        tail.unshift head
-        tail
-      fallback: (e)=>
-        # no more available
-        []
-    
+max = (m, a, s) ->
+  if m <= 0
+    # no more needed
+    return []
+  s.backtrack
+    try: =>
+      head = a.parse(s)
+      s.optionalWhitespace()
+      tail = max(m-1, a, s)
+      tail.unshift head
+      tail
+    fallback: (e)=>
+      # no more available
+      []
+
 class Range extends Type
-  constructor: (@n,@m,@a) ->
+  semantic: Id
+  constructor: (@n,@m,@a,@semantic=@semantic) ->
   parse: (s) ->
     result = []
     i = 0
@@ -203,30 +201,55 @@ class Range extends Type
       result.push @a.parse(s)
       s.optionalWhitespace()
       ++i
-    tail = new Max(@m-@n, @a).parse(s)
+    tail = max(@m-@n, @a, s)
     for i in tail
       result.push i
-    result
+    @semantic result
 
-class Star extends Max
-  constructor: (@a) ->
+class Star extends Range
+  constructor: (@a,@semantic = @semantic) ->
+    @n = 0
     @m = Infinity
 
 class Plus extends Range
-  constructor: (@a) ->
+  constructor: (@a,@semantic = @semantic) ->
     @n = 1
     @m = Infinity
 
 class DelimitedBy extends Type
-  constructor: (@delim, @a) ->
+  semantic: Id
+  constructor: (@delim, @a, @semantic = @semantic) ->
   parse: (s) ->
-    new Juxtaposition(@a, new Star(new Juxtaposition(@delim, @a, Snd)), Cons).parse(s)
+    # we create a proxy type for it. The target type, then any number of pairs of
+    # the delimiter and the target type. We take the values of the target types
+    # and concatenate them in an array.
+    new Juxtaposition(
+      @a,
+      new Star(new Juxtaposition(@delim, @a, Snd)),
+
+      # Finally we add the first target type value then we call the semantic function
+      # with the array.
+      (x,y)=>y.unshift(x); @semantic(y)
+    ).parse(s)
 
 class Hash extends DelimitedBy
-  constructor: (@a) ->
+  constructor: (@a, @semantic = @semantic) ->
     @delim = new Comma
 
 
+class Eof extends TokenType
+  expected: "EOF"
+  tokenClass: SS.EOFToken
+    
+class Full extends Type
+  semantic: (x)->x
+  constructor: (@value, @semantic = @semantic) ->
+  parse: (s) ->
+    s.optionalWhitespace()
+    result = @value.parse(s)
+    s.optionalWhitespace()
+    new Eof().parse(s)
+    result
 
 
 
@@ -250,4 +273,6 @@ module.exports = {
   Star
   Range
   Hash
+  Eof
+  Full
 }

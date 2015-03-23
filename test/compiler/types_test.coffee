@@ -12,7 +12,7 @@ check_tree = (str, type, next, args...) ->
   check t, args...
   s.position.should.be.equal(next)
 
-check_error = (str, type, pos, message) ->
+check_nomatch = (str, type, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error TP.NoMatch, message: message, ->
     t = type.parse(s)
@@ -41,7 +41,7 @@ describe 'TP', ->
     it "can parse 3.0", ->
       check_tree "3.0", number, 1, SS.NumberToken, value: 3, type: "number"
     it "cannot parse 'str'", ->
-      check_error "'str'", number, 0, "number expected but '\"str\"' found"
+      check_nomatch "'str'", number, 0, "number expected but '\"str\"' found"
 
   describe 'Integer', ->
     integer = new TP.Integer((x)->x)
@@ -50,7 +50,7 @@ describe 'TP', ->
       check_tree "3", integer, 1, SS.NumberToken, value: 3, type:"integer"
 
     it "cannot parse 3.3", ->
-      check_error "3.3", integer, 0, "integer expected but '3.3' found"
+      check_nomatch "3.3", integer, 0, "integer expected but '3.3' found"
 
   describe 'Delimiters', ->
     p = new TP.DelimLike(new SS.DelimToken("+"), (x)->x)
@@ -59,7 +59,7 @@ describe 'TP', ->
       check_tree "+", p, 1, SS.DelimToken, value: "+"
 
     it "cannot parse 3.3", ->
-      check_error "3.3", p, 0, "'+' expected but '3.3' found"
+      check_nomatch "3.3", p, 0, "'+' expected but '3.3' found"
 
   describe 'Juxtaposition', ->
     jp = new TP.Juxtaposition(new TP.IdentType('black', Value), new TP.Number(Value), (x,y)->{x,y})
@@ -67,15 +67,15 @@ describe 'TP', ->
     it "works", ->
       check_tree "black 3.3", jp, 3, Object, x:"black", y:3.3
     it "fails for first bad type", ->
-      check_error "green 3.3", jp, 0, "'black' expected but 'green' found", ->
+      check_nomatch "green 3.3", jp, 0, "'black' expected but 'green' found", ->
     it "fails for first EOF", ->
-      check_error "", jp, 0, "'black' expected but '' found"
+      check_nomatch "", jp, 0, "'black' expected but '' found"
     it "fails for second EOF", ->
-      check_error "black", jp, 1, "number expected but '' found"
+      check_nomatch "black", jp, 1, "number expected but '' found"
     it "fails for second _EOF", ->
-      check_error "black    ", jp, 2, "number expected but '' found"
+      check_nomatch "black    ", jp, 2, "number expected but '' found"
     it "fails for second bad type", ->
-      check_error "black green", jp, 2, "number expected but 'green' found"
+      check_nomatch "black green", jp, 2, "number expected but 'green' found"
 
   describe "DoubleAmpersand", ->
     da = new TP.DoubleAmpersand(new TP.Ident(Value),new TP.Number(Value), (x,y)->{x,y})
@@ -157,9 +157,9 @@ describe 'TP', ->
   describe "Plus", ->
     pl = new TP.Plus(new TP.Ident(Value))
     it "cannot parse none", ->
-      check_error "", pl, 0, "identifier expected but '' found"
+      check_nomatch "", pl, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
-      check_error "3px", pl, 0, "identifier expected but '3px' found"
+      check_nomatch "3px", pl, 0, "identifier expected but '3px' found"
     it "can parse one", ->
       check_tree "hello", pl, 1, Array, length:1, 0:"hello"
     it "can parse two", ->
@@ -191,9 +191,9 @@ describe 'TP', ->
   describe "Hash", ->
     hs = new TP.Hash(new TP.Ident(Value))
     it "cannot parse none", ->
-      check_error "", hs, 0, "identifier expected but '' found"
+      check_nomatch "", hs, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
-      check_error "3px", hs, 0, "identifier expected but '3px' found"
+      check_nomatch "3px", hs, 0, "identifier expected but '3px' found"
     it "can parse one", ->
       check_tree "hello", hs, 1, Array, length:1, 0:"hello"
     it "can parse one sth", ->
@@ -227,18 +227,18 @@ describe 'TP', ->
       specify "for 00", -> check_tree "", r00, 0, Array, length:0
       specify "for 01", -> check_tree "", r01, 0, Array, length:0
       specify "for 02", -> check_tree "", r02, 0, Array, length:0
-      specify "for 11", -> check_error "", r11, 0, "identifier expected but '' found"
-      specify "for 12", -> check_error "", r12, 0, "identifier expected but '' found"
-      specify "for 13", -> check_error "", r13, 0, "identifier expected but '' found"
-      specify "for 22", -> check_error "", r22, 0, "identifier expected but '' found"
+      specify "for 11", -> check_nomatch "", r11, 0, "identifier expected but '' found"
+      specify "for 12", -> check_nomatch "", r12, 0, "identifier expected but '' found"
+      specify "for 13", -> check_nomatch "", r13, 0, "identifier expected but '' found"
+      specify "for 22", -> check_nomatch "", r22, 0, "identifier expected but '' found"
     describe "can parse sth", ->
       specify "for 00", -> check_tree "3px", r00, 0, Array, length:0
       specify "for 01", -> check_tree "3px", r01, 0, Array, length:0
       specify "for 02", -> check_tree "3px", r02, 0, Array, length:0
-      specify "for 11", -> check_error "3px", r11, 0, "identifier expected but '3px' found"
-      specify "for 12", -> check_error "3px", r12, 0, "identifier expected but '3px' found"
-      specify "for 13", -> check_error "3px", r13, 0, "identifier expected but '3px' found"
-      specify "for 22", -> check_error "3px", r22, 0, "identifier expected but '3px' found"
+      specify "for 11", -> check_nomatch "3px", r11, 0, "identifier expected but '3px' found"
+      specify "for 12", -> check_nomatch "3px", r12, 0, "identifier expected but '3px' found"
+      specify "for 13", -> check_nomatch "3px", r13, 0, "identifier expected but '3px' found"
+      specify "for 22", -> check_nomatch "3px", r22, 0, "identifier expected but '3px' found"
     describe "can parse one", ->
       specify "for 00", -> check_tree "hello", r00, 0, Array, length:0
       specify "for 01", -> check_tree "hello", r01, 1, Array, length:1, 0:"hello"
@@ -246,7 +246,7 @@ describe 'TP', ->
       specify "for 11", -> check_tree "hello", r11, 1, Array, length:1, 0:"hello"
       specify "for 12", -> check_tree "hello", r12, 1, Array, length:1, 0:"hello"
       specify "for 13", -> check_tree "hello", r13, 1, Array, length:1, 0:"hello"
-      specify "for 22", -> check_error "hello", r22, 1, "identifier expected but '' found"
+      specify "for 22", -> check_nomatch "hello", r22, 1, "identifier expected but '' found"
     describe "can parse two", ->
       specify "for 00", -> check_tree "hello world", r00, 0, Array, length:0
       specify "for 01", -> check_tree "hello world", r01, 2, Array, length:1, 0:"hello"
@@ -298,6 +298,23 @@ describe 'TP', ->
             check_tree "hello 5% world 30%/**/haha 40%", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
           it "can parse three sth", ->
             check_tree "hello 5% world 30%/**/haha 40%/**/1", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
+
+  describe "Eof", ->
+    eof = new TP.Eof()
+    it "can parse empty string", ->
+      s = new Stream(Parser.parse_list_of_component_values(""))
+      t = eof.parse(s)
+      throw "t must be undefined" unless t is undefined
+      s.position.should.be.equal(1)
+    it "cannot parse anything else", ->
+      check_nomatch "3", eof, 0, "EOF expected but '3' found"
+
+  describe "full", ->
+    f = new TP.Full(new TP.IdentType("asdf", (x)->{x:x.value}))
+    it "can parse asdf", ->
+      check_tree "asdf", f, 2, Object, x:"asdf"
+    it "cannot parse asdf sth", ->
+      check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
 
 
     
