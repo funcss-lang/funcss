@@ -28,6 +28,8 @@ PairsOf = (t, list, pair=undefined, cons=undefined) ->
 OpeningAngle = new TP.DelimLike(new SS.DelimToken('<'))
 ClosingAngle = new TP.DelimLike(new SS.DelimToken('>'))
 Colon = new TP.DelimLike(new SS.ColonToken)
+Ampersand = new TP.DelimLike(new SS.DelimToken('&'))
+DblAmpersand = new TP.CloselyJuxtaposed(Ampersand, Ampersand, ->)
 
 # simple types
 Ident = new TP.Ident
@@ -37,6 +39,7 @@ Percentage = new TP.Percentage
 String = new TP.String
 Slash = new TP.DelimLike(new SS.DelimToken('/'), (x)->new TP.DelimLike(x))
 Comma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x))
+
 
 # The generic type where a specific identifier is required
 Keyword = new TP.Ident((x)->new TP.Keyword(x.value))
@@ -73,9 +76,12 @@ AnnotatedValueType.a.b.b = AnnotatedValueType
 
 # Juxtaposition
 Juxtaposition = new TP.Plus(AnnotatedValueType, (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
+# Both
+Both = new TP.DelimitedBy(DblAmpersand, Juxtaposition, (l)->PairsOf(TP.Both, l, Pair, Cons))
 
 
-module.exports = new TP.Full(Juxtaposition, (x)->new TP.AnnotationRoot(x))
+#module.exports = new TP.Full(Juxtaposition, (x)->new TP.AnnotationRoot(x))
+module.exports = new TP.Full(Both, (x)->new TP.AnnotationRoot(x))
 
 TYPES.ident = Ident
 TYPES.number = Number

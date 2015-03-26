@@ -118,6 +118,17 @@ describe "Value Definition Syntax", ->
     it "fails for third EOF", ->
       check_nomatch "black 3.3 ", "black <number> <percentage>", 4, "percentage expected but '' found"
 
+  describe "double ampersand", ->
+    it "works forward", ->
+      check_tree "black 3.3", "black && <number>", 3, Array, length: 2, 0:"black", 1:3.3
+    it "works backwards", ->
+      check_tree "3.3 black", "black && <number>", 3, Array, length: 2, 0:"black", 1:3.3
+    it "fails for first", ->
+      check_nomatch "black", "black && <number>", 1, "number expected but '' found"
+    it "fails for second", ->
+      check_nomatch "3.3", "black && <number>", 1, "'black' expected but '' found"
+
+
   describe "annotations", ->
     it "works for x:hello", ->
       check_tree "black", "color:<ident>", 1, Object, color:"black"

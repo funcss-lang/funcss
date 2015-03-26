@@ -142,8 +142,14 @@ class Juxtaposition extends Type
     s.optionalWhitespace()
     y = @b.parse(s)
     @semantic(x,y)
-  semantic: Cons
     
+# semantic = (a,b) -> [a,b]
+class CloselyJuxtaposed extends Type
+  constructor: (@a, @b, @semantic = @semantic) ->
+  parse: (s) ->
+    x = @a.parse(s)
+    y = @b.parse(s)
+    @semantic(x,y)
 
 # semantic = (a) -> a
 class Bar extends Type
@@ -160,11 +166,25 @@ class Bar extends Type
             throw e.merge(f)
   semantic: Id
 
-class DoubleAmpersand extends Type
+class Both extends Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
-    new Bar(new Juxtaposition(@a,@b,@semantic),
-            new Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
+    #new Bar(new Juxtaposition(@a,@b,@semantic),
+    #new Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
+    res = s.backtrack
+      try: =>
+        a: @a.parse(s)
+      fallback: (e)=>
+        s.backtrack
+          try: =>
+            b: @b.parse(s)
+          fallback: (f)=>
+            throw e.merge(f)
+    s.optionalWhitespace()
+    if "a" of res
+      @semantic(res.a, @b.parse(s))
+    else
+      @semantic(@a.parse(s), res.b)
   semantic: Cons
 
 class DoubleBar extends Type
@@ -309,7 +329,8 @@ module.exports = {
   String
   NoMatch
   Juxtaposition
-  DoubleAmpersand
+  CloselyJuxtaposed
+  Both
   Bar
   DoubleBar
   Optional
@@ -319,6 +340,7 @@ module.exports = {
   Hash
   Eof
   Full
+  DelimitedBy
   Annotation
   AnnotationRoot
 }
