@@ -127,6 +127,8 @@ describe "Value Definition Syntax", ->
       check_nomatch "black", "black && <number>", 1, "number expected but '' found"
     it "fails for second", ->
       check_nomatch "3.3", "black && <number>", 1, "'black' expected but '' found"
+    it "fails for empty", ->
+      check_nomatch "", "black && <number>", 0, "'black' or number expected but '' found"
 
 
   describe "annotations", ->
