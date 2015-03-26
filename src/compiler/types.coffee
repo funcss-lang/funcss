@@ -152,7 +152,7 @@ class CloselyJuxtaposed extends Type
     @semantic(x,y)
 
 # semantic = (a) -> a
-class Bar extends Type
+class ExclusiveOr extends Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
     s.backtrack
@@ -169,7 +169,7 @@ class Bar extends Type
 class Both extends Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
-    #new Bar(new Juxtaposition(@a,@b,@semantic),
+    #new Or(new Juxtaposition(@a,@b,@semantic),
     #new Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
     res = s.backtrack
       try: =>
@@ -187,10 +187,10 @@ class Both extends Type
       @semantic(@a.parse(s), res.b)
   semantic: Cons
 
-class DoubleBar extends Type
+class InclusiveOr extends Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
-    new Bar(new Juxtaposition(@a,new Optional(@b),@semantic),
+    new ExclusiveOr(new Juxtaposition(@a,new Optional(@b),@semantic),
             new Juxtaposition(@b,new Optional(@a),Swap(@semantic))).parse(s)
   semantic: Cons
 
@@ -331,8 +331,8 @@ module.exports = {
   Juxtaposition
   CloselyJuxtaposed
   Both
-  Bar
-  DoubleBar
+  ExclusiveOr
+  InclusiveOr
   Optional
   Plus
   Star

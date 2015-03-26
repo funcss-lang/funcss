@@ -30,6 +30,8 @@ ClosingAngle = new TP.DelimLike(new SS.DelimToken('>'))
 Colon = new TP.DelimLike(new SS.ColonToken)
 Ampersand = new TP.DelimLike(new SS.DelimToken('&'))
 DblAmpersand = new TP.CloselyJuxtaposed(Ampersand, Ampersand, ->)
+Column = new TP.DelimLike(new SS.ColumnToken)
+Bar    = new TP.DelimLike(new SS.DelimToken('|'))
 
 # simple types
 Ident = new TP.Ident
@@ -56,7 +58,7 @@ class UnknownType extends Error
 
 
 # The union of all component value types
-ComponentValueType = PairsOf TP.Bar, [
+ComponentValueType = PairsOf TP.ExclusiveOr, [
   Keyword
   TypeReference
   Slash
@@ -68,20 +70,23 @@ class PLACEHOLDER extends TP.Type
 
 
 # Annotations
-AnnotatedValueType = new TP.Bar \
+AnnotatedValueType = new TP.ExclusiveOr \
   new TP.Juxtaposition(Ident, new TP.Juxtaposition(Colon, new PLACEHOLDER, Pair), (name,[_,a])->
     new TP.Annotation(name, a)),
   ComponentValueType
 AnnotatedValueType.a.b.b = AnnotatedValueType
 
-# Juxtaposition
-Juxtaposition = new TP.Plus(AnnotatedValueType, (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
-# Both
-Both = new TP.DelimitedBy(DblAmpersand, Juxtaposition, (l)->PairsOf(TP.Both, l, Pair, Cons))
+# Combinators
+Juxtaposition = new TP.Plus(AnnotatedValueType,               (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
+Both        = new TP.DelimitedBy(DblAmpersand, Juxtaposition, (l)->PairsOf(TP.Both,          l, Pair, Cons))
+InclusiveOr = new TP.DelimitedBy(Column,       Both,          (l)->PairsOf(TP.InclusiveOr,   l, Pair, Cons))
+ExclusiveOr = new TP.DelimitedBy(Bar,          InclusiveOr,   (l)->PairsOf(TP.ExclusiveOr,   l, Id, Id))
+
+
 
 
 #module.exports = new TP.Full(Juxtaposition, (x)->new TP.AnnotationRoot(x))
-module.exports = new TP.Full(Both, (x)->new TP.AnnotationRoot(x))
+module.exports = new TP.Full(ExclusiveOr, (x)->new TP.AnnotationRoot(x))
 
 TYPES.ident = Ident
 TYPES.number = Number

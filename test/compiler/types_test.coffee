@@ -85,8 +85,8 @@ describe 'TP', ->
     it "can parse second first", ->
       check_tree "3.3 black", da, 3, Object, x:"black", y:3.3
     
-  describe "Bar", ->
-    bar = new TP.Bar(new TP.Ident(Value), new TP.Number(Value), (x)->{value: x})
+  describe "ExclusiveOr", ->
+    bar = new TP.ExclusiveOr(new TP.Ident(Value), new TP.Number(Value), (x)->{value: x})
 
     it "can parse first", ->
       check_tree "black", bar, 1, Object, value: "black"
@@ -94,41 +94,41 @@ describe 'TP', ->
     it "can parse second", ->
       check_tree "3.3", bar, 1, Object, value: 3.3
 
-  describe 'DoubleBar', ->
+  describe 'InclusiveOr', ->
     it "can parse first branch", ->
-      result = new TP.DoubleBar(new TP.Ident((x)->x),
+      result = new TP.InclusiveOr(new TP.Ident((x)->x),
         new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black")))
       check result, Object, x:"black", y:undefined
 
     it "can parse the second branch", ->
-      result = new TP.DoubleBar(new TP.Ident((x)->x),
+      result = new TP.InclusiveOr(new TP.Ident((x)->x),
         new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3")))
       check result, Object, x:undefined, y:3.3
 
     it "can parse first second", ->
-      result = new TP.DoubleBar(new TP.Ident((x)->x),
+      result = new TP.InclusiveOr(new TP.Ident((x)->x),
         new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black 3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second first", ->
-      result = new TP.DoubleBar(new TP.Ident((x)->x),
+      result = new TP.InclusiveOr(new TP.Ident((x)->x),
         new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3 black")))
       check result, Object, x:"black", y:3.3
 
     it "can parse first/**/second", ->
-      result = new TP.DoubleBar(new TP.Ident((x)->x),
+      result = new TP.InclusiveOr(new TP.Ident((x)->x),
         new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black/**/3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second/**/first", ->
-      result = new TP.DoubleBar(new TP.Ident((x)->x),
+      result = new TP.InclusiveOr(new TP.Ident((x)->x),
         new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3/**/black")))
       check result, Object, x:"black", y:3.3
 
     describe "for three arguments", ->
-      t3 = new TP.DoubleBar(
+      t3 = new TP.InclusiveOr(
           new TP.Keyword("hello", ->hello:true),
-          new TP.DoubleBar(
+          new TP.InclusiveOr(
             new TP.Number((x)->number:x.value),
             new TP.Keyword("world", ->world:true),
             (x,y)->number:x?.number,world:y?.world),
@@ -148,7 +148,7 @@ describe 'TP', ->
     it "can fail for invalid", ->
       err = undefined
       try
-        result = new TP.DoubleBar(new TP.Ident((x)->x),
+        result = new TP.InclusiveOr(new TP.Ident((x)->x),
           new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("2px")))
       catch e
         err = e

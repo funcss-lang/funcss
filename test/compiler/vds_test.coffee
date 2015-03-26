@@ -130,6 +130,26 @@ describe "Value Definition Syntax", ->
     it "fails for empty", ->
       check_nomatch "", "black && <number>", 0, "'black' or number expected but '' found"
 
+  describe "double bar", ->
+    it "works forward", ->
+      check_tree "black 3.3", "black || <number>", 3, Array, length: 2, 0:"black", 1:3.3
+    it "works backwards", ->
+      check_tree "3.3 black", "black || <number>", 3, Array, length: 2, 0:"black", 1:3.3
+    it "works for first", ->
+      check_tree "black", "black || <number>", 1, Array, length: 2, 0:"black", 1:undefined
+    it "works for second", ->
+      check_tree "3.3", "black || <number>", 1, Array, length: 2, 0:undefined, 1:3.3
+    it "fails for empty", ->
+      check_nomatch "", "black || <number>", 0, "'black' or number expected but '' found"
+
+  describe "Bar", ->
+    it "works for first", ->
+      check_value "black", "black | <number>", 1, "black"
+    it "works for second", ->
+      check_value "3.3", "black | <number>", 1, 3.3
+    it "fails for empty", ->
+      check_nomatch "", "black | <number>", 0, "'black' or number expected but '' found"
+
 
   describe "annotations", ->
     it "works for x:hello", ->
