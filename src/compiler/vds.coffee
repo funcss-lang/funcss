@@ -77,7 +77,7 @@ AnnotatedValueType = new TP.ExclusiveOr \
 AnnotatedValueType.a.b.b = AnnotatedValueType
 
 # Combinators
-Juxtaposition = new TP.Plus(AnnotatedValueType,               (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
+Juxtaposition = new TP.OneOrMore(AnnotatedValueType,               (l)->PairsOf(TP.Juxtaposition, l, Pair, Cons))
 Both        = new TP.DelimitedBy(DblAmpersand, Juxtaposition, (l)->PairsOf(TP.Both,          l, Pair, Cons))
 InclusiveOr = new TP.DelimitedBy(Column,       Both,          (l)->PairsOf(TP.InclusiveOr,   l, Pair, Cons))
 ExclusiveOr = new TP.DelimitedBy(Bar,          InclusiveOr,   (l)->PairsOf(TP.ExclusiveOr,   l, Id, Id))

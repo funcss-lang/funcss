@@ -224,12 +224,12 @@ class Range extends Type
       result.push i
     @semantic result
 
-class Star extends Range
+class ZeroOrMore extends Range
   constructor: (@a,@semantic = @semantic) ->
     @n = 0
     @m = Infinity
 
-class Plus extends Range
+class OneOrMore extends Range
   constructor: (@a,@semantic = @semantic) ->
     @n = 1
     @m = Infinity
@@ -243,14 +243,14 @@ class DelimitedBy extends Type
     # and concatenate them in an array.
     new Juxtaposition(
       @a,
-      new Star(new Juxtaposition(@delim, @a, Snd)),
+      new ZeroOrMore(new Juxtaposition(@delim, @a, Snd)),
 
       # Finally we add the first target type value then we call the semantic function
       # with the array.
       (x,y)=>y.unshift(x); @semantic(y)
     ).parse(s)
 
-class Hash extends DelimitedBy
+class DelimitedByComma extends DelimitedBy
   constructor: (@a, @semantic = @semantic) ->
     @delim = new Comma
 
@@ -332,10 +332,10 @@ module.exports = {
   ExclusiveOr
   InclusiveOr
   Optional
-  Plus
-  Star
+  OneOrMore
+  ZeroOrMore
   Range
-  Hash
+  DelimitedByComma
   Eof
   Full
   DelimitedBy

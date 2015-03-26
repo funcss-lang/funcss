@@ -154,8 +154,8 @@ describe 'TP', ->
         err = e
       check err, TP.NoMatch, message:"identifier or number expected but '2px' found"
 
-  describe "Plus", ->
-    pl = new TP.Plus(new TP.Ident(Value))
+  describe "OneOrMore", ->
+    pl = new TP.OneOrMore(new TP.Ident(Value))
     it "cannot parse none", ->
       check_nomatch "", pl, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
@@ -171,8 +171,8 @@ describe 'TP', ->
     it "can parse three sth", ->
       check_tree "hello world/**/haha/**/1", pl, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
-  describe "Star", ->
-    st = new TP.Star(new TP.Ident(Value))
+  describe "ZeroOrMore", ->
+    st = new TP.ZeroOrMore(new TP.Ident(Value))
     it "can parse none", ->
       check_tree "", st, 0, Array, length:0
     it "can parse sth", ->
@@ -188,8 +188,8 @@ describe 'TP', ->
     it "can parse three sth", ->
       check_tree "hello world/**/haha/**/1", st, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
-  describe "Hash", ->
-    hs = new TP.Hash(new TP.Ident(Value))
+  describe "DelimitedByComma", ->
+    hs = new TP.DelimitedByComma(new TP.Ident(Value))
     it "cannot parse none", ->
       check_nomatch "", hs, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
