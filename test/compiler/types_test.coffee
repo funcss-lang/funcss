@@ -23,14 +23,14 @@ Value100 = (x)->x.value/100
 Id = (x)->x
 
 describe 'TP', ->
-  describe 'IdentType', ->
-    asdf = new TP.IdentType("asdf", Id)
+  describe 'Keyword', ->
+    asdf = new TP.Keyword("asdf", Id)
 
     it "can parse ident", ->
       check_tree "asdf", asdf, 1, SS.IdentToken, value: "asdf"
 
     it "can parse $x:ident", ->
-      result = new TP.IdentType("asdf", (x)->{x:x}).parse(new Stream(Parser.parse_list_of_component_values("asdf")))
+      result = new TP.Keyword("asdf", (x)->{x:x}).parse(new Stream(Parser.parse_list_of_component_values("asdf")))
       check result, Object
       check result.x, SS.IdentToken, value: "asdf"
 
@@ -62,7 +62,7 @@ describe 'TP', ->
       check_nomatch "3.3", p, 0, "'+' expected but '3.3' found"
 
   describe 'Juxtaposition', ->
-    jp = new TP.Juxtaposition(new TP.IdentType('black', Value), new TP.Number(Value), (x,y)->{x,y})
+    jp = new TP.Juxtaposition(new TP.Keyword('black', Value), new TP.Number(Value), (x,y)->{x,y})
     
     it "works", ->
       check_tree "black 3.3", jp, 3, Object, x:"black", y:3.3
@@ -127,10 +127,10 @@ describe 'TP', ->
 
     describe "for three arguments", ->
       t3 = new TP.DoubleBar(
-          new TP.IdentType("hello", ->hello:true),
+          new TP.Keyword("hello", ->hello:true),
           new TP.DoubleBar(
             new TP.Number((x)->number:x.value),
-            new TP.IdentType("world", ->world:true),
+            new TP.Keyword("world", ->world:true),
             (x,y)->number:x?.number,world:y?.world),
           (x,y)->hello:x?.hello,number:y?.number,world:y?.world)
 
@@ -310,14 +310,14 @@ describe 'TP', ->
       check_nomatch "3", eof, 0, "EOF expected but '3' found"
 
   describe "full", ->
-    f = new TP.Full(new TP.IdentType("asdf", (x)->{x:x.value}))
+    f = new TP.Full(new TP.Keyword("asdf", (x)->{x:x.value}))
     it "can parse asdf", ->
       check_tree "asdf", f, 2, Object, x:"asdf"
     it "cannot parse asdf sth", ->
       check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
 
   describe "annotation", ->
-    a = new TP.AnnotationRoot(new TP.Annotation("hello", new TP.IdentType("world")))
+    a = new TP.AnnotationRoot(new TP.Annotation("hello", new TP.Keyword("world")))
     it "works", ->
       check_tree "world", a, 1, Object, hello:"world"
 

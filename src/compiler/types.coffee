@@ -61,7 +61,7 @@ class TokenType extends Type
   semantic: (token) ->
 
 # helper function to create a type for a token for a specific ident 
-class IdentType extends TokenType
+class Keyword extends TokenType
   tokenClass: SS.IdentToken
   constructor: (@value, @semantic = @semantic) ->
     @expected = "'#{@value}'"
@@ -299,7 +299,7 @@ class Annotation extends AnnotationRoot
 module.exports = {
   Type
   TokenType
-  IdentType
+  Keyword
   DelimLike
   Ident
   Integer

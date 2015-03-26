@@ -34,7 +34,7 @@ check_error = (str, typeStr, errorClass, message) ->
     t = type.parse(s)
 
 describe "Value Definition Syntax", ->
-  describe "identType", ->
+  describe "keyword", ->
     it "can parse ident", ->
       check_value "asdf", "asdf", 1, "asdf"
     it "cannot parse sth", ->

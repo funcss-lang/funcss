@@ -39,7 +39,7 @@ Slash = new TP.DelimLike(new SS.DelimToken('/'), (x)->new TP.DelimLike(x))
 Comma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x))
 
 # The generic type where a specific identifier is required
-IdentType = new TP.Ident((x)->new TP.IdentType(x.value))
+Keyword = new TP.Ident((x)->new TP.Keyword(x.value))
 
 # The type reference
 TypeReference = new TP.Juxtaposition(
@@ -54,7 +54,7 @@ class UnknownType extends Error
 
 # The union of all component value types
 ComponentValueType = PairsOf TP.Bar, [
-  IdentType
+  Keyword
   TypeReference
   Slash
   Comma
