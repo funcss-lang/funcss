@@ -4,18 +4,16 @@ SS = require "./stylesheet"
 
 # helper error class to use for parsing
 class NoMatch extends Error
-  constructor: (expected, found) ->
-    @expected = expected
-    @found = found
+  constructor: (@expected, @found, message) ->
     @name = "No match"
-    @message = "#{expected} expected but #{found} found"
+    @message = message ? "#{@expected} expected but #{@found} found"
   toString: () ->
     @name+  ": "+@message
   merge: (f) ->
     if @.found is f.found
       new NoMatch(@.expected + " or " + f.expected, @.found)
     else
-      new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found)
+      new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
 
 # backtrack algorithm for the stream
 Stream = require "./stream"

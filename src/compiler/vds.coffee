@@ -47,8 +47,8 @@ Comma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x))
 Keyword = new TP.Ident((x)->new TP.Keyword(x.value))
 
 # The type reference
-TypeReference = new TP.Juxtaposition(
-  OpeningAngle, new TP.Juxtaposition(
+TypeReference = new TP.CloselyJuxtaposed(
+  OpeningAngle, new TP.CloselyJuxtaposed(
     Ident, ClosingAngle, Fst), (_,y)->TYPES[y.toLowerCase()] ? throw new UnknownType(y))
 
 # This error is thrown when a user tries to reference a type that does not exist
@@ -82,7 +82,8 @@ Both        = new TP.DelimitedBy(DblAmpersand, Juxtaposition, (l)->PairsOf(TP.Bo
 InclusiveOr = new TP.DelimitedBy(Column,       Both,          (l)->PairsOf(TP.InclusiveOr,   l, Pair, Cons))
 ExclusiveOr = new TP.DelimitedBy(Bar,          InclusiveOr,   (l)->PairsOf(TP.ExclusiveOr,   l, Id, Id))
 
-
+# Brackets
+Brackets = new TP.Juxtaposition()
 
 
 #module.exports = new TP.Full(Juxtaposition, (x)->new TP.AnnotationRoot(x))

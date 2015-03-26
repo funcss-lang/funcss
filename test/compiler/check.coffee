@@ -11,7 +11,10 @@ module.exports = check = (tree, clazz, data={}) ->
       if tree[k] is undefined
         throw new Error("#{tree}.#{k} is undefined")
       else
-        tree[k].should.be.equal(v)
+        if v instanceof RegExp
+          tree[k].should.match(v)
+        else
+          tree[k].should.be.equal(v)
 
 check.error = (clazz, data, fn) ->
   err = null

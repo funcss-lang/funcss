@@ -43,8 +43,14 @@ describe "Value Definition Syntax", ->
       check_nomatch "", "asdf", 0, "'asdf' expected but '' found"
 
   describe "type reference", ->
+    it "works", ->
+      check_value "3%", "<percentage>", 1, 0.03
+    it "cannot use whitespace", ->
+      # TODO make better error messages in this case
+      check_error "3%", "< percentage>", TP.NoMatch, /identifier expected but ' ' found/
+      check_error "3%", "<percentage >", TP.NoMatch, /'>' expected but ' ' found/
     it "cannot use unnamed type", ->
-      check_error "3px", "<asdf>", Vds.UnknownType, "unknown type <asdf>"
+      check_error "3%", "<asdf>", Vds.UnknownType, "unknown type <asdf>"
 
   describe "<ident>", ->
     it "can parse an ident", ->
