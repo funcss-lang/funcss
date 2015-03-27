@@ -321,4 +321,14 @@ describe 'TP', ->
     it "works", ->
       check_tree "world", a, 1, Object, hello:"world"
 
+  describe "simple block", ->
+    sb = new TP.SimpleBlock(SS.OpeningCurlyToken, new TP.Keyword("hello"), (x)->hello:x)
+    it "works", ->
+      check_tree "{hello}", sb, 1, Object, hello:"hello"
+    it "works", ->
+      check_nomatch "{hello world}", sb, 1, "EOF expected but 'world' found"
+    it "fails for sth", ->
+      check_nomatch "sth", sb, 0, "'{' expected but 'sth' found"
+    it "fails for ()", ->
+      check_nomatch "(hello world)", sb, 0, "'{' expected but '(hello world)' found"
     

@@ -76,9 +76,9 @@ describe "Value Definition Syntax", ->
 
   describe "delimiters", ->
     it "can parse a slash token", ->
-      check_value "/", "/", 1, undefined
+      check_value "/", "/", 1, true
     it "can parse a comma token", ->
-      check_value ",", ",", 1, undefined
+      check_value ",", ",", 1, true
     it "cannot parse sth", ->
       check_nomatch "3px", "/", 0, "'/' expected but '3px' found"
       check_nomatch "3px", ",", 0, "',' expected but '3px' found"
@@ -156,6 +156,65 @@ describe "Value Definition Syntax", ->
     it "fails for empty", ->
       check_nomatch "", "black | <number>", 0, "'black' or number expected but '' found"
 
+  describe "Asterisk", ->
+    it "works for none", ->
+      check_tree "", "<number>*", 0, Array, length: 0
+    it "works for one", ->
+      check_tree "1", "<number>*", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_tree "1 2", "<number>*", 3, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_tree "1 2 3", "<number>*", 5, Array, length: 3, 0:1, 1:2, 2:3
+    it "works for sth", ->
+      check_tree "black", "<number>*", 0, Array, length: 0
+
+  describe "Plus", ->
+    it "fails for none", ->
+      check_nomatch "", "<number>+", 0, "number expected but '' found"
+    it "works for one", ->
+      check_tree "1", "<number>+", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_tree "1 2", "<number>+", 3, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_tree "1 2 3", "<number>+", 5, Array, length: 3, 0:1, 1:2, 2:3
+    it "fails for sth", ->
+      check_nomatch "black", "<number>+", 0, "number expected but 'black' found"
+
+  describe "QuestionMark", ->
+    it "works for none", ->
+      check_value "", "<number>?", 0, undefined
+    it "works for one", ->
+      check_value "3.3", "<number>?", 1, 3.3
+    it "works for two", ->
+      check_value "3.3 2", "<number>?", 1, 3.3
+    it "works for sth", ->
+      check_value "black", "<number>?", 0, undefined
+
+  describe "Range", ->
+    it "works for none", ->
+      check_nomatch "", "<number>{1,3}", 0, "number expected but '' found"
+    it "works for one", ->
+      check_tree "1", "<number>{1,3}", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_tree "1 2", "<number>{1,3}", 3, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_tree "1 2 3", "<number>{1,3}", 5, Array, length: 3, 0:1, 1:2, 2:3
+    it "works for four", ->
+      check_tree "1 2 3 4", "<number>{1,3}", 6, Array, length: 3, 0:1, 1:2, 2:3
+    it "fails for sth", ->
+      check_nomatch "black", "<number>{1,3}", 0, "number expected but 'black' found"
+
+  describe "Hashmark", ->
+    it "fails for none", ->
+      check_nomatch "", "<number>#", 0, "number expected but '' found"
+    it "works for one", ->
+      check_tree "1", "<number>#", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_tree "1, 2", "<number>#", 4, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_tree "1, 2,3", "<number>#", 6, Array, length: 3, 0:1, 1:2, 2:3
+    it "fails for sth", ->
+      check_nomatch "black", "<number>#", 0, "number expected but 'black' found"
 
   describe "annotations", ->
     it "works for x:hello", ->

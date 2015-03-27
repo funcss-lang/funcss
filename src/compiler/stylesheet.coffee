@@ -78,20 +78,20 @@ exports.CommaToken = class CommaToken extends SimpleToken
 # These tokens are the block separators. The opening versions have a `mirror()` instance
 # function which return the constructor of the closing version.
 
-exports.OpeningSquareToken = class OpeningSquareToken extends Token
+exports.OpeningSquareToken = class OpeningSquareToken extends SimpleToken
   toString: -> "["
   mirror: -> ClosingSquareToken
-exports.ClosingSquareToken = class ClosingSquareToken extends Token
+exports.ClosingSquareToken = class ClosingSquareToken extends SimpleToken
   toString: -> "]"
-exports.OpeningParenToken = class OpeningParenToken extends Token
+exports.OpeningParenToken = class OpeningParenToken extends SimpleToken
   toString: -> "("
   mirror: -> ClosingParenToken
-exports.ClosingParenToken = class ClosingParenToken extends Token
+exports.ClosingParenToken = class ClosingParenToken extends SimpleToken
   toString: -> ")"
-exports.OpeningCurlyToken = class OpeningCurlyToken extends Token
+exports.OpeningCurlyToken = class OpeningCurlyToken extends SimpleToken
   toString: -> "{"
   mirror: -> ClosingCurlyToken
-exports.ClosingCurlyToken = class ClosingCurlyToken extends Token
+exports.ClosingCurlyToken = class ClosingCurlyToken extends SimpleToken
   toString: -> "}"
 exports.EOFToken = class EOFToken
   toString: -> ""

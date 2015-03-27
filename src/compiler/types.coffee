@@ -101,6 +101,7 @@ class Whitespace extends TokenType
   tokenClass: SS.WhitespaceToken
 
 class DelimLike extends TokenType
+  semantic: -> true
   constructor: (@token, @semantic = @semantic) ->
     @tokenClass = @token.constructor
     @expected = "'#{@token}'"
@@ -312,6 +313,19 @@ class Annotation extends AnnotationRoot
       throw new Error "Annotation used without an AnnotationRoot correctly configured"
 
 
+# block types - these simply match a block, with the interior matching the given type
+class SimpleBlock extends Type
+  semantic: (x)->x
+  constructor: (@tokenClass, @a, @semantic = @semantic) ->
+    @expected = "'#{new @tokenClass}'"
+  parse: (s) ->
+    next = s.next()
+    unless next instanceof SS.SimpleBlock
+      throw new NoMatch(@expected, "'#{next}'")
+    unless next.token instanceof @tokenClass
+      throw new NoMatch(@expected, "'#{next}'")
+    s.consume_next()
+    return @semantic new Full(@a).parse(new Stream(next.value))
 
 
 module.exports = {
@@ -341,4 +355,5 @@ module.exports = {
   DelimitedBy
   Annotation
   AnnotationRoot
+  SimpleBlock
 }
