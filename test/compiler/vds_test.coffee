@@ -107,12 +107,21 @@ describe "Value Definition Syntax", ->
       check_tree "black 3.3", "black <number>", 3, Array, length: 2, 0:"black", 1:3.3
     it "works with three elements", ->
       check_tree "black 3.3 12%", "black <number> <percentage>", 5, Array, length: 3, 0:"black", 1:3.3, 2:0.12
+      check_tree "black 3.3 12%", "[black <number> <percentage>]", 5, Array, length: 3, 0:"black", 1:3.3, 2:0.12
+    it "works with three elements grouped 1-2", ->
+      t = check_tree "black 3.3 12%", "[black <number>] <percentage>", 5, Array, length: 2, 1:0.12
+      check t[0], Array, length: 2, 0:"black", 1:3.3
+    it "works with three elements grouped 2-3", ->
+      t = check_tree "black 3.3 12%", "black [<number> <percentage>]", 5, Array, length: 2, 0:"black"
+      check t[1], Array, length: 2, 0:3.3, 1:0.12
     it "fails for first bad type", ->
       check_nomatch "green 3.3", "black <number>", 0, "'black' expected but 'green' found"
     it "fails for first EOF", ->
       check_nomatch "", "black <number>", 0, "'black' expected but '' found"
       check_nomatch "", "black <number> asdf", 0, "'black' expected but '' found"
       check_nomatch "", "black <number> <percentage>", 0, "'black' expected but '' found"
+      check_nomatch "", "[black <number>] <percentage>", 0, "'black' expected but '' found"
+      check_nomatch "", "black [<number> <percentage>]", 0, "'black' expected but '' found"
     it "fails for second EOF", ->
       check_nomatch "black", "black <number>", 1, "number expected but '' found"
     it "fails for second _EOF", ->
@@ -123,6 +132,9 @@ describe "Value Definition Syntax", ->
       check_nomatch "black 3.3 sdf", "black <number> <percentage>", 4, "percentage expected but 'sdf' found"
     it "fails for third EOF", ->
       check_nomatch "black 3.3 ", "black <number> <percentage>", 4, "percentage expected but '' found"
+      check_nomatch "black 3.3 ", "black [<number> <percentage>]", 4, "percentage expected but '' found"
+      check_nomatch "black 3.3 ", "[black <number>] <percentage>", 4, "percentage expected but '' found"
+      check_nomatch "black 3.3 ", "[black <number> <percentage>]", 4, "percentage expected but '' found"
 
   describe "double ampersand", ->
     it "works forward", ->
@@ -147,6 +159,8 @@ describe "Value Definition Syntax", ->
       check_tree "3.3", "black || <number>", 1, Array, length: 2, 0:undefined, 1:3.3
     it "fails for empty", ->
       check_nomatch "", "black || <number>", 0, "'black' or number expected but '' found"
+      check_nomatch "", "black || [<number>]", 0, "'black' or number expected but '' found"
+      check_nomatch "", "[[black] || [<number>]]", 0, "'black' or number expected but '' found"
 
   describe "Bar", ->
     it "works for first", ->
@@ -155,6 +169,8 @@ describe "Value Definition Syntax", ->
       check_value "3.3", "black | <number>", 1, 3.3
     it "fails for empty", ->
       check_nomatch "", "black | <number>", 0, "'black' or number expected but '' found"
+      check_nomatch "", "[black] | <number>", 0, "'black' or number expected but '' found"
+      check_nomatch "", "[[[black] | <number>]]", 0, "'black' or number expected but '' found"
 
   describe "Asterisk", ->
     it "works for none", ->
@@ -171,8 +187,12 @@ describe "Value Definition Syntax", ->
   describe "Plus", ->
     it "fails for none", ->
       check_nomatch "", "<number>+", 0, "number expected but '' found"
+      check_nomatch "", "[<number>+]", 0, "number expected but '' found"
+      check_nomatch "", "[<number>]+", 0, "number expected but '' found"
     it "works for one", ->
       check_tree "1", "<number>+", 1, Array, length: 1, 0:1
+      check_tree "1", "[<number>+]", 1, Array, length: 1, 0:1
+      check_tree "1", "[<number>]+", 1, Array, length: 1, 0:1
     it "works for two", ->
       check_tree "1 2", "<number>+", 3, Array, length: 2, 0:1, 1:2
     it "works for three", ->
@@ -193,6 +213,8 @@ describe "Value Definition Syntax", ->
   describe "Range", ->
     it "works for none", ->
       check_nomatch "", "<number>{1,3}", 0, "number expected but '' found"
+      check_nomatch "", "[<number>]{1,3}", 0, "number expected but '' found"
+      check_nomatch "", "[<number>{1,3}]", 0, "number expected but '' found"
     it "works for one", ->
       check_tree "1", "<number>{1,3}", 1, Array, length: 1, 0:1
     it "works for two", ->
@@ -216,14 +238,35 @@ describe "Value Definition Syntax", ->
     it "fails for sth", ->
       check_nomatch "black", "<number>#", 0, "number expected but 'black' found"
 
+
   describe "annotations", ->
     it "works for x:hello", ->
       check_tree "black", "color:<ident>", 1, Object, color:"black"
     it "works for x:y:hello", ->
       t = check_tree "hello", "x:y:<ident>", 1, Object
       check t.x, Object, y:"hello"
-
-
+    it "works for x:[a:yes b:no]", ->
+      t = check_tree "yes no", "x:[a:yes b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+    it "works for x:[a:yes && b:no]", ->
+      t = check_tree "yes no", "x:[a:yes && b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_tree "no yes", "x:[a:yes && b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+    it "works for x:[a:yes || b:no]", ->
+      t = check_tree "yes no", "x:[a:yes || b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_tree "no yes", "x:[a:yes || b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_tree "no", "x:[a:yes || b:no]", 1, Object
+      check t.x, Object, a:undefined, b:"no"
+      t = check_tree "yes", "x:[a:yes || b:no]", 1, Object
+      check t.x, Object, a:"yes", b:undefined
+    it "works for x:[a:yes | b:no]", ->
+      t = check_tree "no", "x:[a:yes | b:no]", 1, Object
+      check t.x, Object, a:undefined, b:"no"
+      t = check_tree "yes", "x:[a:yes | b:no]", 1, Object
+      check t.x, Object, a:"yes", b:undefined
 
 
 

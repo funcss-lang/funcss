@@ -88,10 +88,11 @@ ComponentValueType = PairsOf TP.ExclusiveOr, [
 class PLACEHOLDER extends TP.Type
   parse: -> throw new Error "PLACEHOLDER not replaced"
 
-#Brackets = new TP.ExclusiveOr \
-  #TP.Juxtaposition OpeningSquareToken, PLACEHOLDER, ClosingAngle
+Bracket = new TP.ExclusiveOr \
+  ComponentValueType,
+  new TP.SimpleBlock SS.OpeningSquareToken, PLACEHOLDER
 
-Multipliable = ComponentValueType
+Multipliable = Bracket
 
 # Multipliers
 Multiplier = PairsOf TP.ExclusiveOr, [Asterisk, Plus, QuestionMark, RepeatCount, Hashmark], Id, Id
@@ -118,6 +119,8 @@ Both        = new TP.DelimitedBy(DblAmpersand, Juxtaposition, (l)->PairsOf(TP.Bo
 InclusiveOr = new TP.DelimitedBy(Column,       Both,          (l)->PairsOf(TP.InclusiveOr,   l, Pair, Cons))
 ExclusiveOr = new TP.DelimitedBy(Bar,          InclusiveOr,   (l)->PairsOf(TP.ExclusiveOr,   l, Id, Id))
 Combined = ExclusiveOr
+
+Bracket.b.a = Combined
 
 
 #module.exports = new TP.Full(Juxtaposition, (x)->new TP.AnnotationRoot(x))
