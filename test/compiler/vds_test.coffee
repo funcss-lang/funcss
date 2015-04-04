@@ -1,3 +1,4 @@
+# This file tests both the VDS grammar and the `js()` feature of the LLL.
 TP = require "../../src/compiler/types"
 Stream = require "../../src/compiler/stream"
 Parser = require "../../src/compiler/parser"
@@ -270,6 +271,40 @@ describe "Value Definition Syntax", ->
       check t.x, Object, a:undefined, b:"no"
       t = check_tree "yes", "x:[a:yes | b:no]", 1, Object
       check t.x, Object, a:"yes", b:undefined
+    it "works for x:[a:yes|b:no]*", ->
+      t = check_tree "", "x:[a:yes|b:no]*", 0, Object
+      check t.x, Array, length: 0
+      t = check_tree "yes", "x:[a:yes|b:no]*", 1, Object
+      check t.x, Array, length: 1
+      check t.x[0], Object, a:"yes", b:undefined
+      t = check_tree "yes no", "x:[a:yes|b:no]*", 3, Object
+      check t.x, Array, length: 2
+      check t.x[0], Object, a:"yes", b:undefined
+      check t.x[1], Object, a:undefined, b:"no"
+    it "works for x:[a:yes|b:no]#", ->
+      t = check_tree "yes", "x:[a:yes|b:no]#", 1, Object
+      check t.x, Array, length: 1
+      check t.x[0], Object, a:"yes", b:undefined
+      t = check_tree "no,no,yes", "x:[a:yes|b:no]#", 5, Object
+      check t.x, Array, length: 3
+      check t.x[0], Object, a:undefined, b:"no"
+      check t.x[1], Object, a:undefined, b:"no"
+      check t.x[2], Object, a:"yes", b:undefined
+    it "works for x:[a:yes|b:no]?", ->
+      check_tree "", "x:[a:yes|b:no]?", 0, Object, x:undefined
+      t = check_tree "no", "x:[a:yes|b:no]?", 1, Object
+      check t.x, Object, a:undefined, b:"no"
+    it "works for x:[a:yes||b:no]?", ->
+      check_tree "", "x:[a:yes||b:no]?", 0, Object, x:undefined
+      t = check_tree "no", "x:[a:yes||b:no]?", 1, Object
+      check t.x, Object, a:undefined, b:"no"
+      t = check_tree "yes", "x:[a:yes||b:no]?", 1, Object
+      check t.x, Object, a:"yes", b:undefined
+      t = check_tree "yes no", "x:[a:yes||b:no]?", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_tree "no yes", "x:[a:yes||b:no]?", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+
 
 
 

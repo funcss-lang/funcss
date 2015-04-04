@@ -51,7 +51,6 @@ exports.String = class String extends Constant
 
 exports.Collection = class Collection extends Value
   constructor: (@value) ->
-    debugger if @value.length is 0
   unshift: (x)->
     @value.unshift(x)
   js: ->
@@ -71,6 +70,7 @@ exports.And = class And extends Collection
 
 exports.InclusiveOr = class InclusiveOr extends Collection
 
+# This class is responsible for using a mapping from an AnnotationRoot object
 exports.Marking = class Marking extends Value
   constructor: (@value, @marking) ->
   js: ->

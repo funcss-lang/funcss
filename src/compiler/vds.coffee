@@ -55,6 +55,14 @@ Integer = new TP.Integer
 Percentage = new TP.Percentage
 String = new TP.String
 
+# This is a semantic function for  AnnotationRoot and Annotation, to add markings to the tree if the node
+# has (sub-)annotations.
+AddMarkings = (x,markings) ->
+  if markings and not isEmptyObject(markings)
+    new LL.Marking(x, markings)
+  else
+    x
+
 # CSS separators
 # Separators have a JS representation of their string value. This is useful when using it in
 # a mapping, to decide whether the delimiter is there, or what delimiter is there.
@@ -77,13 +85,15 @@ Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{collection: yes, mult
 Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{collection: yes, multiplier: TP.OneOrMore})
 QuestionMark = new TP.DelimLike(new SS.DelimToken('?'), ->{collection: no,  multiplier: TP.Optional})
 Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{collection: yes, multiplier: TP.ZeroOrMore})
-# The {A,B} syntax for repetition count. Its semantic function returns a [1,3] format
+
+# The {A,B} syntax for repetition count.
+# TODO {A,} and {A} syntax is also needed
 RepeatCount =
   new TP.SimpleBlock SS.OpeningCurlyToken,
     new TP.CloselyJuxtaposed Integer,
       new TP.CloselyJuxtaposed Comma, Integer , Snd
     , Pair
-  , (y)->{collection: yes, multiplier: TP.Range, args: y}
+  , ([from,to])->{collection: yes, multiplier: TP.Range, args: [from,to]}
 
 
 # The generic type where a specific identifier is required
@@ -128,9 +138,9 @@ Multiplied = new TP.Juxtaposition(
   (a,multdata) ->
     if multdata
       if multdata.collection
-        new multdata.multiplier((multdata.args ? [])..., a, (arr)->new LL.Collection(arr))
+        new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (arr)->new LL.Collection(arr))
       else
-        new multdata.multiplier((multdata.args ? [])..., a, (x)->x ? new LL.EmptyValue)
+        new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (x)->x ? new LL.EmptyValue)
     else
       a
 )
@@ -144,14 +154,6 @@ isEmptyObject = (x) ->
     if x.hasOwnProperty(k)
       return false
   return true
-
-# This is a semantic function for  AnnotationRoot and Annotation, to add markings to the tree if the node
-# has (sub-)annotations.
-AddMarkings = (x,markings) ->
-  if markings and not isEmptyObject(markings)
-    new LL.Marking(x, markings)
-  else
-    x
 
 
 

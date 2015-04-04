@@ -270,24 +270,26 @@ class Full extends Type
     new Eof().parse(s)
     @semantic result
 
+# This class does not affect the parsing, it only keeps track of a mapping
+# of the annotations directly (without another Annotation in between) below
+# this node.
 class AnnotationRoot extends Type
   semantic: Id
   hasAnnotations: false
   constructor: (@a, @semantic = @semantic) ->
     @prepareMappings(@a)
   prepareMappings: (node) ->
+    debugger
     if node instanceof AnnotationRoot
       if node instanceof Annotation
         @hasAnnotations = true
         node.root = @
-      else
-        throw new Error "AnnotationRoot in another AnnotationRoot"
       node.prepareMappings(node.a)
     else
       if node.a
         @prepareMappings(node.a)
-        if node.b
-          @prepareMappings(node.b)
+      if node.b
+        @prepareMappings(node.b)
     
   # This parses the tree as usual, but also passes a mapping
   # to the semantic function. The mapping maps the names of the direct descendant
@@ -304,6 +306,9 @@ class AnnotationRoot extends Type
     else
       @semantic @a.parse(s)
 
+# This node represents the `x:` annotations in the type tree.
+# This is a subclass of  AnnotationRoot, as the annotations below this
+# will collect their mappings here.
 class Annotation extends AnnotationRoot
   root: undefined
   constructor: (@name, @a, @semantic = @semantic) ->
