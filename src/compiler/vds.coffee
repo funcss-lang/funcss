@@ -73,17 +73,17 @@ LiteralSlash = new TP.DelimLike(new SS.DelimToken('/'), (x)->new TP.DelimLike(x,
 LiteralComma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x, (x)->new LL.Keyword(",")))
 
 # Multiplier tokens with metadata for easy handling
-Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{multiplier: TP.DelimitedByComma})
-Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{multiplier: TP.OneOrMore})
-QuestionMark = new TP.DelimLike(new SS.DelimToken('?'), ->{multiplier: TP.Optional})
-Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{multiplier: TP.ZeroOrMore})
+Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{collection: yes, multiplier: TP.DelimitedByComma})
+Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{collection: yes, multiplier: TP.OneOrMore})
+QuestionMark = new TP.DelimLike(new SS.DelimToken('?'), ->{collection: no,  multiplier: TP.Optional})
+Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{collection: yes, multiplier: TP.ZeroOrMore})
 # The {A,B} syntax for repetition count. Its semantic function returns a [1,3] format
 RepeatCount =
   new TP.SimpleBlock SS.OpeningCurlyToken,
     new TP.CloselyJuxtaposed Integer,
       new TP.CloselyJuxtaposed Comma, Integer , Snd
     , Pair
-  , (y)->{multiplier: TP.Range, args: y}
+  , (y)->{collection: yes, multiplier: TP.Range, args: y}
 
 
 # The generic type where a specific identifier is required
@@ -127,7 +127,10 @@ Multiplied = new TP.Juxtaposition(
   new TP.Optional(Multiplier),
   (a,multdata) ->
     if multdata
-      new multdata.multiplier((multdata.args ? [])..., a)
+      if multdata.collection
+        new multdata.multiplier((multdata.args ? [])..., a, (arr)->new LL.Collection(arr))
+      else
+        new multdata.multiplier((multdata.args ? [])..., a, (x)->x ? new LL.EmptyValue)
     else
       a
 )

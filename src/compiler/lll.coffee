@@ -1,5 +1,10 @@
 
 #### The Low Level Language nodes
+# 
+# The nodes defined in this file constitute a tree that represents the most semantical
+# representation of the FunCSS stylesheet. It is actually a data flow graph.
+#
+# The basic elements of the grammar are Rule and Value.
 
 exports.Rule = class Rule
   constructor : (@mediaQuery, @important, @selectorGroup, @prop, @value) ->

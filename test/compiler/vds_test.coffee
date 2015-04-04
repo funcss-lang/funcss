@@ -165,7 +165,7 @@ describe "Value Definition Syntax", ->
       check_nomatch "", "black || [<number>]", 0, "'black' or number expected but '' found"
       check_nomatch "", "[[black] || [<number>]]", 0, "'black' or number expected but '' found"
 
-  describe.skip "Bar", ->
+  describe "Bar", ->
     it "works for first", ->
       check_value "black", "black | <number>", 1, "black"
     it "works for second", ->
@@ -175,7 +175,7 @@ describe "Value Definition Syntax", ->
       check_nomatch "", "[black] | <number>", 0, "'black' or number expected but '' found"
       check_nomatch "", "[[[black] | <number>]]", 0, "'black' or number expected but '' found"
 
-  describe.skip "Asterisk", ->
+  describe "Asterisk", ->
     it "works for none", ->
       check_tree "", "<number>*", 0, Array, length: 0
     it "works for one", ->
@@ -187,7 +187,7 @@ describe "Value Definition Syntax", ->
     it "works for sth", ->
       check_tree "black", "<number>*", 0, Array, length: 0
 
-  describe.skip "Plus", ->
+  describe "Plus", ->
     it "fails for none", ->
       check_nomatch "", "<number>+", 0, "number expected but '' found"
       check_nomatch "", "[<number>+]", 0, "number expected but '' found"
@@ -203,7 +203,7 @@ describe "Value Definition Syntax", ->
     it "fails for sth", ->
       check_nomatch "black", "<number>+", 0, "number expected but 'black' found"
 
-  describe.skip "QuestionMark", ->
+  describe "QuestionMark", ->
     it "works for none", ->
       check_value "", "<number>?", 0, undefined
     it "works for one", ->
@@ -213,7 +213,7 @@ describe "Value Definition Syntax", ->
     it "works for sth", ->
       check_value "black", "<number>?", 0, undefined
 
-  describe.skip "Range", ->
+  describe "Range", ->
     it "works for none", ->
       check_nomatch "", "<number>{1,3}", 0, "number expected but '' found"
       check_nomatch "", "[<number>]{1,3}", 0, "number expected but '' found"
@@ -229,7 +229,7 @@ describe "Value Definition Syntax", ->
     it "fails for sth", ->
       check_nomatch "black", "<number>{1,3}", 0, "number expected but 'black' found"
 
-  describe.skip "Hashmark", ->
+  describe "Hashmark", ->
     it "fails for none", ->
       check_nomatch "", "<number>#", 0, "number expected but '' found"
     it "works for one", ->
