@@ -138,6 +138,13 @@ Multiplied = new TP.Juxtaposition(
   (a,multdata) ->
     if multdata
       if multdata.collection
+        # Here we add an AnnotationRoot to the inside of the multiplier. This is necessary to
+        # make it possible to write types like
+        #
+        #     x:[n:<number>|p:<percentage>]*
+        #
+        # Each element of the collection will be an object with fields from the internal annotations
+        # if any annotation is present inside.
         new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (arr)->new LL.Collection(arr))
       else
         new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (x)->x ? new LL.EmptyValue)

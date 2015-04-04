@@ -304,6 +304,13 @@ describe "Value Definition Syntax", ->
       check t.x, Object, a:"yes", b:"no"
       t = check_tree "no yes", "x:[a:yes||b:no]?", 3, Object
       check t.x, Object, a:"yes", b:"no"
+    it "works for [a:yes|b:no]*", ->
+      check_tree "", "[a:yes|b:no]*", 0, Array, length: 0
+      t = check_tree "yes", "[a:yes|b:no]*", 1, Array, length: 1
+      check t[0], Object, a:"yes", b:undefined
+      t = check_tree "yes no", "[a:yes|b:no]*", 3, Array, length: 2
+      check t[0], Object, a:"yes", b:undefined
+      check t[1], Object, a:undefined, b:"no"
 
 
 
