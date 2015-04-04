@@ -81,10 +81,10 @@ LiteralSlash = new TP.DelimLike(new SS.DelimToken('/'), (x)->new TP.DelimLike(x,
 LiteralComma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x, (x)->new LL.Keyword(",")))
 
 # Multiplier tokens with metadata for easy handling
-Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{collection: yes, multiplier: TP.DelimitedByComma})
-Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{collection: yes, multiplier: TP.OneOrMore})
+Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{collection: LL.CommaDelimitedCollection, multiplier: TP.DelimitedByComma})
+Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{collection: LL.Collection, multiplier: TP.OneOrMore})
 QuestionMark = new TP.DelimLike(new SS.DelimToken('?'), ->{collection: no,  multiplier: TP.Optional})
-Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{collection: yes, multiplier: TP.ZeroOrMore})
+Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{collection: LL.Collection, multiplier: TP.ZeroOrMore})
 
 # The {A,B} syntax for repetition count.
 # TODO {A,} and {A} syntax is also needed
@@ -93,7 +93,7 @@ RepeatCount =
     new TP.CloselyJuxtaposed Integer,
       new TP.CloselyJuxtaposed Comma, Integer , Snd
     , Pair
-  , ([from,to])->{collection: yes, multiplier: TP.Range, args: [from,to]}
+  , ([from,to])->{collection: LL.Collection, multiplier: TP.Range, args: [from,to]}
 
 
 # The generic type where a specific identifier is required
@@ -145,7 +145,7 @@ Multiplied = new TP.Juxtaposition(
         #
         # Each element of the collection will be an object with fields from the internal annotations
         # if any annotation is present inside.
-        new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (arr)->new LL.Collection(arr))
+        new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (arr)->new multdata.collection(arr))
       else
         new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (x)->x ? new LL.EmptyValue)
     else

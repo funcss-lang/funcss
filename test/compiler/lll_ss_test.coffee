@@ -99,73 +99,63 @@ describe "LL ss() of", ->
     it "works for sth", ->
       check_value "black", "<number>*", 0, ""
 
-  describe.skip "Plus", ->
+  describe "Plus", ->
     it "works for one", ->
-      check_value "1", "<number>+", 1, Array, length: 1, 0:1
-      check_value "1", "[<number>+]", 1, Array, length: 1, 0:1
-      check_value "1", "[<number>]+", 1, Array, length: 1, 0:1
+      check_value "1", "<number>+", 1, "1"
+      check_value "1", "[<number>+]", 1, "1"
+      check_value "1", "[<number>]+", 1, "1"
     it "works for two", ->
-      check_value "1 2", "<number>+", 3, Array, length: 2, 0:1, 1:2
+      check_value "1 2", "<number>+", 3, "1 2"
     it "works for three", ->
-      check_value "1 2 3", "<number>+", 5, Array, length: 3, 0:1, 1:2, 2:3
+      check_value "1 2 3", "<number>+", 5, "1 2 3"
 
-  describe.skip "QuestionMark", ->
+  describe "QuestionMark", ->
     it "works for none", ->
-      check_value "", "<number>?", 0, undefined
+      check_value "", "<number>?", 0, ""
     it "works for one", ->
-      check_value "3.3", "<number>?", 1, 3.3
+      check_value "3.3", "<number>?", 1, "3.3"
     it "works for two", ->
-      check_value "3.3 2", "<number>?", 1, 3.3
+      check_value "3.3 2", "<number>?", 1, "3.3"
     it "works for sth", ->
-      check_value "black", "<number>?", 0, undefined
+      check_value "black", "<number>?", 0, ""
 
-  describe.skip "Range", ->
+  describe "Range", ->
     it "works for one", ->
-      check_value "1", "<number>{1,3}", 1, Array, length: 1, 0:1
+      check_value "1", "<number>{1,3}", 1, "1"
     it "works for two", ->
-      check_value "1 2", "<number>{1,3}", 3, Array, length: 2, 0:1, 1:2
+      check_value "1 2", "<number>{1,3}", 3, "1 2"
     it "works for three", ->
-      check_value "1 2 3", "<number>{1,3}", 5, Array, length: 3, 0:1, 1:2, 2:3
+      check_value "1 2 3", "<number>{1,3}", 5, "1 2 3"
     it "works for four", ->
-      check_value "1 2 3 4", "<number>{1,3}", 6, Array, length: 3, 0:1, 1:2, 2:3
+      check_value "1 2 3 4", "<number>{1,3}", 6, "1 2 3"
 
-  describe.skip "Hashmark", ->
+  describe "Hashmark", ->
     it "works for one", ->
-      check_value "1", "<number>#", 1, Array, length: 1, 0:1
+      check_value "1", "<number>#", 1, "1"
     it "works for two", ->
-      check_value "1, 2", "<number>#", 4, Array, length: 2, 0:1, 1:2
+      check_value "1, 2", "<number>#", 4, "1, 2"
     it "works for three", ->
-      check_value "1, 2,3", "<number>#", 6, Array, length: 3, 0:1, 1:2, 2:3
+      check_value "1, 2,3", "<number>#", 6, "1, 2, 3"
 
 
-  describe.skip "annotations", ->
+  describe "annotations", ->
     it "works for x:hello", ->
-      check_value "black", "color:<ident>", 1, Object, color:"black"
+      check_value "black", "color:<ident>", 1, "black"
     it "works for x:y:hello", ->
-      t = check_value "hello", "x:y:<ident>", 1, Object
-      check t.x, Object, y:"hello"
+      check_value "hello", "x:y:<ident>", 1, "hello"
     it "works for x:[a:yes b:no]", ->
-      t = check_value "yes no", "x:[a:yes b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
+      check_value "yes no", "x:[a:yes b:no]", 3, "yes no"
     it "works for x:[a:yes && b:no]", ->
-      t = check_value "yes no", "x:[a:yes && b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_value "no yes", "x:[a:yes && b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
+      check_value "yes no", "x:[a:yes && b:no]", 3, "yes no"
+      check_value "no yes", "x:[a:yes && b:no]", 3, "yes no"
     it "works for x:[a:yes || b:no]", ->
-      t = check_value "yes no", "x:[a:yes || b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_value "no yes", "x:[a:yes || b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_value "no", "x:[a:yes || b:no]", 1, Object
-      check t.x, Object, a:undefined, b:"no"
-      t = check_value "yes", "x:[a:yes || b:no]", 1, Object
-      check t.x, Object, a:"yes", b:undefined
+      check_value "yes no", "x:[a:yes || b:no]", 3, "yes no"
+      check_value "no yes", "x:[a:yes || b:no]", 3, "yes no"
+      check_value "no", "x:[a:yes || b:no]", 1, "no"
+      check_value "yes", "x:[a:yes || b:no]", 1, "yes"
     it "works for x:[a:yes | b:no]", ->
-      t = check_value "no", "x:[a:yes | b:no]", 1, Object
-      check t.x, Object, a:undefined, b:"no"
-      t = check_value "yes", "x:[a:yes | b:no]", 1, Object
-      check t.x, Object, a:"yes", b:undefined
+      check_value "no", "x:[a:yes | b:no]", 1, "no"
+      check_value "yes", "x:[a:yes | b:no]", 1, "yes"
 
 
 

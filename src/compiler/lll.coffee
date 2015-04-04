@@ -41,6 +41,7 @@ exports.EmptyValue = class EmptyValue extends Constant
   js: ->
     "(void 0)"
   ssjs: ->
+    JSON.stringify("")
 
 exports.String = class String extends Constant
   js: ->
@@ -51,17 +52,22 @@ exports.String = class String extends Constant
 
 exports.Collection = class Collection extends Value
   constructor: (@value) ->
+  delimiter: " "
   unshift: (x)->
     @value.unshift(x)
   js: ->
     "[#{(i.js() for i in @value).join(", ")}]"
   ssjs: ->
     elems = (i.ssjs() for i in @value)
-    elems = (e for e in elems when e)
+    # We remove the empty values from the token
+    elems = (e for e in elems when e != '""')
     if elems.length
-      elems.join(" + \" \" + ")
+      elems.join(" + #{JSON.stringify(@delimiter)} + ")
     else
       JSON.stringify("")
+
+exports.CommaDelimitedCollection = class CommaDelimitedCollection extends Collection
+  delimiter: ", "
 
 # A list of values that need to be juxtaposed in a stylesheet.
 exports.Juxtaposition = class Juxtaposition extends Collection
@@ -77,3 +83,5 @@ exports.Marking = class Marking extends Value
     # The object is wrapped here into `()` to avoid interpreting it as a statement.
     # FIXME the beautifier should handle this later.
     "({#{("#{JSON.stringify(k)}:#{v.js()}" for k,v of @marking).join(", ")}})"
+  ssjs: ->
+    @value.ssjs()
