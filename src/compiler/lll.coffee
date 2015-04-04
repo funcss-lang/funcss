@@ -4,7 +4,11 @@
 # The nodes defined in this file constitute a tree that represents the most semantical
 # representation of the FunCSS stylesheet. It is actually a data flow graph.
 #
-# The basic elements of the grammar are Rule and Value.
+# The basic elements of the tree are Rule and Value.
+#
+# The two outputs of this tree are the `js()` and `ssjs()` values. Both return a JavaScript
+# expression, which, if evaled, return a value for the user-written JS functions and for the 
+# CSSOM respectively
 
 exports.Rule = class Rule
   constructor : (@mediaQuery, @important, @selectorGroup, @prop, @value) ->
@@ -18,11 +22,15 @@ exports.Keyword = class Constant extends Constant
   constructor: (@value) ->
   js: ->
     JSON.stringify(@value)
+  ssjs: ->
+    JSON.stringify("#{@value}")
 
 exports.Percentage = class Percentage extends Constant
   constructor: (@value) ->
   js: ->
     JSON.stringify(@value / 100)
+  ssjs: ->
+    JSON.stringify("#{@value}%")
 
 exports.Number = class Number extends Constant
   constructor: (@value) ->
@@ -32,18 +40,29 @@ exports.Number = class Number extends Constant
 exports.EmptyValue = class EmptyValue extends Constant
   js: ->
     "(void 0)"
+  ssjs: ->
 
 exports.String = class String extends Constant
   js: ->
+    JSON.stringify(@value)
+  ssjs: ->
     JSON.stringify(@value)
 
 
 exports.Collection = class Collection extends Value
   constructor: (@value) ->
-  js: ->
-    "[#{(i.js() for i in @value).join(", ")}]"
+    debugger if @value.length is 0
   unshift: (x)->
     @value.unshift(x)
+  js: ->
+    "[#{(i.js() for i in @value).join(", ")}]"
+  ssjs: ->
+    elems = (i.ssjs() for i in @value)
+    elems = (e for e in elems when e)
+    if elems.length
+      elems.join(" + \" \" + ")
+    else
+      JSON.stringify("")
 
 # A list of values that need to be juxtaposed in a stylesheet.
 exports.Juxtaposition = class Juxtaposition extends Collection

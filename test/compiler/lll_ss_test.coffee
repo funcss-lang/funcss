@@ -1,0 +1,173 @@
+TP = require "../../src/compiler/types"
+Stream = require "../../src/compiler/stream"
+Parser = require "../../src/compiler/parser"
+Vds = require "../../src/compiler/vds"
+check = require "./check"
+
+parse = (s, typeStr) ->
+  type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  value = type.parse(s)
+  ssjs = value.ssjs()
+  eval("#{ssjs}")
+
+
+check_value = (str, typeStr, next, value) ->
+  s = new Stream(Parser.parse_list_of_component_values(str))
+  t = parse(s, typeStr)
+  t.should.equal(value) unless t is undefined and value is undefined
+  s.position.should.be.equal(next)
+
+describe "LL ss() of", ->
+  describe "keyword", ->
+    it "works for ident", ->
+      check_value "asdf", "asdf", 1, "asdf"
+
+  describe "<ident>", ->
+    it "works for an ident", ->
+      check_value "asdf", "<ident>", 1, "asdf"
+
+  describe "<number>", ->
+    it "works for a number", ->
+      check_value "3.14", "<number>", 1, "3.14"
+    it "works for an integer", ->
+      check_value "3", "<number>", 1, "3"
+
+  describe "<integer>", ->
+    it "works for an integer", ->
+      check_value "3", "<integer>", 1, "3"
+
+  describe "delimiters", ->
+    it "works for a slash token", ->
+      check_value "/", "/", 1, "/"
+    it "works for a comma token", ->
+      check_value ",", ",", 1, ","
+
+  describe "<percentage>", ->
+    it "works for a percentage", ->
+      check_value "3%", "<percentage>", 1, "3%"
+    it "cannot parse sth", ->
+
+  describe "<string>", ->
+    it "works for a string", ->
+      check_value "'asdf'", "<string>", 1, "asdf"
+    it "works for a string with doulbe quotes", ->
+      check_value '"asdf"', "<string>", 1, "asdf"
+
+
+  describe "Juxtaposition", ->
+    it "works", ->
+      check_value "black 3.3", "black <number>", 3, "black 3.3"
+    it "works with three elements", ->
+      check_value "black 3.3 12%", "black <number> <percentage>", 5, "black 3.3 12%"
+      check_value "black 3.3 12%", "[black <number> <percentage>]", 5, "black 3.3 12%"
+    it "works with three elements grouped 1-2", ->
+      check_value "black 3.3 12%", "[black <number>] <percentage>", 5, "black 3.3 12%"
+    it "works with three elements grouped 2-3", ->
+      check_value "black 3.3 12%", "black [<number> <percentage>]", 5, "black 3.3 12%"
+
+  describe "double ampersand", ->
+    it "works forward", ->
+      check_value "black 3.3", "black && <number>", 3, "black 3.3"
+    it "works backwards", ->
+      check_value "3.3 black", "black && <number>", 3, "black 3.3"
+
+  describe "double bar", ->
+    it "works forward", ->
+      check_value "black 3.3", "black || <number>", 3, "black 3.3"
+    it "works backwards", ->
+      check_value "3.3 black", "black || <number>", 3, "black 3.3"
+    it "works for first", ->
+      check_value "black", "black || <number>", 1, "black"
+    it "works for second", ->
+      check_value "3.3", "black || <number>", 1, "3.3"
+
+  describe "Bar", ->
+    it "works for first", ->
+      check_value "black", "black | <number>", 1, "black"
+    it "works for second", ->
+      check_value "3.3", "black | <number>", 1, "3.3"
+
+  describe "Asterisk", ->
+    it "works for none", ->
+      check_value "", "<number>*", 0, ""
+    it "works for one", ->
+      check_value "1", "<number>*", 1, "1"
+    it "works for two", ->
+      check_value "1 2", "<number>*", 3, "1 2"
+    it "works for three", ->
+      check_value "1 2 3", "<number>*", 5, "1 2 3"
+    it "works for sth", ->
+      check_value "black", "<number>*", 0, ""
+
+  describe.skip "Plus", ->
+    it "works for one", ->
+      check_value "1", "<number>+", 1, Array, length: 1, 0:1
+      check_value "1", "[<number>+]", 1, Array, length: 1, 0:1
+      check_value "1", "[<number>]+", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_value "1 2", "<number>+", 3, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_value "1 2 3", "<number>+", 5, Array, length: 3, 0:1, 1:2, 2:3
+
+  describe.skip "QuestionMark", ->
+    it "works for none", ->
+      check_value "", "<number>?", 0, undefined
+    it "works for one", ->
+      check_value "3.3", "<number>?", 1, 3.3
+    it "works for two", ->
+      check_value "3.3 2", "<number>?", 1, 3.3
+    it "works for sth", ->
+      check_value "black", "<number>?", 0, undefined
+
+  describe.skip "Range", ->
+    it "works for one", ->
+      check_value "1", "<number>{1,3}", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_value "1 2", "<number>{1,3}", 3, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_value "1 2 3", "<number>{1,3}", 5, Array, length: 3, 0:1, 1:2, 2:3
+    it "works for four", ->
+      check_value "1 2 3 4", "<number>{1,3}", 6, Array, length: 3, 0:1, 1:2, 2:3
+
+  describe.skip "Hashmark", ->
+    it "works for one", ->
+      check_value "1", "<number>#", 1, Array, length: 1, 0:1
+    it "works for two", ->
+      check_value "1, 2", "<number>#", 4, Array, length: 2, 0:1, 1:2
+    it "works for three", ->
+      check_value "1, 2,3", "<number>#", 6, Array, length: 3, 0:1, 1:2, 2:3
+
+
+  describe.skip "annotations", ->
+    it "works for x:hello", ->
+      check_value "black", "color:<ident>", 1, Object, color:"black"
+    it "works for x:y:hello", ->
+      t = check_value "hello", "x:y:<ident>", 1, Object
+      check t.x, Object, y:"hello"
+    it "works for x:[a:yes b:no]", ->
+      t = check_value "yes no", "x:[a:yes b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+    it "works for x:[a:yes && b:no]", ->
+      t = check_value "yes no", "x:[a:yes && b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_value "no yes", "x:[a:yes && b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+    it "works for x:[a:yes || b:no]", ->
+      t = check_value "yes no", "x:[a:yes || b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_value "no yes", "x:[a:yes || b:no]", 3, Object
+      check t.x, Object, a:"yes", b:"no"
+      t = check_value "no", "x:[a:yes || b:no]", 1, Object
+      check t.x, Object, a:undefined, b:"no"
+      t = check_value "yes", "x:[a:yes || b:no]", 1, Object
+      check t.x, Object, a:"yes", b:undefined
+    it "works for x:[a:yes | b:no]", ->
+      t = check_value "no", "x:[a:yes | b:no]", 1, Object
+      check t.x, Object, a:undefined, b:"no"
+      t = check_value "yes", "x:[a:yes | b:no]", 1, Object
+      check t.x, Object, a:"yes", b:undefined
+
+
+
+
+

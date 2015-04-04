@@ -276,7 +276,6 @@ class AnnotationRoot extends Type
   constructor: (@a, @semantic = @semantic) ->
     @prepareMappings(@a)
   prepareMappings: (node) ->
-    debugger
     if node instanceof AnnotationRoot
       if node instanceof Annotation
         @hasAnnotations = true
