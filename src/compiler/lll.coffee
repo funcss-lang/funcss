@@ -52,3 +52,9 @@ exports.And = class And extends Collection
 
 exports.InclusiveOr = class InclusiveOr extends Collection
 
+exports.Marking = class Marking extends Value
+  constructor: (@value, @marking) ->
+  js: ->
+    # The object is wrapped here into `()` to avoid interpreting it as a statement.
+    # FIXME the beautifier should handle this later.
+    "({#{("#{JSON.stringify(k)}:#{v.js()}" for k,v of @marking).join(", ")}})"

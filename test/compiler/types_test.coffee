@@ -317,7 +317,7 @@ describe 'TP', ->
       check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
 
   describe "annotation", ->
-    a = new TP.AnnotationRoot(new TP.Annotation("hello", new TP.Keyword("world")))
+    a = new TP.AnnotationRoot(new TP.Annotation("hello", new TP.Keyword("world")), (x,m)->m)
     it "works", ->
       check_tree "world", a, 1, Object, hello:"world"
 

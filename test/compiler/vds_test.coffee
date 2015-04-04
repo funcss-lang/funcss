@@ -242,7 +242,7 @@ describe "Value Definition Syntax", ->
       check_nomatch "black", "<number>#", 0, "number expected but 'black' found"
 
 
-  describe.skip "annotations", ->
+  describe "annotations", ->
     it "works for x:hello", ->
       check_tree "black", "color:<ident>", 1, Object, color:"black"
     it "works for x:y:hello", ->

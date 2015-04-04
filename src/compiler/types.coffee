@@ -290,11 +290,18 @@ class AnnotationRoot extends Type
         if node.b
           @prepareMappings(node.b)
     
+  # This parses the tree as usual, but also passes a mapping
+  # to the semantic function. The mapping maps the names of the direct descendant
+  # annotations to their subtree.
+  parseWithAnnotations: (s) ->
+    @mappings = {}
+    # `a.parse(s)` will add mappings to `@mappings`
+    result = @a.parse(s)
+    @semantic result, @mappings
+
   parse: (s) ->
     if @hasAnnotations
-      @results = {}
-      @a.parse(s)
-      @semantic @results
+      @parseWithAnnotations(s)
     else
       @semantic @a.parse(s)
 
@@ -303,10 +310,9 @@ class Annotation extends AnnotationRoot
   constructor: (@name, @a, @semantic = @semantic) ->
   parse: (s) ->
     if @root
-      @root.results[@name] = if @hasAnnotations
-        @results = {}
-        @a.parse(s)
-        @semantic @results
+      # Here we add the mapping to the closes AnnotationRoot in the parent chain.
+      @root.mappings[@name] = if @hasAnnotations
+        @parseWithAnnotations(s)
       else
         @semantic @a.parse(s)
     else

@@ -138,10 +138,28 @@ Multiplied = new TP.Juxtaposition(
 # The basis for annotations is an optionally multiplied value
 Annotatable = Multiplied
 
+# A helper function to decide if `x` is `{}` or not
+isEmptyObject = (x) ->
+  for k of x
+    if x.hasOwnProperty(k)
+      return false
+  return true
+
+# This is a semantic function for  AnnotationRoot and Annotation, to add markings to the tree if the node
+# has (sub-)annotations.
+AddMarkings = (x,markings) ->
+  if markings and not isEmptyObject(markings)
+    new LL.Marking(x, markings)
+  else
+    x
+
+
+
+
 # Annotations
 Annotated = new TP.ExclusiveOr \
   new TP.Juxtaposition(Ident, new TP.Juxtaposition(Colon, new PLACEHOLDER, Pair), (name,[_,a])->
-    new TP.Annotation(name, a)),
+    new TP.Annotation name, a, AddMarkings),
   Annotatable
 Annotated.a.b.b = Annotated
 
@@ -181,7 +199,7 @@ Bracket.b.a = Combined
 # We wrap the root into an AnnotationRoot so that it can manage the annotations.
 # This might not be the best solution. We also wrap it to Full, so it must
 # consume all tokens from the stream
-module.exports = new TP.Full(Combined, (x)->new TP.AnnotationRoot(x))
+module.exports = new TP.Full(Combined, (x)->new TP.AnnotationRoot(x, AddMarkings))
 
 TYPES.ident = new TP.Ident((x)->new LL.Keyword(x.value))
 TYPES.number = new TP.Number((x)->new LL.Number(x.value))
