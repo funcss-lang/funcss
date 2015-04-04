@@ -77,8 +77,8 @@ describe 'TP', ->
     it "fails for second bad type", ->
       check_nomatch "black green", jp, 2, "number expected but 'green' found"
 
-  describe "Both", ->
-    da = new TP.Both(new TP.Ident(Value),new TP.Number(Value), (x,y)->{x,y})
+  describe "And", ->
+    da = new TP.And(new TP.Ident(Value),new TP.Number(Value), (x,y)->{x,y})
     
     it "can parse first second", ->
       check_tree "black 3.3", da, 3, Object, x:"black", y:3.3

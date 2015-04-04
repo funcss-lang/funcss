@@ -165,7 +165,7 @@ class ExclusiveOr extends Type
             throw e.merge(f)
   semantic: Id
 
-class Both extends Type
+class And extends Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
     #new Or(new Juxtaposition(@a,@b,@semantic),
@@ -342,7 +342,7 @@ module.exports = {
   NoMatch
   Juxtaposition
   CloselyJuxtaposed
-  Both
+  And
   ExclusiveOr
   InclusiveOr
   Optional
