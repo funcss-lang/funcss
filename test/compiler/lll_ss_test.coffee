@@ -156,7 +156,17 @@ describe "LL ss() of", ->
     it "works for x:[a:yes | b:no]", ->
       check_value "no", "x:[a:yes | b:no]", 1, "no"
       check_value "yes", "x:[a:yes | b:no]", 1, "yes"
-
+    it "works for x:[a:yes | b:no]*", ->
+      check_value "", "x:[a:yes | b:no]*", 0, ""
+      check_value "no", "x:[a:yes | b:no]*", 1, "no"
+      check_value "yes", "x:[a:yes | b:no]*", 1, "yes"
+      check_value "no    yes no", "x:[a:yes | b:no]*", 5, "no yes no"
+      check_value "no yes/*-*/yes", "x:[a:yes | b:no]*", 4, "no yes yes"
+    it "works for x:[a:yes | b:no]#", ->
+      check_value "no", "x:[a:yes | b:no]#", 1, "no"
+      check_value "yes", "x:[a:yes | b:no]#", 1, "yes"
+      check_value "no,    yes, no", "x:[a:yes | b:no]#", 7, "no, yes, no"
+      check_value "no, yes,yes", "x:[a:yes | b:no]#", 6, "no, yes, yes"
 
 
 
