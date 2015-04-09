@@ -37,7 +37,7 @@ check_error = (str, typeStr, errorClass, message) ->
     type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
     t = type.parse(s)
 
-describe "Value Definition Syntax", ->
+describe "Vds", ->
   describe "keyword", ->
     it "can parse ident", ->
       check_value "asdf", "asdf", 1, "asdf"
@@ -83,9 +83,11 @@ describe "Value Definition Syntax", ->
       check_value "/", "/", 1, "/"
     it "can parse a comma token", ->
       check_value ",", ",", 1, ","
-    it "cannot parse sth", ->
-      check_nomatch "3px", "/", 0, "'/' expected but '3px' found"
-      check_nomatch "3px", ",", 0, "',' expected but '3px' found"
+    describe "cannot parse sth", ->
+      specify "with '/'", ->
+        check_nomatch "3px", "/", 0, "'/' expected but '3px' found"
+      specify "with ','", ->
+        check_nomatch "3px", ",", 0, "',' expected but '3px' found"
 
   describe "<percentage>", ->
     it "can parse a percentage", ->
@@ -257,60 +259,88 @@ describe "Value Definition Syntax", ->
       check t.x, Object, a:"yes", b:"no"
       t = check_tree "no yes", "x:[a:yes && b:no]", 3, Object
       check t.x, Object, a:"yes", b:"no"
-    it "works for x:[a:yes || b:no]", ->
-      t = check_tree "yes no", "x:[a:yes || b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_tree "no yes", "x:[a:yes || b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_tree "no", "x:[a:yes || b:no]", 1, Object
-      check t.x, Object, a:undefined, b:"no"
-      t = check_tree "yes", "x:[a:yes || b:no]", 1, Object
-      check t.x, Object, a:"yes", b:undefined
-    it "works for x:[a:yes | b:no]", ->
-      t = check_tree "no", "x:[a:yes | b:no]", 1, Object
-      check t.x, Object, a:undefined, b:"no"
-      t = check_tree "yes", "x:[a:yes | b:no]", 1, Object
-      check t.x, Object, a:"yes", b:undefined
-    it "works for x:[a:yes|b:no]*", ->
-      t = check_tree "", "x:[a:yes|b:no]*", 0, Object
-      check t.x, Array, length: 0
-      t = check_tree "yes", "x:[a:yes|b:no]*", 1, Object
-      check t.x, Array, length: 1
-      check t.x[0], Object, a:"yes", b:undefined
-      t = check_tree "yes no", "x:[a:yes|b:no]*", 3, Object
-      check t.x, Array, length: 2
-      check t.x[0], Object, a:"yes", b:undefined
-      check t.x[1], Object, a:undefined, b:"no"
-    it "works for x:[a:yes|b:no]#", ->
-      t = check_tree "yes", "x:[a:yes|b:no]#", 1, Object
-      check t.x, Array, length: 1
-      check t.x[0], Object, a:"yes", b:undefined
-      t = check_tree "no,no,yes", "x:[a:yes|b:no]#", 5, Object
-      check t.x, Array, length: 3
-      check t.x[0], Object, a:undefined, b:"no"
-      check t.x[1], Object, a:undefined, b:"no"
-      check t.x[2], Object, a:"yes", b:undefined
-    it "works for x:[a:yes|b:no]?", ->
-      check_tree "", "x:[a:yes|b:no]?", 0, Object, x:undefined
-      t = check_tree "no", "x:[a:yes|b:no]?", 1, Object
-      check t.x, Object, a:undefined, b:"no"
-    it "works for x:[a:yes||b:no]?", ->
-      check_tree "", "x:[a:yes||b:no]?", 0, Object, x:undefined
-      t = check_tree "no", "x:[a:yes||b:no]?", 1, Object
-      check t.x, Object, a:undefined, b:"no"
-      t = check_tree "yes", "x:[a:yes||b:no]?", 1, Object
-      check t.x, Object, a:"yes", b:undefined
-      t = check_tree "yes no", "x:[a:yes||b:no]?", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_tree "no yes", "x:[a:yes||b:no]?", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-    it "works for [a:yes|b:no]*", ->
-      check_tree "", "[a:yes|b:no]*", 0, Array, length: 0
-      t = check_tree "yes", "[a:yes|b:no]*", 1, Array, length: 1
-      check t[0], Object, a:"yes", b:undefined
-      t = check_tree "yes no", "[a:yes|b:no]*", 3, Array, length: 2
-      check t[0], Object, a:"yes", b:undefined
-      check t[1], Object, a:undefined, b:"no"
+
+    describe "works for x:[a:yes || b:no]", ->
+      specify "for 'yes no'", ->
+        t = check_tree "yes no", "x:[a:yes || b:no]", 3, Object
+        check t.x, Object, a:"yes", b:"no"
+      specify "for 'no yes'", ->
+        t = check_tree "no yes", "x:[a:yes || b:no]", 3, Object
+        check t.x, Object, a:"yes", b:"no"
+      specify "for 'no'", ->
+        t = check_tree "no", "x:[a:yes || b:no]", 1, Object
+        check t.x, Object, a:undefined, b:"no"
+      specify "for 'yes'", ->
+        t = check_tree "yes", "x:[a:yes || b:no]", 1, Object
+        check t.x, Object, a:"yes", b:undefined
+
+    describe "works for x:[a:yes | b:no]", ->
+      specify "for 'no'", ->
+        t = check_tree "no", "x:[a:yes | b:no]", 1, Object
+        check t.x, Object, a:undefined, b:"no"
+      specify "for 'yes'", ->
+        t = check_tree "yes", "x:[a:yes | b:no]", 1, Object
+        check t.x, Object, a:"yes", b:undefined
+
+    describe "works for x:[a:yes|b:no]*", ->
+      specify "for ''", ->
+        t = check_tree "", "x:[a:yes|b:no]*", 0, Object
+        check t.x, Array, length: 0
+      specify "for 'yes'", ->
+        t = check_tree "yes", "x:[a:yes|b:no]*", 1, Object
+        check t.x, Array, length: 1
+        check t.x[0], Object, a:"yes", b:undefined
+      specify "for 'yes no'", ->
+        t = check_tree "yes no", "x:[a:yes|b:no]*", 3, Object
+        check t.x, Array, length: 2
+        check t.x[0], Object, a:"yes", b:undefined
+        check t.x[1], Object, a:undefined, b:"no"
+
+    describe "works for x:[a:yes|b:no]#", ->
+      specify "for 'yes'", ->
+        t = check_tree "yes", "x:[a:yes|b:no]#", 1, Object
+        check t.x, Array, length: 1
+        check t.x[0], Object, a:"yes", b:undefined
+      specify "for 'no,no,yes'", ->
+        t = check_tree "no,no,yes", "x:[a:yes|b:no]#", 5, Object
+        check t.x, Array, length: 3
+        check t.x[0], Object, a:undefined, b:"no"
+        check t.x[1], Object, a:undefined, b:"no"
+        check t.x[2], Object, a:"yes", b:undefined
+
+    describe "works for x:[a:yes|b:no]?", ->
+      specify "for ''", ->
+        check_tree "", "x:[a:yes|b:no]?", 0, Object, x:undefined
+      specify "for 'no'", ->
+        t = check_tree "no", "x:[a:yes|b:no]?", 1, Object
+        check t.x, Object, a:undefined, b:"no"
+
+    describe "works for x:[a:yes||b:no]?", ->
+      specify "for ''", ->
+        check_tree "", "x:[a:yes||b:no]?", 0, Object, x:undefined
+      specify "for 'no'", ->
+        t = check_tree "no", "x:[a:yes||b:no]?", 1, Object
+        check t.x, Object, a:undefined, b:"no"
+      specify "for 'yes'", ->
+        t = check_tree "yes", "x:[a:yes||b:no]?", 1, Object
+        check t.x, Object, a:"yes", b:undefined
+      specify "for 'yes no'", ->
+        t = check_tree "yes no", "x:[a:yes||b:no]?", 3, Object
+        check t.x, Object, a:"yes", b:"no"
+      specify "for 'no yes'", ->
+        t = check_tree "no yes", "x:[a:yes||b:no]?", 3, Object
+        check t.x, Object, a:"yes", b:"no"
+
+    describe "works for [a:yes|b:no]*", ->
+      specify "for ''", ->
+        check_tree "", "[a:yes|b:no]*", 0, Array, length: 0
+      specify "for 'yes'", ->
+        t = check_tree "yes", "[a:yes|b:no]*", 1, Array, length: 1
+        check t[0], Object, a:"yes", b:undefined
+      specify "for 'yes no'", ->
+        t = check_tree "yes no", "[a:yes|b:no]*", 3, Array, length: 2
+        check t[0], Object, a:"yes", b:undefined
+        check t[1], Object, a:undefined, b:"no"
 
 
 
