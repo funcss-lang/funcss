@@ -6,9 +6,9 @@
 #
 # The basic elements of the tree are Rule and Value. Every Rule associates a Value to a CSS property.
 #
-# The two outputs of this tree are the `js()` and `ssjs()` methods. Both return a JavaScript
+# The two outputs of this tree are the `jsjs()` and `ssjs()` methods. Both return a JavaScript
 # expression, which, if evaled, return a value for the user-written JS functions and for the 
-# CSS, respectively. For example
+# CSS(OM), respectively. For example
 #
 
 exports.Rule = class Rule
@@ -21,31 +21,31 @@ exports.Constant = class Constant extends Value
 
 exports.Keyword = class Constant extends Constant
   constructor: (@value) ->
-  js: ->
+  jsjs: ->
     JSON.stringify(@value)
   ssjs: ->
     JSON.stringify("#{@value}")
 
 exports.Percentage = class Percentage extends Constant
   constructor: (@value) ->
-  js: ->
+  jsjs: ->
     JSON.stringify(@value / 100)
   ssjs: ->
     JSON.stringify("#{@value}%")
 
 exports.Number = class Number extends Constant
   constructor: (@value) ->
-  js: ->
+  jsjs: ->
     JSON.stringify(@value)
 
 exports.EmptyValue = class EmptyValue extends Constant
-  js: ->
+  jsjs: ->
     "(void 0)"
   ssjs: ->
     JSON.stringify("")
 
 exports.String = class String extends Constant
-  js: ->
+  jsjs: ->
     JSON.stringify(@value)
   ssjs: ->
     JSON.stringify(@value)
@@ -56,8 +56,8 @@ exports.Collection = class Collection extends Value
   delimiter: " "
   unshift: (x)->
     @value.unshift(x)
-  js: ->
-    "[#{(i.js() for i in @value).join(", ")}]"
+  jsjs: ->
+    "[#{(i.jsjs() for i in @value).join(", ")}]"
   ssjs: ->
     elems = (i.ssjs() for i in @value)
     # We remove the empty values from the token
@@ -80,9 +80,9 @@ exports.InclusiveOr = class InclusiveOr extends Collection
 # This class is responsible for using a mapping from an AnnotationRoot object
 exports.Marking = class Marking extends Value
   constructor: (@value, @marking) ->
-  js: ->
+  jsjs: ->
     # The object is wrapped here into `()` to avoid interpreting it as a statement.
     # FIXME the beautifier should handle this later.
-    "({#{("#{JSON.stringify(k)}:#{v.js()}" for k,v of @marking).join(", ")}})"
+    "({#{("#{JSON.stringify(k)}:#{v.jsjs()}" for k,v of @marking).join(", ")}})"
   ssjs: ->
     @value.ssjs()

@@ -8,8 +8,8 @@ check = require "./check"
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
   value = type.parse(s)
-  js = value.js()
-  eval("#{js}")
+  jsjs = value.jsjs()
+  eval("#{jsjs}")
 
 
 check_value = (str, typeStr, next, value) ->
