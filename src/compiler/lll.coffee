@@ -2,13 +2,14 @@
 #### The Low Level Language nodes
 # 
 # The nodes defined in this file constitute a tree that represents the most semantical
-# representation of the FunCSS stylesheet. It is actually a data flow graph.
+# representation of the FunCSS stylesheet. It is actually a rule list and a data flow graph.
 #
-# The basic elements of the tree are Rule and Value.
+# The basic elements of the tree are Rule and Value. Every Rule associates a Value to a CSS property.
 #
-# The two outputs of this tree are the `js()` and `ssjs()` values. Both return a JavaScript
+# The two outputs of this tree are the `js()` and `ssjs()` methods. Both return a JavaScript
 # expression, which, if evaled, return a value for the user-written JS functions and for the 
-# CSSOM respectively
+# CSS, respectively. For example
+#
 
 exports.Rule = class Rule
   constructor : (@mediaQuery, @important, @selectorGroup, @prop, @value) ->
