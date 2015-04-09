@@ -2,9 +2,9 @@
 # that transforms a type definition token stream to a Types tree. The result will
 # transform an actual value token stream to an LLL value
 #
-TP = require "../../src/compiler/types"
-SS = require "../../src/compiler/stylesheet"
-LL = require "./lll"
+TP = require "./types"
+SS = require "./stylesheet"
+VL = require "./value"
 
 TYPES = {}
 
@@ -59,7 +59,7 @@ String = new TP.String
 # has (sub-)annotations.
 AddMarkings = (x,markings) ->
   if markings and not isEmptyObject(markings)
-    new LL.Marking(x, markings)
+    new VL.Marking(x, markings)
   else
     x
 
@@ -77,14 +77,14 @@ AddMarkings = (x,markings) ->
 #       ...
 #     }
 #   }
-LiteralSlash = new TP.DelimLike(new SS.DelimToken('/'), (x)->new TP.DelimLike(x, (x)->new LL.Keyword("/")))
-LiteralComma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x, (x)->new LL.Keyword(",")))
+LiteralSlash = new TP.DelimLike(new SS.DelimToken('/'), (x)->new TP.DelimLike(x, (x)->new VL.Keyword("/")))
+LiteralComma = new TP.DelimLike(new SS.CommaToken, (x)->new TP.DelimLike(x, (x)->new VL.Keyword(",")))
 
 # Multiplier tokens with metadata for easy handling
-Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{collection: LL.CommaDelimitedCollection, multiplier: TP.DelimitedByComma})
-Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{collection: LL.Collection, multiplier: TP.OneOrMore})
+Hashmark     = new TP.DelimLike(new SS.DelimToken('#'), ->{collection: VL.CommaDelimitedCollection, multiplier: TP.DelimitedByComma})
+Plus         = new TP.DelimLike(new SS.DelimToken('+'), ->{collection: VL.Collection, multiplier: TP.OneOrMore})
 QuestionMark = new TP.DelimLike(new SS.DelimToken('?'), ->{collection: no,  multiplier: TP.Optional})
-Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{collection: LL.Collection, multiplier: TP.ZeroOrMore})
+Asterisk     = new TP.DelimLike(new SS.DelimToken('*'), ->{collection: VL.Collection, multiplier: TP.ZeroOrMore})
 
 # The {A,B} syntax for repetition count.
 # TODO {A,} and {A} syntax is also needed
@@ -93,11 +93,11 @@ RepeatCount =
     new TP.CloselyJuxtaposed Integer,
       new TP.CloselyJuxtaposed Comma, Integer , Snd
     , Pair
-  , ([from,to])->{collection: LL.Collection, multiplier: TP.Range, args: [from,to]}
+  , ([from,to])->{collection: VL.Collection, multiplier: TP.Range, args: [from,to]}
 
 
 # The generic type where a specific identifier is required
-Keyword = new TP.Ident((x)->new TP.Keyword(x.value, (x)->new LL.Keyword(x.value)))
+Keyword = new TP.Ident((x)->new TP.Keyword(x.value, (x)->new VL.Keyword(x.value)))
 
 # The type reference
 TypeReference = new TP.CloselyJuxtaposed(
@@ -147,7 +147,7 @@ Multiplied = new TP.Juxtaposition(
         # if any annotation is present inside.
         new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (arr)->new multdata.collection(arr))
       else
-        new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (x)->x ? new LL.EmptyValue)
+        new multdata.multiplier((multdata.args ? [])..., new TP.AnnotationRoot(a, AddMarkings), (x)->x ? new VL.EmptyValue)
     else
       a
 )
@@ -175,21 +175,21 @@ Annotated.a.b.b = Annotated
 # Combinators
 Juxtaposition = new TP.OneOrMore Annotated, (l)-> pairsOf(
   TP.Juxtaposition, l,
-  pair: (x,y)->new LL.Juxtaposition([x,y])
+  pair: (x,y)->new VL.Juxtaposition([x,y])
   cons: Cons
 )
 
 And = new TP.DelimitedBy DblAmpersand, Juxtaposition, (l)-> pairsOf(
   TP.And, l,
-  pair: (x,y)->new LL.And([x,y])
+  pair: (x,y)->new VL.And([x,y])
   cons: Cons
 )
 
 # We pass a parameter to the TT.InclusiveOr constructor, the semantic function to be used with the nested Optional type.
 InclusiveOr = new TP.DelimitedBy Column, And, (l)-> pairsOf(
   TP.InclusiveOr, l,
-  pair: (x,y)->new LL.InclusiveOr([x ? new LL.EmptyValue, y ? new LL.EmptyValue])
-  cons: (x,y)->y.unshift(x ? new LL.EmptyValue) ; y
+  pair: (x,y)->new VL.InclusiveOr([x ? new VL.EmptyValue, y ? new VL.EmptyValue])
+  cons: (x,y)->y.unshift(x ? new VL.EmptyValue) ; y
 )
 
 ExclusiveOr = new TP.DelimitedBy Bar, InclusiveOr, (l)-> pairsOf(
@@ -210,11 +210,11 @@ Bracket.b.a = Combined
 # consume all tokens from the stream
 module.exports = new TP.Full(Combined, (x)->new TP.AnnotationRoot(x, AddMarkings))
 
-TYPES.ident = new TP.Ident((x)->new LL.Keyword(x.value))
-TYPES.number = new TP.Number((x)->new LL.Number(x.value))
-TYPES.integer = new TP.Integer((x)->new LL.Number(x.value))
-TYPES.percentage = new TP.Percentage((x)->new LL.Percentage(x.value))
-TYPES.string = new TP.String((x)->new LL.String(x.value))
+TYPES.ident = new TP.Ident((x)->new VL.Keyword(x.value))
+TYPES.number = new TP.Number((x)->new VL.Number(x.value))
+TYPES.integer = new TP.Integer((x)->new VL.Number(x.value))
+TYPES.percentage = new TP.Percentage((x)->new VL.Percentage(x.value))
+TYPES.string = new TP.String((x)->new VL.String(x.value))
 
 module.exports[k] = v for k,v of {
   UnknownType
