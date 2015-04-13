@@ -1,10 +1,15 @@
 #!/usr/bin/env coffee
 # vim: ft=coffee
 
-bdd = require "../test/bdd/bdd"
-FunCSS = require "../src/compiler/funcss"
+bdd = require "../test/bdd"
+FunCSS = require "../src/compiler"
 fs = require "fs"
 
+if !process.argv[3]
+  console.log """
+    Usage: bdd testName:<ident> action:[try|ok|fail]
+  """
+  return
 
 basename = bdd.find(process.argv[2]).replace(/\.fcss$/, "")
 

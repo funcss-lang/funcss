@@ -1,5 +1,5 @@
-Tokenizer = require "../../src/compiler/tokenizer.coffee"
-SS = require "../../src/compiler/stylesheet"
+Tokenizer = require "../../src/compiler/syntax/tokenizer"
+SS = require "../../src/compiler/syntax/ss_nodes"
 
 describe 'Tokenizer', ->
   it "has token classes", ->

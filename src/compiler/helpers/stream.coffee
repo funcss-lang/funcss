@@ -1,4 +1,4 @@
-SS = require "./stylesheet"
+SS = require "../syntax/ss_nodes"
 
 class Stream
   constructor: (items) ->

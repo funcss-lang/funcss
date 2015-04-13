@@ -1,6 +1,7 @@
-Tokenizer = require("#{__dirname}/../../src/compiler/tokenizer.coffee")
-Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
-SS = require "./stylesheet"
+Tokenizer = require "../../syntax/tokenizer"
+Parser = require "../../syntax/parser"
+SS = require "../../syntax/ss_nodes"
+Stream = require "../../helpers/stream"
 
 # helper error class to use for parsing
 class NoMatch extends Error
@@ -16,7 +17,6 @@ class NoMatch extends Error
       new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
 
 # backtrack algorithm for the stream
-Stream = require "./stream"
 Stream.prototype.backtrack = (options) ->
   try
     p = @position

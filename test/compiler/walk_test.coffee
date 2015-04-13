@@ -1,4 +1,4 @@
-walk = require "../../src/compiler/walk"
+walk = require "../../src/compiler/helpers/walk"
 check = require "./check"
 
 describe "walk", ->

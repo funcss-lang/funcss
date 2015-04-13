@@ -1,5 +1,5 @@
 Tokenizer = require "./tokenizer"
-SS = require "./stylesheet"
+SS = require "./ss_nodes"
 
 
 

@@ -4,7 +4,7 @@
 
 fs = require "fs"
 path = require "path"
-FunCSS = require "../src/compiler/funcss"
+FunCSS = require "../src/compiler"
 
 exports.search = search = (dir) ->
   result = []

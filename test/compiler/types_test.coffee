@@ -1,8 +1,8 @@
-TP = require "../../src/compiler/types"
-Stream = require "../../src/compiler/stream"
-Parser = require "../../src/compiler/parser"
-Tokenizer = require "../../src/compiler/tokenizer"
-SS = require "../../src/compiler/stylesheet"
+TP = require "../../src/compiler/semantics/values/tp_nodes"
+Stream = require "../../src/compiler/helpers/stream"
+Parser = require "../../src/compiler/syntax/parser"
+Tokenizer = require "../../src/compiler/syntax/tokenizer"
+SS = require "../../src/compiler/syntax/ss_nodes"
 check = require "./check"
 
 

@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+Compiler = require "../src/compiler"
+
+
+
+Compiler.
+

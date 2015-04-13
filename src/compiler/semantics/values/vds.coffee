@@ -2,9 +2,9 @@
 # that transforms a type definition token stream to a Types tree. The result will
 # transform an actual value token stream to an LLL value
 #
-TP = require "./types"
-SS = require "./stylesheet"
-VL = require "./value"
+TP = require "./tp_nodes"
+SS = require "../../syntax/ss_nodes"
+VL = require "./vl_nodes"
 
 TYPES = {}
 

@@ -1,7 +1,7 @@
-TP = require "../../src/compiler/types"
-Stream = require "../../src/compiler/stream"
-Parser = require "../../src/compiler/parser"
-Vds = require "../../src/compiler/vds"
+TP = require "../../src/compiler/semantics/values/tp_nodes"
+Stream = require "../../src/compiler/helpers/stream"
+Parser = require "../../src/compiler/syntax/parser"
+Vds = require "../../src/compiler/semantics/values/vds"
 check = require "./check"
 
 parse = (s, typeStr) ->
@@ -49,9 +49,9 @@ describe "LL ss() of", ->
 
   describe "<string>", ->
     it "works for a string", ->
-      check_value "'asdf'", "<string>", 1, "asdf"
+      check_value "'asdf'", "<string>", 1, '"asdf"'
     it "works for a string with doulbe quotes", ->
-      check_value '"asdf"', "<string>", 1, "asdf"
+      check_value '"asdf"', "<string>", 1, '"asdf"'
 
 
   describe "Juxtaposition", ->

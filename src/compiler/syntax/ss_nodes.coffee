@@ -134,7 +134,8 @@ exports.DeclarationList = class DeclarationList
   @prototype: []
 exports.ComponentValueList = class ComponentValueList
   @prototype: []
-  # This table is the copy of the one in the CSS Syntax Level 3 CR spec.
+  # This table is the copy of the one in the CSS Syntax Level 3 CR spec. It is used
+  # for deciding whether a comment is needed between two tokens when serializing.
   @commentNeededMap :
     IdentToken:
       IdentToken: yes

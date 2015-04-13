@@ -1,6 +1,6 @@
-Tokenizer = require("../../src/compiler/tokenizer.coffee")
-Parser = require("../../src/compiler/parser.coffee")
-SS = require "../../src/compiler/stylesheet"
+Tokenizer = require "../../src/compiler/syntax/tokenizer"
+Parser = require "../../src/compiler/syntax/parser"
+SS = require "../../src/compiler/syntax/ss_nodes"
 
 check = require "./check"
 

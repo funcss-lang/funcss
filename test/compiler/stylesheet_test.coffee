@@ -1,8 +1,8 @@
 # These are the tests for the code generator.
 #
 
-SS = require "../../src/compiler/stylesheet"
-Parser = require("#{__dirname}/../../src/compiler/parser.coffee")
+SS = require "../../src/compiler/syntax/ss_nodes"
+Parser = require "../../src/compiler/syntax/parser"
 
 
 check_ser = (orig, result=orig) ->

@@ -1,8 +1,8 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
-TP = require "../../src/compiler/types"
-Stream = require "../../src/compiler/stream"
-Parser = require "../../src/compiler/parser"
-Vds = require "../../src/compiler/vds"
+TP = require "../../src/compiler/semantics/values/tp_nodes"
+Stream = require "../../src/compiler/helpers/stream"
+Parser = require "../../src/compiler/syntax/parser"
+Vds = require "../../src/compiler/semantics/values/vds"
 check = require "./check"
 
 parse = (s, typeStr) ->

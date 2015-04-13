@@ -32,8 +32,8 @@
 # usage.
 
 
-Stream = require "./stream"
-SS = require "./stylesheet"
+Stream = require "../helpers/stream"
+SS = require "./ss_nodes"
 
 class Tokenizer
   tokenize: (string) ->
