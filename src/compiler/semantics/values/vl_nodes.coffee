@@ -90,4 +90,7 @@ exports.FunctionalNotation = class FunctionalNotation extends Value
   jsjs: ->
     "customFunctions[#{JSON.stringify(@name)}]("+@arg.jsjs()+")"
   ssjs: ->
-    JSON.stringify("#{escape(@name)}(") + @arg.ssjs() + JSON.stringify(")")
+    JSON.stringify("#{escape(@name)}(") + " + " + @arg.ssjs() + " + " + JSON.stringify(")")
+
+
+

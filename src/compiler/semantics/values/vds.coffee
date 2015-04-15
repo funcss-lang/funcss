@@ -48,6 +48,11 @@ Bar          = new TP.DelimLike(new SS.DelimToken('|'))
 Comma        = new TP.DelimLike(new SS.CommaToken)
 
 
+# We use this class to create recursive types. We define the type with the placeholder, and then replace it afterwards.
+class PLACEHOLDER extends TP.Type
+  parse: -> throw new Error "PLACEHOLDER not replaced"
+
+
 # helper types
 Ident = new TP.Ident
 Number = new TP.Number
@@ -102,29 +107,26 @@ Keyword = new TP.Ident((x)->new TP.Keyword(x.value, (x)->new VL.Keyword(x.value)
 # The type reference
 TypeReference = new TP.CloselyJuxtaposed(
   OpeningAngle, new TP.CloselyJuxtaposed(
-    Ident, ClosingAngle, Fst), (_,y)->TYPES[y.toLowerCase()] ? throw new UnknownType(y))
+    Ident, ClosingAngle, Fst), (_,y)->new TP.TypeReference(y))
 
-# This error is thrown when a user tries to reference a type that does not exist
-class UnknownType extends Error
-  constructor: (@type) ->
-    @message = "unknown type <#{@type}>"
-
+# The function definition
+FunctionalNotation = new TP.AnyFunctionalNotation(
+  PLACEHOLDER,
+  (name,x)->new TP.FunctionalNotation(name,x,(y)->new VL.FunctionalNotation(name, y)))
 
 # The union of all component value types
-ComponentValueType = pairsOf TP.ExclusiveOr, [
+ComponentValue = pairsOf TP.ExclusiveOr, [
   Keyword
+  FunctionalNotation
   TypeReference
   LiteralSlash
   LiteralComma
 ]
 
-# We use this class to create recursive types. We define the type with the placeholder, and then replace it afterwards.
-class PLACEHOLDER extends TP.Type
-  parse: -> throw new Error "PLACEHOLDER not replaced"
 
 # This is the `[]` grouping bracket pair
 Bracket = new TP.ExclusiveOr \
-  ComponentValueType,
+  ComponentValue,
   new TP.SimpleBlock SS.OpeningSquareToken, PLACEHOLDER
 
 # The basis for multipliers is the bracket
@@ -204,9 +206,12 @@ Combined = ExclusiveOr
 # We create the recursive type for the bracket, so that it can contain any combined values
 Bracket.b.a = Combined
 
+# We create the recursive type for function as well
+FunctionalNotation.a = Combined
+
 
 # We wrap the root into an AnnotationRoot so that it can manage the annotations.
-# This might not be the best solution. We also wrap it to Full, so it must
+# This might not be the best solution. We also wrap it into Full, so it must
 # consume all tokens from the stream
 module.exports = new TP.Full(Combined, (x)->new TP.AnnotationRoot(x, AddMarkings))
 
@@ -216,7 +221,12 @@ TYPES.integer = new TP.Integer((x)->new VL.Number(x.value))
 TYPES.percentage = new TP.Percentage((x)->new VL.Percentage(x.value))
 TYPES.string = new TP.String((x)->new VL.String(x.value))
 
+# This is used in syntactic contexts where a single type atom is allowed and
+# brackets are required when the user needs more complex types.
+Atom = Annotatable
+
 module.exports[k] = v for k,v of {
-  UnknownType
   TYPES
+  Atom
+  TypeReference
 }

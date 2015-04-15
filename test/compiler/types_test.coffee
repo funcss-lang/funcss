@@ -326,9 +326,34 @@ describe 'TP', ->
     it "works", ->
       check_tree "{hello}", sb, 1, Object, hello:"hello"
     it "works", ->
+      # TODO change error message to '}' expected...
       check_nomatch "{hello world}", sb, 1, "EOF expected but 'world' found"
     it "fails for sth", ->
       check_nomatch "sth", sb, 0, "'{' expected but 'sth' found"
     it "fails for ()", ->
+      # TODO change error message to '(' found... maybe
       check_nomatch "(hello world)", sb, 0, "'{' expected but '(hello world)' found"
     
+  describe "functional notation", ->
+    fn = new TP.FunctionalNotation("tan", new TP.Keyword("hello"), (x)->hello:x)
+    it "works", ->
+      check_tree "tan(hello)", fn, 1, Object, hello:"hello"
+    it "works with whitespace", ->
+      check_tree "tan(  hello  )", fn, 1, Object, hello:"hello"
+    it "works", ->
+      # TODO change error message to ')' expected...
+      check_nomatch "tan(hello world)", fn, 1, "EOF expected but 'world' found"
+    it "fails for sth", ->
+      check_nomatch "sth", fn, 0, "'tan(' expected but 'sth' found"
+
+  describe "CustomFunction", ->
+    fn = new TP.AnyFunctionalNotation(new TP.Keyword("hello"), (name, hello)->{name,hello})
+    it "works", ->
+      check_tree "f(hello)", fn, 1, Object, name:"f", hello:"hello"
+    it "works with whitespace", ->
+      check_tree "f(  hello  )", fn, 1, Object, name:"f", hello:"hello"
+    it "works", ->
+      # TODO change error message to ')' expected...
+      check_nomatch "f(hello world)", fn, 1, "EOF expected but 'world' found"
+    it "fails for sth", ->
+      check_nomatch "sth", fn, 0, "function expected but 'sth' found"

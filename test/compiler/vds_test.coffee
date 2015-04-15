@@ -5,8 +5,14 @@ Parser = require "../../src/compiler/syntax/parser"
 Vds = require "../../src/compiler/semantics/values/vds"
 check = require "./check"
 
+customFunctions =
+  abs: Math.abs
+  sign: Math.sign
+  sqrt: Math.sqrt
+
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  type.setTypeTable(Vds.TYPES)
   value = type.parse(s)
   jsjs = value.jsjs()
   eval("#{jsjs}")
@@ -35,6 +41,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+    type.setTypeTable(Vds.TYPES)
     t = type.parse(s)
 
 describe "Vds", ->
@@ -50,11 +57,11 @@ describe "Vds", ->
     it "works", ->
       check_value "3%", "<percentage>", 1, 0.03
     it "cannot use whitespace", ->
-      # TODO make better error messages in this case
+      # TODO make this allowed
       check_error "3%", "< percentage>", TP.NoMatch, /identifier expected but ' ' found/
       check_error "3%", "<percentage >", TP.NoMatch, /'>' expected but ' ' found/
     it "cannot use unnamed type", ->
-      check_error "3%", "<asdf>", Vds.UnknownType, "unknown type <asdf>"
+      check_error "3%", "<asdf>", TP.UnknownType, "unknown type <asdf>"
 
   describe "<ident>", ->
     it "can parse an ident", ->
@@ -342,6 +349,9 @@ describe "Vds", ->
         check t[0], Object, a:"yes", b:undefined
         check t[1], Object, a:undefined, b:"no"
 
+  describe "functional notations", ->
+    it "works for f(x)", ->
+      check_value "abs(-5)", "abs(<number>)", 1, 5
 
 
 

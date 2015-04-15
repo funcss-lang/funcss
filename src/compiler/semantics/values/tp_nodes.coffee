@@ -44,6 +44,9 @@ Snd = (x,y) -> y
 # base class for all types
 class Type
   constructor: (@semantic = @semantic) ->
+  setTypeTable: (@typeTable) ->
+    @a?.setTypeTable(@typeTable)
+    @b?.setTypeTable(@typeTable)
 
 # a type which matches a single token of a single class, with optional property restrictions
 class TokenType extends Type
@@ -336,6 +339,46 @@ class SimpleBlock extends Type
     s.consume_next()
     return @semantic new Full(@a).parse(new Stream(next.value))
 
+# A special type that refers to another type.
+class TypeReference extends Type
+  semantic: Id
+  constructor: (@name, @semantic = @semantic) ->
+    @expected = @name
+  parse: (s) ->
+    if ! @typeTable
+      throw new Error "type tables are not set up correctly"
+    if ! @typeTable[@name]
+      throw new UnknownType(@name)
+    @typeTable[@name].parse(s)
+
+# This error is thrown when a user tries to reference a type that does not exist
+class UnknownType extends Error
+  constructor: (@type) ->
+    @message = "unknown type <#{@type}>"
+
+class FunctionalNotation extends Type
+  semantic: Id
+  constructor: (@name, @a, @semantic=@semantic) ->
+    @expected = "'#{name}('"
+  parse: (s) ->
+    next = s.next()
+    unless next instanceof SS.Function
+      throw new NoMatch(@expected, "'#{next}'")
+    unless next.name is @name
+      throw new NoMatch(@expected, "'#{next}'")
+    s.consume_next()
+    return @semantic new Full(@a).parse(new Stream(next.value))
+
+class AnyFunctionalNotation extends Type
+  expected: "function"
+  semantic: (name, x) -> throw Error "No semantic function for AnyFunctionalNotation"
+  constructor: (@a, @semantic = @semantic) ->
+  parse: (s) ->
+    next = s.next()
+    unless next instanceof SS.Function
+      throw new NoMatch(@expected, "'#{next}'")
+    s.consume_next()
+    return @semantic next.name, new Full(@a).parse(new Stream(next.value))
 
 module.exports = {
   Type
@@ -365,4 +408,8 @@ module.exports = {
   Annotation
   AnnotationRoot
   SimpleBlock
+  TypeReference
+  UnknownType
+  FunctionalNotation
+  AnyFunctionalNotation
 }

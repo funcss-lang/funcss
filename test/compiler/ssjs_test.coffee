@@ -6,6 +6,7 @@ check = require "./check"
 
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  type.setTypeTable(Vds.TYPES)
   value = type.parse(s)
   ssjs = value.ssjs()
   eval("#{ssjs}")
@@ -182,6 +183,11 @@ describe "LL ss() of", ->
         check_value "no,    yes, no", "x:[a:yes | b:no]#", 7, "no, yes, no"
       specify "for 'no, yes,yes'", ->
         check_value "no, yes,yes", "x:[a:yes | b:no]#", 6, "no, yes, yes"
+
+  describe "functional notations", ->
+    it "works for f(x)", ->
+      check_value "abs(-5)", "abs(<number>)", 1, "abs(-5)"
+
 
 
 

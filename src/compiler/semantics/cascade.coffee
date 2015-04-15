@@ -14,6 +14,7 @@ exports.qualifiedRule = (qrule, sg) ->
   sel = Selectors.parse new Stream qrule.prelude
   for decl in Parser.parse_list_of_declarations qrule.value.value
     type = sg.propertyValueTypes[decl.name] || new TP.Full(Vds.parse(new Stream(Parser.parse_list_of_component_values("<ident>"))))
+    type.setTypeTable(Vds.TYPES)
     if not type
       throw new Error "Undefined property: #{decl.name}"
     sg.simpleRules.push new CS.SimpleRule
