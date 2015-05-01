@@ -11,9 +11,11 @@ customFunctions =
   sign: Math.sign
   sqrt: Math.sqrt
 
+BorderType = Vds.parse(new Stream(Parser.parse_list_of_component_values("solid|dashed|dotted|none")))
+
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setTypeTable(Vds.TYPES)
+  type.setTypeTables({normal: Vds.TYPES, quoted: {'border-type': BorderType}})
   value = type.parse(s)
   value
 
@@ -35,7 +37,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    type.setTypeTable(Vds.TYPES)
+    type.setTypeTables({normal: Vds.TYPES, quoted: {}})
     t = type.parse(s)
 
 describe "Vds", ->
@@ -59,6 +61,12 @@ describe "Vds", ->
       check_tree "3%", "< percentage >", 1, VL.Percentage, value: 3
     it "cannot use unnamed type", ->
       check_error "3%", "<asdf>", TP.UnknownType, "unknown type <asdf>"
+    it "can refer to a quoted type", ->
+      check_tree "solid", "<'border-type'>", 1, VL.Keyword, value: "solid"
+    it "can refer to a quoted type with no match", ->
+      check_nomatch "asdf", "<'border-type'>", 0, "'solid' or 'dashed' or 'dotted' or 'none' expected but 'asdf' found"
+    it "cannot use unnamed quoted type", ->
+      check_error "3%", "<'asdf'>", TP.UnknownType, "unknown type <'asdf'>"
 
   describe "<ident>", ->
     it "can parse an ident", ->

@@ -108,7 +108,10 @@ Keyword = new TP.Ident((x)->new TP.Keyword(x.value, (x)->new VL.Keyword(x.value)
 # The type reference
 TypeReference = new TP.Juxtaposition(
   OpeningAngle, new TP.Juxtaposition(
-    Ident, ClosingAngle, Fst), (_,y)->new TP.TypeReference(y))
+    new TP.ExclusiveOr(new TP.Ident((x)->[x.value,no]), new TP.String((x)->[x.value,yes]))
+    ClosingAngle,
+    Fst
+  ), (_,[name,quoted])->new TP.TypeReference(name,quoted))
 
 # The function definition
 FunctionalNotation = new TP.AnyFunctionalNotation(

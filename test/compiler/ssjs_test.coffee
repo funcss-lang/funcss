@@ -6,7 +6,7 @@ check = require "./check"
 
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setTypeTable(Vds.TYPES)
+  type.setTypeTables({normal: Vds.TYPES, quoted: {}})
   value = type.parse(s)
   ssjs = value.ssjs()
   eval("#{ssjs}")

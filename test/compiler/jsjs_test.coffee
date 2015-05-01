@@ -12,7 +12,7 @@ customFunctions =
 
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setTypeTable(Vds.TYPES)
+  type.setTypeTables({normal: Vds.TYPES, quoted: {}})
   value = type.parse(s)
   jsjs = value.jsjs()
   eval("#{jsjs}")
@@ -41,7 +41,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    type.setTypeTable(Vds.TYPES)
+    type.setTypeTables({normal: Vds.TYPES, quoted: {}})
     t = type.parse(s)
 
 describe "Jsjs", ->

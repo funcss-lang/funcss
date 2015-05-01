@@ -44,9 +44,9 @@ Snd = (x,y) -> y
 # base class for all types
 class Type
   constructor: (@semantic = @semantic) ->
-  setTypeTable: (@typeTable) ->
-    @a?.setTypeTable(@typeTable)
-    @b?.setTypeTable(@typeTable)
+  setTypeTables: (@typeTables) ->
+    @a?.setTypeTables(@typeTables)
+    @b?.setTypeTables(@typeTables)
 
 # a type which matches a single token of a single class, with optional property restrictions
 class TokenType extends Type
@@ -342,19 +342,20 @@ class SimpleBlock extends Type
 # A special type that refers to another type.
 class TypeReference extends Type
   semantic: Id
-  constructor: (@name, @semantic = @semantic) ->
+  constructor: (@name, @quoted = no, @semantic = @semantic) ->
     @expected = @name
   parse: (s) ->
-    if ! @typeTable
+    if ! @typeTables
       throw new Error "type tables are not set up correctly"
-    if ! @typeTable[@name]
-      throw new UnknownType(@name)
-    @typeTable[@name].parse(s)
+    table = if @quoted then @typeTables.quoted else @typeTables.normal
+    type = table[@name]
+    throw new UnknownType(@name, @quoted) if not type?
+    type.parse(s)
 
 # This error is thrown when a user tries to reference a type that does not exist
 class UnknownType extends Error
-  constructor: (@type) ->
-    @message = "unknown type <#{@type}>"
+  constructor: (@type, @quoted) ->
+    @message = if @quoted then "unknown type <'#{@type}'>" else "unknown type <#{@type}>"
 
 class FunctionalNotation extends Type
   semantic: Id
