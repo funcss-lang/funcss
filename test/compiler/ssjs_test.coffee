@@ -140,49 +140,49 @@ describe "LL ss() of", ->
 
 
   describe "annotations", ->
-    it "works for x:hello", ->
-      check_value "black", "color:<ident>", 1, "black"
-    it "works for x:y:hello", ->
-      check_value "hello", "x:y:<ident>", 1, "hello"
-    it "works for x:[a:yes b:no]", ->
-      check_value "yes no", "x:[a:yes b:no]", 3, "yes no"
-    it "works for x:[a:yes && b:no]", ->
-      check_value "yes no", "x:[a:yes && b:no]", 3, "yes no"
-      check_value "no yes", "x:[a:yes && b:no]", 3, "yes no"
-    describe "works for x:[a:yes || b:no]", ->
+    it "works for x:ident", ->
+      check_value "black", "color:ident", 1, "black"
+    it "works for x:y:ident", ->
+      check_value "hello", "x:[y:ident]", 1, "hello"
+    it "works for x:[a:[yes] b:[no]]", ->
+      check_value "yes no", "x:[a:[yes] b:[no]]", 3, "yes no"
+    it "works for x:[a:[yes] && b:[no]]", ->
+      check_value "yes no", "x:[a:[yes] && b:[no]]", 3, "yes no"
+      check_value "no yes", "x:[a:[yes] && b:[no]]", 3, "yes no"
+    describe "works for x:[a:[yes] || b:[no]]", ->
       specify "for 'yes no'", ->
-        check_value "yes no", "x:[a:yes || b:no]", 3, "yes no"
+        check_value "yes no", "x:[a:[yes] || b:[no]]", 3, "yes no"
       specify "for 'no yes'", ->
-        check_value "no yes", "x:[a:yes || b:no]", 3, "yes no"
+        check_value "no yes", "x:[a:[yes] || b:[no]]", 3, "yes no"
       specify "for 'no'", ->
-        check_value "no", "x:[a:yes || b:no]", 1, "no"
+        check_value "no", "x:[a:[yes] || b:[no]]", 1, "no"
       specify "for 'yes'", ->
-        check_value "yes", "x:[a:yes || b:no]", 1, "yes"
-    describe "works for x:[a:yes | b:no]", ->
+        check_value "yes", "x:[a:[yes] || b:[no]]", 1, "yes"
+    describe "works for x:[a:[yes] | b:[no]]", ->
       specify "for 'no'", ->
-        check_value "no", "x:[a:yes | b:no]", 1, "no"
+        check_value "no", "x:[a:[yes] | b:[no]]", 1, "no"
       specify "for 'yes'", ->
-        check_value "yes", "x:[a:yes | b:no]", 1, "yes"
-    describe "works for x:[a:yes | b:no]*", ->
+        check_value "yes", "x:[a:[yes] | b:[no]]", 1, "yes"
+    describe "works for x:[a:[yes] | b:[no]]*", ->
       specify "for ''", ->
-        check_value "", "x:[a:yes | b:no]*", 0, ""
+        check_value "", "x:[a:[yes] | b:[no]]*", 0, ""
       specify "for 'no'", ->
-        check_value "no", "x:[a:yes | b:no]*", 1, "no"
+        check_value "no", "x:[a:[yes] | b:[no]]*", 1, "no"
       specify "for 'yes'", ->
-        check_value "yes", "x:[a:yes | b:no]*", 1, "yes"
+        check_value "yes", "x:[a:[yes] | b:[no]]*", 1, "yes"
       specify "for 'no    yes no'", ->
-        check_value "no    yes no", "x:[a:yes | b:no]*", 5, "no yes no"
+        check_value "no    yes no", "x:[a:[yes] | b:[no]]*", 5, "no yes no"
       specify "for 'no yes/*-*/yes'", ->
-        check_value "no yes/*-*/yes", "x:[a:yes | b:no]*", 4, "no yes yes"
-    describe "works for x:[a:yes | b:no]#", ->
+        check_value "no yes/*-*/yes", "x:[a:[yes] | b:[no]]*", 4, "no yes yes"
+    describe "works for x:[a:[yes] | b:[no]]#", ->
       specify "for 'no'", ->
-        check_value "no", "x:[a:yes | b:no]#", 1, "no"
+        check_value "no", "x:[a:[yes] | b:[no]]#", 1, "no"
       specify "for 'yes'", ->
-        check_value "yes", "x:[a:yes | b:no]#", 1, "yes"
+        check_value "yes", "x:[a:[yes] | b:[no]]#", 1, "yes"
       specify "for 'no,    yes, no'", ->
-        check_value "no,    yes, no", "x:[a:yes | b:no]#", 7, "no, yes, no"
+        check_value "no,    yes, no", "x:[a:[yes] | b:[no]]#", 7, "no, yes, no"
       specify "for 'no, yes,yes'", ->
-        check_value "no, yes,yes", "x:[a:yes | b:no]#", 6, "no, yes, yes"
+        check_value "no, yes,yes", "x:[a:[yes] | b:[no]]#", 6, "no, yes, yes"
 
   describe "functional notations", ->
     it "works for f(x)", ->

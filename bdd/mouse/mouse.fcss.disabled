@@ -1,3 +1,5 @@
+@import "vanilla-1.2";
+
 body {
-  background: rgb(255, page-mouse-x(), page-mouse-x());
+  background: linear(page-mouse-x(), #ff0000 0, #ffffff 130px);
 }

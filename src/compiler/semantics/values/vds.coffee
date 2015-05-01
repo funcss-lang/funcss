@@ -46,10 +46,11 @@ DblAmpersand = new TP.CloselyJuxtaposed(Ampersand, Ampersand, ->)
 Column       = new TP.DelimLike(new SS.ColumnToken)
 Bar          = new TP.DelimLike(new SS.DelimToken('|'))
 Comma        = new TP.DelimLike(new SS.CommaToken)
+Dollar       = new TP.DelimLike(new SS.DelimToken('$'))
 
 
 # We use this class to create recursive types. We define the type with the placeholder, and then replace it afterwards.
-class PLACEHOLDER extends TP.Type
+PLACEHOLDER =
   parse: -> throw new Error "PLACEHOLDER not replaced"
 
 
@@ -105,8 +106,8 @@ RepeatCount =
 Keyword = new TP.Ident((x)->new TP.Keyword(x.value, (x)->new VL.Keyword(x.value)))
 
 # The type reference
-TypeReference = new TP.CloselyJuxtaposed(
-  OpeningAngle, new TP.CloselyJuxtaposed(
+TypeReference = new TP.Juxtaposition(
+  OpeningAngle, new TP.Juxtaposition(
     Ident, ClosingAngle, Fst), (_,y)->new TP.TypeReference(y))
 
 # The function definition
@@ -114,23 +115,57 @@ FunctionalNotation = new TP.AnyFunctionalNotation(
   PLACEHOLDER,
   (name,x)->new TP.FunctionalNotation(name,x,(y)->new VL.FunctionalNotation(name, y)))
 
+#### Annotations
+#
+#
+# 
+Variable = new TP.ExclusiveOr \
+  new TP.CloselyJuxtaposed(Dollar, Ident, (x,y)->x+y),
+  Ident
+Variable.expected = "variable"
+Annotation = new TP.Juxtaposition(
+  Variable,
+  new TP.Juxtaposition(
+    Colon,
+    new TP.ExclusiveOr(
+      new TP.Ident((x)->new TP.TypeReference(x.value)),
+      PLACEHOLDER # Bracket
+    ),
+    Snd
+  ),
+  (name,a)->new TP.Annotation(name, a, AddMarkings)
+)
+
 # The union of all component value types
 ComponentValue = pairsOf TP.ExclusiveOr, [
+  TypeReference
+  Annotation
   Keyword
   FunctionalNotation
-  TypeReference
   LiteralSlash
   LiteralComma
 ]
 
 
+#### Square brackets
 # This is the `[]` grouping bracket pair
-Bracket = new TP.ExclusiveOr \
-  ComponentValue,
-  new TP.SimpleBlock SS.OpeningSquareToken, PLACEHOLDER
+Bracketable = ComponentValue
+Bracket = new TP.SimpleBlock SS.OpeningSquareToken, PLACEHOLDER
+Bracketed = new TP.ExclusiveOr \
+  Bracketable,
+  Bracket
+
+
+Annotation.b.b.b = Bracket
+
+
+
+
+#### Multipliers
+#
 
 # The basis for multipliers is the bracket
-Multipliable = Bracket
+Multipliable = Bracketed
 
 # Multipliers
 Multiplier = pairsOf TP.ExclusiveOr, [Asterisk, Plus, QuestionMark, RepeatCount, Hashmark], pair: Id, cons: Id
@@ -155,7 +190,7 @@ Multiplied = new TP.Juxtaposition(
 )
 
 # The basis for annotations is an optionally multiplied value
-Annotatable = Multiplied
+#Annotatable = Multiplied
 
 # A helper function to decide if `x` is `{}` or not
 isEmptyObject = (x) ->
@@ -168,14 +203,14 @@ isEmptyObject = (x) ->
 
 
 # Annotations
-Annotated = new TP.ExclusiveOr \
-  new TP.Juxtaposition(Ident, new TP.Juxtaposition(Colon, new PLACEHOLDER, Pair), (name,[_,a])->
-    new TP.Annotation name, a, AddMarkings),
-  Annotatable
-Annotated.a.b.b = Annotated
+#Annotated = new TP.ExclusiveOr \
+#  new TP.Juxtaposition(Ident, new TP.Juxtaposition(Colon, PLACEHOLDER, Pair), (name,[_,a])->
+#    new TP.Annotation name, a, AddMarkings),
+#  Annotatable
+#Annotated.a.b.b = Annotated
 
 # Combinators
-Juxtaposition = new TP.OneOrMore Annotated, (l)-> pairsOf(
+Juxtaposition = new TP.OneOrMore Multiplied, (l)-> pairsOf(
   TP.Juxtaposition, l,
   pair: (x,y)->new VL.Juxtaposition([x,y])
   cons: Cons
@@ -204,7 +239,7 @@ ExclusiveOr = new TP.DelimitedBy Bar, InclusiveOr, (l)-> pairsOf(
 Combined = ExclusiveOr
 
 # We create the recursive type for the bracket, so that it can contain any combined values
-Bracket.b.a = Combined
+Bracket.a = Combined
 
 # We create the recursive type for function as well
 FunctionalNotation.a = Combined
@@ -223,7 +258,7 @@ TYPES.string = new TP.String((x)->new VL.String(x.value))
 
 # This is used in syntactic contexts where a single type atom is allowed and
 # brackets are required when the user needs more complex types.
-Atom = Annotatable
+Atom = Bracketed
 
 module.exports[k] = v for k,v of {
   TYPES

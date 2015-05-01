@@ -104,7 +104,7 @@ class Whitespace extends TokenType
   tokenClass: SS.WhitespaceToken
 
 class DelimLike extends TokenType
-  semantic: -> true
+  semantic: -> "#{@token}"
   constructor: (@token, @semantic = @semantic) ->
     @tokenClass = @token.constructor
     @expected = "'#{@token}'"
