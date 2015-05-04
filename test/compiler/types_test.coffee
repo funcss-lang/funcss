@@ -300,7 +300,7 @@ describe 'TP', ->
             check_tree "hello 5% world 30%/**/haha 40%/**/1", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
 
   describe "Eof", ->
-    eof = new TP.Eof()
+    eof = new TP.Eof
     it "can parse empty string", ->
       s = new Stream(Parser.parse_list_of_component_values(""))
       t = eof.parse(s)

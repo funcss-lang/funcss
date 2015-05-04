@@ -5,6 +5,7 @@ Parser = require "../../src/compiler/syntax/parser"
 Vds = require "../../src/compiler/semantics/values/vds"
 VL = require "../../src/compiler/semantics/values/vl_nodes"
 check = require "./check"
+SG = require "../../src/compiler/semantics/sg_nodes"
 
 customFunctions =
   abs: Math.abs
@@ -15,7 +16,9 @@ BorderType = Vds.parse(new Stream(Parser.parse_list_of_component_values("solid|d
 
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setTypeTables({normal: Vds.TYPES, quoted: {'border-type': BorderType}})
+  sg = new SG.SemanticGraph
+  type.setSg(sg)
+  sg.propertyValueTypes['border-type'] = BorderType
   value = type.parse(s)
   value
 
@@ -37,7 +40,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    type.setTypeTables({normal: Vds.TYPES, quoted: {}})
+    type.setSg(new SG.SemanticGraph)
     t = type.parse(s)
 
 describe "Vds", ->

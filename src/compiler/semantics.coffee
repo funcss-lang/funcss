@@ -8,7 +8,7 @@
 SS = require "./syntax/ss_nodes"
 SG = require "./semantics/sg_nodes"
 Cascade = require "./semantics/cascade"
-Extensions = require "./semantics/extensions"
+Def = require "./semantics/def"
 
 module.exports = Semantics = (ss) ->
   sg = new SG.SemanticGraph
@@ -17,19 +17,31 @@ module.exports = Semantics = (ss) ->
     if rule instanceof SS.QualifiedRule
       Cascade.qualifiedRule(rule, sg)
     else if rule instanceof SS.AtRule
-      Semantics.handleAtRule[rule.name](rule, sg)
+      Semantics.atRules[rule.name].handle(rule, sg)
     else
       throw new Error "Internal error in Semantics: Unknown rule type in SS.Stylesheet"
 
   sg
     
 Semantics[k]=v for k,v of {
-  handleAtRule: {
-    def: Extensions.def
+  atRules: {
+    def: Def.def
   }
 }
 
 
+#exports.AtRule = class AtRule
+#  constructor: (@preludeType, @blockType, @blockCategory, @blockRequired = false) ->
+#    unless @blockCategory in [undefined, "list_of_component_values", "list_of_rules", "list_of_declarations"]
+#      throw new Error "invalid block category: #{@blockCategory}"
+#  handle: (atrule) ->
+#    throw new Error if atrule.value is undefined and @blockRequired
+#    throw new Error if atrule.value isnt undefined and !@blockCategory
+#    new TP.Full(@preludeType).parse new Stream(atrule.prelude)
+#    if atrule.value
+#      new TP.Full(@blockType).parse new Stream(Parser["parse_#{@blockCategory}"]atrule.prelude)
+#
+    
 
 
   

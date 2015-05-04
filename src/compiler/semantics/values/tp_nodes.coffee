@@ -2,6 +2,7 @@ Tokenizer = require "../../syntax/tokenizer"
 Parser = require "../../syntax/parser"
 SS = require "../../syntax/ss_nodes"
 Stream = require "../../helpers/stream"
+assert = require "../../helpers/assert"
 
 # helper error class to use for parsing
 class NoMatch extends Error
@@ -44,9 +45,9 @@ Snd = (x,y) -> y
 # base class for all types
 class Type
   constructor: (@semantic = @semantic) ->
-  setTypeTables: (@typeTables) ->
-    @a?.setTypeTables(@typeTables)
-    @b?.setTypeTables(@typeTables)
+  setSg: (@sg) ->
+    @a?.setSg(@sg)
+    @b?.setSg(@sg)
 
 # a type which matches a single token of a single class, with optional property restrictions
 class TokenType extends Type
@@ -266,6 +267,7 @@ class Eof extends TokenType
 class Full extends Type
   semantic: (x)->x
   constructor: (@a, @semantic = @semantic) ->
+    assert.hasProp {@a}, "parse"
   parse: (s) ->
     s.optionalWhitespace()
     result = @a.parse(s)
@@ -345,10 +347,9 @@ class TypeReference extends Type
   constructor: (@name, @quoted = no, @semantic = @semantic) ->
     @expected = @name
   parse: (s) ->
-    if ! @typeTables
-      throw new Error "type tables are not set up correctly"
-    table = if @quoted then @typeTables.quoted else @typeTables.normal
-    type = table[@name]
+    if ! @sg
+      throw new Error "sg is not set up correctly"
+    type = if @quoted then @sg.getQuotedType(@name) else @sg.getType(@name)
     throw new UnknownType(@name, @quoted) if not type?
     type.parse(s)
 
@@ -360,7 +361,7 @@ class UnknownType extends Error
 class FunctionalNotation extends Type
   semantic: Id
   constructor: (@name, @a, @semantic=@semantic) ->
-    @expected = "'#{name}('"
+    @expected = "'#{@name}('"
   parse: (s) ->
     next = s.next()
     unless next instanceof SS.Function
@@ -380,6 +381,21 @@ class AnyFunctionalNotation extends Type
       throw new NoMatch(@expected, "'#{next}'")
     s.consume_next()
     return @semantic next.name, new Full(@a).parse(new Stream(next.value))
+
+class RawTokens extends Type
+  semantic: Id
+  constructor: (@semantic = @semantic)->
+  parse: (s) ->
+    result = new SS.ComponentValueList
+    next = s.consume_next()
+    until next instanceof SS.EOFToken
+      result.push next
+      next = s.consume_next()
+    @semantic result
+
+class Empty extends Type
+  parse: (s) ->
+
 
 module.exports = {
   Type
@@ -413,4 +429,7 @@ module.exports = {
   UnknownType
   FunctionalNotation
   AnyFunctionalNotation
+  RawTokens
+  Empty
 }
+

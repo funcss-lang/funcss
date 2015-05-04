@@ -4,6 +4,7 @@ Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 Vds = require "../../src/compiler/semantics/values/vds"
 check = require "./check"
+SG = require "../../src/compiler/semantics/sg_nodes"
 
 customFunctions =
   abs: Math.abs
@@ -12,7 +13,7 @@ customFunctions =
 
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setTypeTables({normal: Vds.TYPES, quoted: {}})
+  type.setSg(new SG.SemanticGraph)
   value = type.parse(s)
   jsjs = value.jsjs()
   eval("#{jsjs}")
@@ -41,7 +42,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    type.setTypeTables({normal: Vds.TYPES, quoted: {}})
+    type.setSg(new SG.SemanticGraph)
     t = type.parse(s)
 
 describe "Jsjs", ->

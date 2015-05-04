@@ -3,10 +3,11 @@ Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 Vds = require "../../src/compiler/semantics/values/vds"
 check = require "./check"
+SG = require "../../src/compiler/semantics/sg_nodes"
 
 parse = (s, typeStr) ->
   type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setTypeTables({normal: Vds.TYPES, quoted: {}})
+  type.setSg(new SG.SemanticGraph)
   value = type.parse(s)
   ssjs = value.ssjs()
   eval("#{ssjs}")
