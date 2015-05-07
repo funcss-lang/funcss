@@ -9,45 +9,49 @@
 #
 
 # TODO
-exports.escape = escape = (s) -> s
+VL = exports
+VL.escape = escape = (s) -> s
 
-exports.Value = class Value
+VL.Value = class VL.Value
 
-exports.Constant = class Constant extends Value
+class VL.Constant extends VL.Value
 
-exports.Keyword = class Constant extends Constant
+class VL.Keyword extends VL.Constant
   constructor: (@value) ->
   jsjs: ->
     JSON.stringify(@value)
   ssjs: ->
     JSON.stringify("#{escape(@value)}")
 
-exports.Percentage = class Percentage extends Constant
+class VL.Percentage extends VL.Constant
   constructor: (@value) ->
   jsjs: ->
     JSON.stringify(@value / 100)
   ssjs: ->
     JSON.stringify("#{@value}%")
 
-exports.Number = class Number extends Constant
+class VL.Number extends VL.Constant
   constructor: (@value) ->
   jsjs: ->
     JSON.stringify(@value)
+  ssjs: ->
+    JSON.stringify("#{@value}")
 
-exports.EmptyValue = class EmptyValue extends Constant
+class VL.EmptyValue extends VL.Constant
   jsjs: ->
     "(void 0)"
   ssjs: ->
     JSON.stringify("")
 
-exports.String = class String extends Constant
+class VL.String extends VL.Constant
+  constructor: (@value) ->
   jsjs: ->
     JSON.stringify(@value)
   ssjs: ->
     JSON.stringify(JSON.stringify(@value))
 
 
-exports.Collection = class Collection extends Value
+class VL.Collection extends VL.Value
   constructor: (@value) ->
   delimiter: " "
   unshift: (x)->
@@ -63,18 +67,18 @@ exports.Collection = class Collection extends Value
     else
       JSON.stringify("")
 
-exports.CommaDelimitedCollection = class CommaDelimitedCollection extends Collection
+class VL.CommaDelimitedCollection extends VL.Collection
   delimiter: ", "
 
 # A list of values that need to be juxtaposed in a stylesheet.
-exports.Juxtaposition = class Juxtaposition extends Collection
+class VL.Juxtaposition extends VL.Collection
     
-exports.And = class And extends Collection
+class VL.And extends VL.Collection
 
-exports.InclusiveOr = class InclusiveOr extends Collection
+class VL.InclusiveOr extends VL.Collection
 
 # This class is responsible for using a mapping from an AnnotationRoot object
-exports.Marking = class Marking extends Value
+class VL.Marking extends VL.Value
   constructor: (@value, @marking) ->
   jsjs: ->
     # The object is wrapped here into `()` to avoid interpreting it as a statement.
@@ -85,7 +89,7 @@ exports.Marking = class Marking extends Value
 
 #### Functions
 #
-exports.FunctionalNotation = class FunctionalNotation extends Value
+class VL.FunctionalNotation extends VL.Value
   constructor: (@name, @arg) ->
   jsjs: ->
     "customFunctions[#{JSON.stringify(@name)}]("+@arg.jsjs()+")"

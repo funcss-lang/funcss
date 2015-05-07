@@ -1,6 +1,6 @@
 
-
-exports.SimpleRule = class SimpleRule
+CS = exports
+class CS.SimpleRule
   constructor : (opts) ->
     {@mediaQuery, @selector, @name, @value, @important} = opts
   isConstantMediaQuery: -> false

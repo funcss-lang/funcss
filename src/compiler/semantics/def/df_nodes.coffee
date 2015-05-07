@@ -4,14 +4,15 @@
 # The subclasses of the `Pattern` class represent those patterns that can
 # be defined. These compile to a GR node.
 
-exports.Definable = class Definable
+DF = exports
+class DF.Definable
 
 #
 # This represents a variable name. TODO it should support dollar signs
-exports.VariableName = class VariableName extends Definable
+class DF.VariableName extends DF.Definable
   constructor: (@value) ->
 
-exports.Definition = class Definition
+class DF.Definition
   constructor: (@definable, @type, @rawValue) ->
 
 

@@ -6,94 +6,97 @@
 #
 # These are the tokens produced by the tokenizer.
 #
+#
 
-exports.Token = class Token
+SS = exports
 
-exports.IdentToken = class IdentToken extends Token
+class SS.Token
+
+class SS.IdentToken extends SS.Token
   constructor : (@value) ->
   toString : -> @value
-exports.FunctionToken = class FunctionToken extends Token
+class SS.FunctionToken extends SS.Token
   constructor : (@value) ->
   toString : -> @value + "("
-exports.AtKeywordToken = class AtKeywordToken extends Token
+class SS.AtKeywordToken extends SS.Token
   constructor : (@value) ->
   toString : -> "@" + @value
-exports.HashToken = class HashToken extends Token
+class SS.HashToken extends SS.Token
   constructor : (@value, @type = "unrestricted") ->
   toString : -> "#" + @value
-exports.StringToken = class StringToken extends Token
+class SS.StringToken extends SS.Token
   constructor : (@value) ->
   toString : -> JSON.stringify(@value)
-exports.BadStringToken = class BadStringToken extends Token
-exports.UrlToken = class UrlToken
+class SS.BadStringToken extends SS.Token
+class SS.UrlToken
   constructor : (@value) ->
   toString : -> "url(" + JSON.stringify(@value) + ")"
-exports.BadUrlToken = class BadUrlToken extends Token
-exports.DelimToken = class DelimToken extends Token
+class SS.BadUrlToken extends SS.Token
+class SS.DelimToken extends SS.Token
   constructor : (@value) ->
   toString : -> @value
-exports.NumberToken = class NumberToken extends Token
+class SS.NumberToken extends SS.Token
   constructor : (@repr, @value, @type = "integer") ->
   toString : -> @repr
-exports.PercentageToken = class PercentageToken extends Token
+class SS.PercentageToken extends SS.Token
   constructor : (@repr, @value) ->
   toString : -> @repr+"%"
-exports.DimensionToken = class DimensionToken extends Token
+class SS.DimensionToken extends SS.Token
   constructor : (@repr, @value, @type = "integer", @unit) ->
   toString : -> @repr+@unit
-exports.UnicodeRangeToken = class UnicodeRangeToken extends Token
+class SS.UnicodeRangeToken extends SS.Token
   constructor : (@start, @end) ->
 
 ##### Simple delim-like tokens
 # These tokens have a single representation
 
-exports.SimpleToken = class SimpleToken extends Token
+class SS.SimpleToken extends SS.Token
 
-exports.IncludeMatchToken = class IncludeMatchToken extends SimpleToken
+class SS.IncludeMatchToken extends SS.SimpleToken
   toString: -> "~="
-exports.DashMatchToken = class DashMatchToken extends SimpleToken
+class SS.DashMatchToken extends SS.SimpleToken
   toString: -> "|="
-exports.PrefixMatchToken = class PrefixMatchToken extends SimpleToken
+class SS.PrefixMatchToken extends SS.SimpleToken
   toString: -> "^="
-exports.SuffixMatchToken = class SuffixMatchToken extends SimpleToken
+class SS.SuffixMatchToken extends SS.SimpleToken
   toString: -> "$="
-exports.SubstringMatchToken = class SubstringMatchToken extends SimpleToken
+class SS.SubstringMatchToken extends SS.SimpleToken
   toString: -> "*="
-exports.ColumnToken = class ColumnToken extends SimpleToken
+class SS.ColumnToken extends SS.SimpleToken
   toString: -> "||"
-exports.WhitespaceToken = class WhitespaceToken extends SimpleToken
+class SS.WhitespaceToken extends SS.SimpleToken
   toString: -> " "
-exports.CDOToken = class CDOToken extends SimpleToken
+class SS.CDOToken extends SS.SimpleToken
   toString: -> "<!--"
-exports.CDCToken = class CDCToken extends SimpleToken
+class SS.CDCToken extends SS.SimpleToken
   toString: -> "-->"
-exports.ColonToken = class ColonToken extends SimpleToken
+class SS.ColonToken extends SS.SimpleToken
   toString: -> ":"
-exports.SemicolonToken = class SemicolonToken extends SimpleToken
+class SS.SemicolonToken extends SS.SimpleToken
   toString: -> ";"
-exports.CommaToken = class CommaToken extends SimpleToken
+class SS.CommaToken extends SS.SimpleToken
   toString: -> ","
 
 ##### Block tokens
 # These tokens are the block separators. The opening versions have a `mirror()` instance
 # function which return the constructor of the closing version.
 
-exports.OpeningSquareToken = class OpeningSquareToken extends SimpleToken
+class SS.OpeningSquareToken extends SS.SimpleToken
   toString: -> "["
-  mirror: -> ClosingSquareToken
-exports.ClosingSquareToken = class ClosingSquareToken extends SimpleToken
+  mirror: -> SS.ClosingSquareToken
+class SS.ClosingSquareToken extends SS.SimpleToken
   toString: -> "]"
-exports.OpeningParenToken = class OpeningParenToken extends SimpleToken
+class SS.OpeningParenToken extends SS.SimpleToken
   toString: -> "("
-  mirror: -> ClosingParenToken
-exports.ClosingParenToken = class ClosingParenToken extends SimpleToken
+  mirror: -> SS.ClosingParenToken
+class SS.ClosingParenToken extends SS.SimpleToken
   toString: -> ")"
-exports.OpeningCurlyToken = class OpeningCurlyToken extends SimpleToken
+class SS.OpeningCurlyToken extends SS.SimpleToken
   toString: -> "{"
-  mirror: -> ClosingCurlyToken
-exports.ClosingCurlyToken = class ClosingCurlyToken extends SimpleToken
+  mirror: -> SS.ClosingCurlyToken
+class SS.ClosingCurlyToken extends SS.SimpleToken
   toString: -> "}"
-exports.EOFToken = class EOFToken
+class SS.EOFToken
   toString: -> ""
 
 #### Parser output nodes
@@ -104,35 +107,35 @@ exports.EOFToken = class EOFToken
 # modification needs to be coded in the upper levels, e.g. in the value 
 # definitions.
 
-exports.AtRule = class AtRule
+class SS.AtRule
   constructor : (@name, @prelude, @value = undefined) ->
   toString: ->
     "@#{@name}#{@prelude}#{@value ? ';'}"
-exports.QualifiedRule = class QualifiedRule
+class SS.QualifiedRule
   constructor : (@prelude, @value = undefined) ->
   toString: ->
     "#{@prelude} { #{@value?.value ? ''} }"
-exports.Declaration = class Declaration
+class SS.Declaration
   constructor : (@name, @value, @important = false) ->
-exports.Function = class Function
+class SS.Function
   constructor : (@name, @value) ->
   toString : ->
     "#{@name}(#{@value})"
-exports.SimpleBlock = class SimpleBlock
+class SS.SimpleBlock
   constructor : (@token, @value) ->
   toString : ->
     "#{@token}#{@value}#{new(@token.mirror())}"
-exports.SyntaxError = class SyntaxError
+class SS.SyntaxError
 
 ##### List classes
 # These classes inherit from Array.
   
   
-exports.RuleList = class RuleList
+class SS.RuleList
   @prototype: []
-exports.DeclarationList = class DeclarationList
+class SS.DeclarationList
   @prototype: []
-exports.ComponentValueList = class ComponentValueList
+class SS.ComponentValueList
   @prototype: []
   # This table is the copy of the one in the CSS Syntax Level 3 CR spec. It is used
   # for deciding whether a comment is needed between two tokens when serializing.
@@ -250,26 +253,26 @@ exports.ComponentValueList = class ComponentValueList
       # Here we do some renaming to help the lookup in the table above.
 
       # First, if the node is not a token but a parser-generated node which
-      # can occur in a component value list (namely, SimpleBlock or Function),
+      # can occur in a component value list (namely, SS.SimpleBlock or SS.Function),
       # we use its starting token.
-      if node instanceof SimpleBlock
+      if node instanceof SS.SimpleBlock
         node = node.token
-      else if node instanceof Function
-        node = new FunctionToken(node.name)
+      else if node instanceof SS.Function
+        node = new SS.FunctionToken(node.name)
 
       # Then for delimiters and (-tokens, we use the string representation,
       # for others we use the token name (like in the spec)
       
-      name = if node instanceof DelimToken
+      name = if node instanceof SS.DelimToken
         node.value
-      else if node instanceof OpeningParenToken
+      else if node instanceof SS.OpeningParenToken
         '('
       else
         node.constructor.name
     !! @commentNeededMap[name1]?[name2]
   toString: ->
     result = for node,i in @
-      if i>0 and i<@length and ComponentValueList.commentNeeded(@[i-1],node)
+      if i>0 and i<@length and SS.ComponentValueList.commentNeeded(@[i-1],node)
         "/**/" + node
       else
         node
@@ -277,7 +280,7 @@ exports.ComponentValueList = class ComponentValueList
 
       
     
-exports.Stylesheet = class Stylesheet
+class SS.Stylesheet
   constructor : (@value) ->
   toString: ->
     @value.join("\n")

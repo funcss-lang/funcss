@@ -1,14 +1,15 @@
 #### JavaScript nodes
 #
 
-exports.camel = camel = (s) ->
+IG = exports
+IG.camel = camel = (s) ->
   return s if s.match(/^--/)
   s.toLowerCase().replace(/-([a-z])/g, (s)->s.charAt(1).toUpperCase())
   
 
-exports.JSCode = class JSCode
-exports.Statement = class Statement extends JSCode
-exports.BlockStatement = class BlockStatement extends Statement
+class IG.JSCode
+class IG.Statement extends IG.JSCode
+class IG.BlockStatement extends IG.Statement
   constructor: (@value...) ->
   push: (newStatement) ->
     @value.push newStatement
@@ -16,7 +17,7 @@ exports.BlockStatement = class BlockStatement extends Statement
 
 #
 # `JavaScript` is the main script class that outputs the target code.
-exports.FunctionBlock = class FunctionBlock extends BlockStatement
+class IG.FunctionBlock extends IG.BlockStatement
   toString: -> if @value.length then """
     (function(){
     #{@value.join('\n')}
@@ -25,7 +26,7 @@ exports.FunctionBlock = class FunctionBlock extends BlockStatement
 
 # Insert a stylesheet to the `head`, and save it to `var S`
 #
-exports.CssStylesheet = class CssStylesheet extends Statement
+class IG.CssStylesheet extends IG.Statement
   constructor: (@value, @name="S") ->
   toString: -> """
     var #{@name} = document.createElement("style");
@@ -34,13 +35,13 @@ exports.CssStylesheet = class CssStylesheet extends Statement
   """
 
 
-exports.Rule = class Rule extends Statement
+class IG.Rule extends IG.Statement
   constructor: (@cssStylesheet, @index) ->
   toString: -> """
     var rule#{@index} = #{@cssStylesheet.name}.sheet.cssRules[#{@index}];
   """
   
-exports.CustomFunction = class CustomFunction extends BlockStatement
+class IG.CustomFunction extends IG.BlockStatement
   toString: -> """
     function #{@name}() {
       #{@value.join("\n")}
@@ -48,7 +49,7 @@ exports.CustomFunction = class CustomFunction extends BlockStatement
     }
   """
 
-exports.ListenerManagerDataSource = class ListenerManagerDataSource extends Statement
+class IG.ListenerManagerDataSource extends IG.Statement
   constructor: (@name, @eventType, @valueOutsideEventHandler, @valueInsideEventHandler) ->
   toString: -> """
     var #{@name} = function() {
@@ -83,23 +84,23 @@ exports.ListenerManagerDataSource = class ListenerManagerDataSource extends Stat
     }();
   """
 
-exports.Expression = class Expression extends JSCode
+class IG.Expression extends IG.JSCode
 
-exports.Autorun = class Autorun extends BlockStatement
+class IG.Autorun extends IG.BlockStatement
   toString: -> """
     Tracker.autorun(function() {
       #{@value.join("\n")}
     });
   """
 
-exports.DomReady = class DomReady extends BlockStatement
+class IG.DomReady extends IG.BlockStatement
   toString: () -> """
     window.addEventListener("load", function() {
       #{@value.join("\n")}
     });
   """
 
-exports.SetDeclarationValue = class SetDeclarationValue extends Statement
+class IG.SetDeclarationValue extends IG.Statement
   constructor: (@ruleIndex, @name, @value) ->
   toString: () -> debugger; """
     rule#{@ruleIndex}.style[#{JSON.stringify camel(@name)}] = #{@value.ssjs()};

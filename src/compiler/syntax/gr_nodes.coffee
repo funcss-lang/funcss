@@ -9,8 +9,9 @@ SS = require "./ss_nodes"
 Stream = require "../helpers/stream"
 assert = require "../helpers/assert"
 
+GR = exports
 # helper error class to use for parsing
-class NoMatch extends Error
+class GR.NoMatch extends Error
   constructor: (@expected, @found, message) ->
     @name = "No match"
     @message = message ? "#{@expected} expected but #{@found} found"
@@ -18,9 +19,9 @@ class NoMatch extends Error
     @name+  ": "+@message
   merge: (f) ->
     if @.found is f.found
-      new NoMatch(@.expected + " or " + f.expected, @.found)
+      new GR.NoMatch(@.expected + " or " + f.expected, @.found)
     else
-      new NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
+      new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
 
 # backtrack algorithm for the stream
 Stream.prototype.backtrack = (options) ->
@@ -28,7 +29,7 @@ Stream.prototype.backtrack = (options) ->
     p = @position
     return options.try()
   catch e
-    if e instanceof NoMatch
+    if e instanceof GR.NoMatch
       @position = p
       return options.fallback(e)
     else
@@ -48,27 +49,27 @@ Snd = (x,y) -> y
 
 
 # base class for all types
-class Type
+class GR.Type
   constructor: (@semantic = @semantic) ->
   setSg: (@sg) ->
     @a?.setSg(@sg)
     @b?.setSg(@sg)
 
 # a type which matches a single token of a single class, with optional property restrictions
-class TokenType extends Type
+class GR.TokenTypeTokenType extends GR.Type
   props: {}
   parse: (s) ->
     next = s.next()
     unless next instanceof @tokenClass
-      throw new NoMatch(@expected, "'#{next}'")
+      throw new GR.NoMatch(@expected, "'#{next}'")
     for k,v of @props
       unless next[k] is v
-        throw new NoMatch(@expected, "'#{next}'")
+        throw new GR.NoMatch(@expected, "'#{next}'")
     return @semantic s.consume_next()
   semantic: (token) ->
 
 # helper function to create a type for a token for a specific ident 
-class Keyword extends TokenType
+class GR.Keyword extends GR.TokenTypeTokenType
   tokenClass: SS.IdentToken
   constructor: (@value, @semantic = @semantic) ->
     @expected = "'#{@value}'"
@@ -76,40 +77,40 @@ class Keyword extends TokenType
   semantic: (token) ->
     token.value
     
-class Ident extends TokenType
+class GR.Ident extends GR.TokenTypeTokenType
   expected: "identifier"
   tokenClass: SS.IdentToken
   semantic: (token) ->
     token.value
 
 
-class Percentage extends TokenType
+class GR.Percentage extends GR.TokenTypeTokenType
   expected: "percentage"
   tokenClass: SS.PercentageToken
   semantic: (token) ->
     token.value / 100
 
-class Number extends TokenType
+class GR.Number extends GR.TokenTypeTokenType
   expected: "number"
   tokenClass: SS.NumberToken
   semantic: (token) ->
     token.value
 
-class Integer extends Number
+class GR.Integer extends GR.Number
   expected: "integer"
   props: {type: "integer"}
 
-class String extends TokenType
+class GR.String extends GR.TokenTypeTokenType
   expected: "string"
   tokenClass: SS.StringToken
   semantic: (token) ->
     token.value
 
-class Whitespace extends TokenType
+class Whitespace extends GR.TokenTypeTokenType
   expected: "whitespace"
   tokenClass: SS.WhitespaceToken
 
-class DelimLike extends TokenType
+class GR.DelimLike extends GR.TokenTypeTokenType
   semantic: -> "#{@token}"
   constructor: (@token, @semantic = @semantic) ->
     @tokenClass = @token.constructor
@@ -120,19 +121,19 @@ class DelimLike extends TokenType
     else if @token instanceof SS.SimpleToken
       return
     else
-      throw new Error "DelimLike expects a DelimToken or a SimpleToken, #{@token.constructor.name} got instead"
+      throw new Error "GR.DelimLike expects a DelimToken or a SimpleToken, #{@token.constructor.name} got instead"
 
 
 
 
-class Comma extends TokenType
+class GR.Comma extends GR.TokenTypeTokenType
   expected: "','"
   tokenClass: SS.CommaToken
 
 #### Parser combinators
 #
 # semantic = (a) -> a ? default
-class Optional extends Type
+class GR.Optional extends GR.Type
   constructor: (@a, @semantic = @semantic) ->
   parse: (s) ->
     s.backtrack
@@ -143,7 +144,7 @@ class Optional extends Type
   semantic: Id
 
 # semantic = (a,b) -> [a,b]
-class Juxtaposition extends Type
+class GR.Juxtaposition extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
     x = @a.parse(s)
@@ -152,7 +153,7 @@ class Juxtaposition extends Type
     @semantic(x,y)
     
 # semantic = (a,b) -> [a,b]
-class CloselyJuxtaposed extends Type
+class GR.CloselyJuxtaposed extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
     x = @a.parse(s)
@@ -160,7 +161,7 @@ class CloselyJuxtaposed extends Type
     @semantic(x,y)
 
 # semantic = (a) -> a
-class ExclusiveOr extends Type
+class GR.ExclusiveOr extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
     s.backtrack
@@ -174,11 +175,11 @@ class ExclusiveOr extends Type
             throw e.merge(f)
   semantic: Id
 
-class And extends Type
+class GR.And extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
-    #new Or(new Juxtaposition(@a,@b,@semantic),
-    #new Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
+    #new Or(new GR.Juxtaposition(@a,@b,@semantic),
+    #new GR.Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
     res = s.backtrack
       try: =>
         a: @a.parse(s)
@@ -195,11 +196,11 @@ class And extends Type
       @semantic(@a.parse(s), res.b)
   semantic: Cons
 
-class InclusiveOr extends Type
+class GR.InclusiveOr extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
   parse: (s) ->
-    new ExclusiveOr(new Juxtaposition(@a,new Optional(@b),@semantic),
-            new Juxtaposition(@b,new Optional(@a),Swap(@semantic))).parse(s)
+    new GR.ExclusiveOr(new GR.Juxtaposition(@a,new GR.Optional(@b),@semantic),
+            new GR.Juxtaposition(@b,new GR.Optional(@a),Swap(@semantic))).parse(s)
   semantic: Cons
 
 
@@ -219,7 +220,7 @@ max = (m, a, s) ->
       # no more available
       []
 
-class Range extends Type
+class GR.Range extends GR.Type
   semantic: Id
   constructor: (@n,@m,@a,@semantic=@semantic) ->
   parse: (s) ->
@@ -234,42 +235,42 @@ class Range extends Type
       result.push i
     @semantic result
 
-class ZeroOrMore extends Range
+class GR.ZeroOrMore extends GR.Range
   constructor: (@a,@semantic = @semantic) ->
     @n = 0
     @m = Infinity
 
-class OneOrMore extends Range
+class GR.OneOrMore extends GR.Range
   constructor: (@a,@semantic = @semantic) ->
     @n = 1
     @m = Infinity
 
-class DelimitedBy extends Type
+class GR.DelimitedBy extends GR.Type
   semantic: Id
   constructor: (@delim, @a, @semantic = @semantic) ->
   parse: (s) ->
     # we create a proxy type for it. The target type, then any number of pairs of
     # the delimiter and the target type. We take the values of the target types
     # and concatenate them in an array.
-    new Juxtaposition(
+    new GR.Juxtaposition(
       @a,
-      new ZeroOrMore(new Juxtaposition(@delim, @a, Snd)),
+      new GR.ZeroOrMore(new GR.Juxtaposition(@delim, @a, Snd)),
 
       # Finally we add the first target type value then we call the semantic function
       # with the array.
       (x,y)=>y.unshift(x); @semantic(y)
     ).parse(s)
 
-class DelimitedByComma extends DelimitedBy
+class GR.DelimitedByComma extends GR.DelimitedBy
   constructor: (@a, @semantic = @semantic) ->
-    @delim = new Comma
+    @delim = new GR.Comma
 
 
-class Eof extends TokenType
+class GR.Eof extends GR.TokenTypeTokenType
   expected: "EOF"
   tokenClass: SS.EOFToken
     
-class Full extends Type
+class GR.Full extends GR.Type
   semantic: (x)->x
   constructor: (@a, @semantic = @semantic) ->
     assert.hasProp {@a}, "parse"
@@ -277,20 +278,20 @@ class Full extends Type
     s.optionalWhitespace()
     result = @a.parse(s)
     s.optionalWhitespace()
-    new Eof().parse(s)
+    new GR.Eof().parse(s)
     @semantic result
 
 # This class does not affect the parsing, it only keeps track of a mapping
-# of the annotations directly (without another Annotation in between) below
+# of the annotations directly (without another GR.Annotation in between) below
 # this node.
-class AnnotationRoot extends Type
+class GR.AnnotationRoot extends GR.Type
   semantic: Id
   hasAnnotations: false
   constructor: (@a, @semantic = @semantic) ->
     @prepareMappings(@a)
   prepareMappings: (node) ->
-    if node instanceof AnnotationRoot
-      if node instanceof Annotation
+    if node instanceof GR.AnnotationRoot
+      if node instanceof GR.Annotation
         @hasAnnotations = true
         node.root = @
       node.prepareMappings(node.a)
@@ -316,38 +317,38 @@ class AnnotationRoot extends Type
       @semantic @a.parse(s)
 
 # This node represents the `x:` annotations in the type tree.
-# This is a subclass of  AnnotationRoot, as the annotations below this
+# This is a subclass of  GR.AnnotationRoot, as the annotations below this
 # will collect their mappings here.
-class Annotation extends AnnotationRoot
+class GR.Annotation extends GR.AnnotationRoot
   root: undefined
   constructor: (@name, @a, @semantic = @semantic) ->
   parse: (s) ->
     if @root
-      # Here we add the mapping to the closes AnnotationRoot in the parent chain.
+      # Here we add the mapping to the closes GR.AnnotationRoot in the parent chain.
       @root.mappings[@name] = if @hasAnnotations
         @parseWithAnnotations(s)
       else
         @semantic @a.parse(s)
     else
-      throw new Error "Annotation used without an AnnotationRoot correctly configured"
+      throw new Error "GR.Annotation used without an GR.AnnotationRoot correctly configured"
 
 
 # block types - these simply match a block, with the interior matching the given type
-class SimpleBlock extends Type
+class GR.SimpleBlock extends GR.Type
   semantic: (x)->x
   constructor: (@tokenClass, @a, @semantic = @semantic) ->
     @expected = "'#{new @tokenClass}'"
   parse: (s) ->
     next = s.next()
     unless next instanceof SS.SimpleBlock
-      throw new NoMatch(@expected, "'#{next}'")
+      throw new GR.NoMatch(@expected, "'#{next}'")
     unless next.token instanceof @tokenClass
-      throw new NoMatch(@expected, "'#{next}'")
+      throw new GR.NoMatch(@expected, "'#{next}'")
     s.consume_next()
-    return @semantic new Full(@a).parse(new Stream(next.value))
+    return @semantic new GR.Full(@a).parse(new Stream(next.value))
 
 # A special type that refers to another type.
-class TypeReference extends Type
+class GR.TypeReference extends GR.Type
   semantic: Id
   constructor: (@name, @quoted = no, @semantic = @semantic) ->
     @expected = @name
@@ -355,39 +356,39 @@ class TypeReference extends Type
     if ! @sg
       throw new Error "sg is not set up correctly"
     type = if @quoted then @sg.getQuotedType(@name) else @sg.getType(@name)
-    throw new UnknownType(@name, @quoted) if not type?
+    throw new GR.UnknownType(@name, @quoted) if not type?
     type.parse(s)
 
 # This error is thrown when a user tries to reference a type that does not exist
-class UnknownType extends Error
+class GR.UnknownType extends Error
   constructor: (@type, @quoted) ->
     @message = if @quoted then "unknown type <'#{@type}'>" else "unknown type <#{@type}>"
 
-class FunctionalNotation extends Type
+class GR.FunctionalNotation extends GR.Type
   semantic: Id
   constructor: (@name, @a, @semantic=@semantic) ->
     @expected = "'#{@name}('"
   parse: (s) ->
     next = s.next()
     unless next instanceof SS.Function
-      throw new NoMatch(@expected, "'#{next}'")
+      throw new GR.NoMatch(@expected, "'#{next}'")
     unless next.name is @name
-      throw new NoMatch(@expected, "'#{next}'")
+      throw new GR.NoMatch(@expected, "'#{next}'")
     s.consume_next()
-    return @semantic new Full(@a).parse(new Stream(next.value))
+    return @semantic new GR.Full(@a).parse(new Stream(next.value))
 
-class AnyFunctionalNotation extends Type
+class GR.AnyFunctionalNotation extends GR.Type
   expected: "function"
-  semantic: (name, x) -> throw Error "No semantic function for AnyFunctionalNotation"
+  semantic: (name, x) -> throw Error "No semantic function for GR.AnyFunctionalNotation"
   constructor: (@a, @semantic = @semantic) ->
   parse: (s) ->
     next = s.next()
     unless next instanceof SS.Function
-      throw new NoMatch(@expected, "'#{next}'")
+      throw new GR.NoMatch(@expected, "'#{next}'")
     s.consume_next()
-    return @semantic next.name, new Full(@a).parse(new Stream(next.value))
+    return @semantic next.name, new GR.Full(@a).parse(new Stream(next.value))
 
-class RawTokens extends Type
+class GR.RawTokens extends GR.Type
   semantic: Id
   constructor: (@semantic = @semantic)->
   parse: (s) ->
@@ -398,43 +399,7 @@ class RawTokens extends Type
       next = s.consume_next()
     @semantic result
 
-class Empty extends Type
+class GR.Empty extends GR.Type
   parse: (s) ->
 
-
-module.exports = {
-  Type
-  TokenType
-  Keyword
-  DelimLike
-  Ident
-  Integer
-  Number
-  Percentage
-  Comma
-  String
-  NoMatch
-  Juxtaposition
-  CloselyJuxtaposed
-  And
-  ExclusiveOr
-  InclusiveOr
-  Optional
-  OneOrMore
-  ZeroOrMore
-  Range
-  DelimitedByComma
-  Eof
-  Full
-  DelimitedBy
-  Annotation
-  AnnotationRoot
-  SimpleBlock
-  TypeReference
-  UnknownType
-  FunctionalNotation
-  AnyFunctionalNotation
-  RawTokens
-  Empty
-}
 

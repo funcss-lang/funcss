@@ -1,7 +1,8 @@
 CS = require "./cascade/cs_nodes"
 VdsGrammar = require "./values/vds_grammar"
 
-exports.SemanticGraph = class SemanticGraph
+SG = exports
+class SG.SemanticGraph
   constructor: () ->
     @simpleRules = []
     @propertyValueTypes = {}
