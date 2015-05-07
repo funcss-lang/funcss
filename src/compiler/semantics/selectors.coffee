@@ -1,10 +1,10 @@
-TP = require "./values/tp_nodes"
+GR = require "./../syntax/gr_nodes"
 SL = require "./selectors/sl_nodes"
 
-TypeSelector = new TP.Ident((x)->new SL.TypeSelector(x.value))
+TypeSelector = new GR.Ident((x)->new SL.TypeSelector(x.value))
 Selector = TypeSelector
 
-SelectorGroup = new TP.DelimitedByComma(Selector)
+SelectorGroup = new GR.DelimitedByComma(Selector)
 
 module.exports = SelectorGroup
 

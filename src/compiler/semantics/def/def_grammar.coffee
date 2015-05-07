@@ -1,15 +1,15 @@
-TP = require "../values/tp_nodes"
+GR = require "../../syntax/gr_nodes"
 Parser = require "../../syntax/parser"
 SS = require "../../syntax/ss_nodes"
 DF = require "./df_nodes"
 
 Snd = (_,y) ->y
-Colon  = new TP.DelimLike(new SS.ColonToken)
-Equals = new TP.DelimLike(new SS.DelimToken("="))
+Colon  = new GR.DelimLike(new SS.ColonToken)
+Equals = new GR.DelimLike(new SS.DelimToken("="))
 
 
 # For now, only idents can be variable names. TODO dollar signs
-VariableName = new TP.Ident((x)->new DF.VariableName(x.value))
+VariableName = new GR.Ident((x)->new DF.VariableName(x.value))
 
 # For now, only a variable with type can be used. TODO type inference
 Definable = VariableName
@@ -20,11 +20,11 @@ Definable = VariableName
 #
 # Contrary to VDS annotations, here no bracketed inline types are allowed. We want to
 # extend the named type, and extending an inline type makes no sense.
-DefinableWithType = new TP.Juxtaposition(
+DefinableWithType = new GR.Juxtaposition(
   Definable,
-  new TP.Juxtaposition(
+  new GR.Juxtaposition(
     Colon,
-    new TP.Ident,
+    new GR.Ident,
     Snd
   ),
   (variableName,typeName) -> [variableName,typeName]
@@ -35,11 +35,11 @@ DefinableWithType = new TP.Juxtaposition(
 #     x:string = "hello"
 #
 # The value must be of the definition type.
-VariableDefinition = new TP.Juxtaposition(
+VariableDefinition = new GR.Juxtaposition(
   DefinableWithType,
-  new TP.Juxtaposition(
+  new GR.Juxtaposition(
     Equals,
-    new TP.RawTokens(),
+    new GR.RawTokens(),
     Snd
   ),
   ([pattern, typeName], rawValue)-> new DF.Definition(pattern, typeName, rawValue)

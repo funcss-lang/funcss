@@ -1,5 +1,5 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
-TP = require "../../src/compiler/semantics/values/tp_nodes"
+GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 Vds = require "../../src/compiler/semantics/values/vds"
@@ -34,7 +34,7 @@ check_tree = (str, typeStr, next, args...) ->
 
 check_nomatch = (str, typeStr, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
-  check.error TP.NoMatch, message: message, ->
+  check.error GR.NoMatch, message: message, ->
     parse(s, typeStr)
   s.position.should.be.equal(pos)
 

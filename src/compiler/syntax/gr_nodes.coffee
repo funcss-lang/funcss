@@ -1,8 +1,13 @@
-Tokenizer = require "../../syntax/tokenizer"
-Parser = require "../../syntax/parser"
-SS = require "../../syntax/ss_nodes"
-Stream = require "../../helpers/stream"
-assert = require "../../helpers/assert"
+## The Grammar Nodes
+#
+# Trees made of these nodes represent the grammar of different sublanguages
+# (e.g. selectors, vds, and each property value type)
+
+Tokenizer = require "./tokenizer"
+Parser = require "./parser"
+SS = require "./ss_nodes"
+Stream = require "../helpers/stream"
+assert = require "../helpers/assert"
 
 # helper error class to use for parsing
 class NoMatch extends Error

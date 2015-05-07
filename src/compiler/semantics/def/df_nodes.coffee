@@ -2,7 +2,7 @@
 
 
 # The subclasses of the `Pattern` class represent those patterns that can
-# be defined. These compile to a TP node.
+# be defined. These compile to a GR node.
 
 exports.Definable = class Definable
 

@@ -1,4 +1,4 @@
-TP = require "../../src/compiler/semantics/values/tp_nodes"
+GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 DF = require "../../src/compiler/semantics/def/df_nodes"
 DefGrammar = require "../../src/compiler/semantics/def/def_grammar"
 Stream = require "../../src/compiler/helpers/stream"

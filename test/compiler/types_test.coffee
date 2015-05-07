@@ -1,4 +1,4 @@
-TP = require "../../src/compiler/semantics/values/tp_nodes"
+GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 Tokenizer = require "../../src/compiler/syntax/tokenizer"
@@ -14,7 +14,7 @@ check_tree = (str, type, next, args...) ->
 
 check_nomatch = (str, type, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
-  check.error TP.NoMatch, message: message, ->
+  check.error GR.NoMatch, message: message, ->
     t = type.parse(s)
   s.position.should.be.equal(pos)
 
@@ -22,20 +22,20 @@ Value = (x)->x.value
 Value100 = (x)->x.value/100
 Id = (x)->x
 
-describe 'TP', ->
+describe 'GR', ->
   describe 'Keyword', ->
-    asdf = new TP.Keyword("asdf", Id)
+    asdf = new GR.Keyword("asdf", Id)
 
     it "can parse ident", ->
       check_tree "asdf", asdf, 1, SS.IdentToken, value: "asdf"
 
     it "can parse $x:ident", ->
-      result = new TP.Keyword("asdf", (x)->{x:x}).parse(new Stream(Parser.parse_list_of_component_values("asdf")))
+      result = new GR.Keyword("asdf", (x)->{x:x}).parse(new Stream(Parser.parse_list_of_component_values("asdf")))
       check result, Object
       check result.x, SS.IdentToken, value: "asdf"
 
   describe 'Number', ->
-    number = new TP.Number(Id)
+    number = new GR.Number(Id)
     it "can parse 3", ->
       check_tree "3", number, 1, SS.NumberToken, value: 3, type: "integer"
     it "can parse 3.0", ->
@@ -44,7 +44,7 @@ describe 'TP', ->
       check_nomatch "'str'", number, 0, "number expected but '\"str\"' found"
 
   describe 'Integer', ->
-    integer = new TP.Integer((x)->x)
+    integer = new GR.Integer((x)->x)
 
     it "can parse 3", ->
       check_tree "3", integer, 1, SS.NumberToken, value: 3, type:"integer"
@@ -53,7 +53,7 @@ describe 'TP', ->
       check_nomatch "3.3", integer, 0, "integer expected but '3.3' found"
 
   describe 'Delimiters', ->
-    p = new TP.DelimLike(new SS.DelimToken("+"), (x)->x)
+    p = new GR.DelimLike(new SS.DelimToken("+"), (x)->x)
 
     it "can parse +", ->
       check_tree "+", p, 1, SS.DelimToken, value: "+"
@@ -62,7 +62,7 @@ describe 'TP', ->
       check_nomatch "3.3", p, 0, "'+' expected but '3.3' found"
 
   describe 'Juxtaposition', ->
-    jp = new TP.Juxtaposition(new TP.Keyword('black', Value), new TP.Number(Value), (x,y)->{x,y})
+    jp = new GR.Juxtaposition(new GR.Keyword('black', Value), new GR.Number(Value), (x,y)->{x,y})
     
     it "works", ->
       check_tree "black 3.3", jp, 3, Object, x:"black", y:3.3
@@ -78,7 +78,7 @@ describe 'TP', ->
       check_nomatch "black green", jp, 2, "number expected but 'green' found"
 
   describe "And", ->
-    da = new TP.And(new TP.Ident(Value),new TP.Number(Value), (x,y)->{x,y})
+    da = new GR.And(new GR.Ident(Value),new GR.Number(Value), (x,y)->{x,y})
     
     it "can parse first second", ->
       check_tree "black 3.3", da, 3, Object, x:"black", y:3.3
@@ -86,7 +86,7 @@ describe 'TP', ->
       check_tree "3.3 black", da, 3, Object, x:"black", y:3.3
     
   describe "ExclusiveOr", ->
-    bar = new TP.ExclusiveOr(new TP.Ident(Value), new TP.Number(Value), (x)->{value: x})
+    bar = new GR.ExclusiveOr(new GR.Ident(Value), new GR.Number(Value), (x)->{value: x})
 
     it "can parse first", ->
       check_tree "black", bar, 1, Object, value: "black"
@@ -96,41 +96,41 @@ describe 'TP', ->
 
   describe 'InclusiveOr', ->
     it "can parse first branch", ->
-      result = new TP.InclusiveOr(new TP.Ident((x)->x),
-        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black")))
+      result = new GR.InclusiveOr(new GR.Ident((x)->x),
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black")))
       check result, Object, x:"black", y:undefined
 
     it "can parse the second branch", ->
-      result = new TP.InclusiveOr(new TP.Ident((x)->x),
-        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3")))
+      result = new GR.InclusiveOr(new GR.Ident((x)->x),
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3")))
       check result, Object, x:undefined, y:3.3
 
     it "can parse first second", ->
-      result = new TP.InclusiveOr(new TP.Ident((x)->x),
-        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black 3.3")))
+      result = new GR.InclusiveOr(new GR.Ident((x)->x),
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black 3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second first", ->
-      result = new TP.InclusiveOr(new TP.Ident((x)->x),
-        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3 black")))
+      result = new GR.InclusiveOr(new GR.Ident((x)->x),
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3 black")))
       check result, Object, x:"black", y:3.3
 
     it "can parse first/**/second", ->
-      result = new TP.InclusiveOr(new TP.Ident((x)->x),
-        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black/**/3.3")))
+      result = new GR.InclusiveOr(new GR.Ident((x)->x),
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black/**/3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second/**/first", ->
-      result = new TP.InclusiveOr(new TP.Ident((x)->x),
-        new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3/**/black")))
+      result = new GR.InclusiveOr(new GR.Ident((x)->x),
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3/**/black")))
       check result, Object, x:"black", y:3.3
 
     describe "for three arguments", ->
-      t3 = new TP.InclusiveOr(
-          new TP.Keyword("hello", ->hello:true),
-          new TP.InclusiveOr(
-            new TP.Number((x)->number:x.value),
-            new TP.Keyword("world", ->world:true),
+      t3 = new GR.InclusiveOr(
+          new GR.Keyword("hello", ->hello:true),
+          new GR.InclusiveOr(
+            new GR.Number((x)->number:x.value),
+            new GR.Keyword("world", ->world:true),
             (x,y)->number:x?.number,world:y?.world),
           (x,y)->hello:x?.hello,number:y?.number,world:y?.world)
 
@@ -148,14 +148,14 @@ describe 'TP', ->
     it "can fail for invalid", ->
       err = undefined
       try
-        result = new TP.InclusiveOr(new TP.Ident((x)->x),
-          new TP.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("2px")))
+        result = new GR.InclusiveOr(new GR.Ident((x)->x),
+          new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("2px")))
       catch e
         err = e
-      check err, TP.NoMatch, message:"identifier or number expected but '2px' found"
+      check err, GR.NoMatch, message:"identifier or number expected but '2px' found"
 
   describe "OneOrMore", ->
-    pl = new TP.OneOrMore(new TP.Ident(Value))
+    pl = new GR.OneOrMore(new GR.Ident(Value))
     it "cannot parse none", ->
       check_nomatch "", pl, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
@@ -172,7 +172,7 @@ describe 'TP', ->
       check_tree "hello world/**/haha/**/1", pl, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
   describe "ZeroOrMore", ->
-    st = new TP.ZeroOrMore(new TP.Ident(Value))
+    st = new GR.ZeroOrMore(new GR.Ident(Value))
     it "can parse none", ->
       check_tree "", st, 0, Array, length:0
     it "can parse sth", ->
@@ -189,7 +189,7 @@ describe 'TP', ->
       check_tree "hello world/**/haha/**/1", st, 4, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
   describe "DelimitedByComma", ->
-    hs = new TP.DelimitedByComma(new TP.Ident(Value))
+    hs = new GR.DelimitedByComma(new GR.Ident(Value))
     it "cannot parse none", ->
       check_nomatch "", hs, 0, "identifier expected but '' found"
     it "cannot parse sth", ->
@@ -216,13 +216,13 @@ describe 'TP', ->
       check_tree "hello, world,haha,1", hs, 6, Array, length:3, 0:"hello", 1:"world", 2:"haha"
 
   describe "Range", ->
-    r00 = new TP.Range(0,0, new TP.Ident(Value))
-    r01 = new TP.Range(0,1, new TP.Ident(Value))
-    r02 = new TP.Range(0,2, new TP.Ident(Value))
-    r11 = new TP.Range(1,1, new TP.Ident(Value))
-    r12 = new TP.Range(1,2, new TP.Ident(Value))
-    r13 = new TP.Range(1,3, new TP.Ident(Value))
-    r22 = new TP.Range(2,2, new TP.Ident(Value))
+    r00 = new GR.Range(0,0, new GR.Ident(Value))
+    r01 = new GR.Range(0,1, new GR.Ident(Value))
+    r02 = new GR.Range(0,2, new GR.Ident(Value))
+    r11 = new GR.Range(1,1, new GR.Ident(Value))
+    r12 = new GR.Range(1,2, new GR.Ident(Value))
+    r13 = new GR.Range(1,3, new GR.Ident(Value))
+    r22 = new GR.Range(2,2, new GR.Ident(Value))
     describe "can parse none", ->
       specify "for 00", -> check_tree "", r00, 0, Array, length:0
       specify "for 01", -> check_tree "", r01, 0, Array, length:0
@@ -283,7 +283,7 @@ describe 'TP', ->
     describe "combinations", ->
       describe "of Range", ->
         describe "and Juxtaposition", ->
-          c = new TP.Range(0,3, new TP.Juxtaposition(new TP.Ident(Value),new TP.Percentage(Value100), (i,p)->"#{p}=#{i}"))
+          c = new GR.Range(0,3, new GR.Juxtaposition(new GR.Ident(Value),new GR.Percentage(Value100), (i,p)->"#{p}=#{i}"))
           it "can parse none", ->
             check_tree "", c, 0, Array, length:0
           it "can parse sth", ->
@@ -300,7 +300,7 @@ describe 'TP', ->
             check_tree "hello 5% world 30%/**/haha 40%/**/1", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
 
   describe "Eof", ->
-    eof = new TP.Eof
+    eof = new GR.Eof
     it "can parse empty string", ->
       s = new Stream(Parser.parse_list_of_component_values(""))
       t = eof.parse(s)
@@ -310,19 +310,19 @@ describe 'TP', ->
       check_nomatch "3", eof, 0, "EOF expected but '3' found"
 
   describe "full", ->
-    f = new TP.Full(new TP.Keyword("asdf", (x)->{x:x.value}))
+    f = new GR.Full(new GR.Keyword("asdf", (x)->{x:x.value}))
     it "can parse asdf", ->
       check_tree "asdf", f, 2, Object, x:"asdf"
     it "cannot parse asdf sth", ->
       check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
 
   describe "annotation", ->
-    a = new TP.AnnotationRoot(new TP.Annotation("hello", new TP.Keyword("world")), (x,m)->m)
+    a = new GR.AnnotationRoot(new GR.Annotation("hello", new GR.Keyword("world")), (x,m)->m)
     it "works", ->
       check_tree "world", a, 1, Object, hello:"world"
 
   describe "simple block", ->
-    sb = new TP.SimpleBlock(SS.OpeningCurlyToken, new TP.Keyword("hello"), (x)->hello:x)
+    sb = new GR.SimpleBlock(SS.OpeningCurlyToken, new GR.Keyword("hello"), (x)->hello:x)
     it "works", ->
       check_tree "{hello}", sb, 1, Object, hello:"hello"
     it "works", ->
@@ -335,7 +335,7 @@ describe 'TP', ->
       check_nomatch "(hello world)", sb, 0, "'{' expected but '(hello world)' found"
     
   describe "functional notation", ->
-    fn = new TP.FunctionalNotation("tan", new TP.Keyword("hello"), (x)->hello:x)
+    fn = new GR.FunctionalNotation("tan", new GR.Keyword("hello"), (x)->hello:x)
     it "works", ->
       check_tree "tan(hello)", fn, 1, Object, hello:"hello"
     it "works with whitespace", ->
@@ -347,7 +347,7 @@ describe 'TP', ->
       check_nomatch "sth", fn, 0, "'tan(' expected but 'sth' found"
 
   describe "CustomFunction", ->
-    fn = new TP.AnyFunctionalNotation(new TP.Keyword("hello"), (name, hello)->{name,hello})
+    fn = new GR.AnyFunctionalNotation(new GR.Keyword("hello"), (name, hello)->{name,hello})
     it "works", ->
       check_tree "f(hello)", fn, 1, Object, name:"f", hello:"hello"
     it "works with whitespace", ->

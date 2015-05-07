@@ -1,5 +1,5 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
-TP = require "../../src/compiler/semantics/values/tp_nodes"
+GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 Vds = require "../../src/compiler/semantics/values/vds"
@@ -32,7 +32,7 @@ check_tree = (str, typeStr, next, args...) ->
 
 check_nomatch = (str, typeStr, pos, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
-  check.error TP.NoMatch, message: message, ->
+  check.error GR.NoMatch, message: message, ->
     parse(s, typeStr)
   s.position.should.be.equal(pos)
 
@@ -57,19 +57,19 @@ describe "Vds", ->
       check_tree "3%", "<percentage>", 1, VL.Percentage, value: 3
     it "can use whitespace", ->
       # TODO make this disallowed?
-      #check_error "3%", "< percentage>", TP.NoMatch, /identifier expected but ' ' found/
-      #check_error "3%", "<percentage >", TP.NoMatch, /'>' expected but ' ' found/
+      #check_error "3%", "< percentage>", GR.NoMatch, /identifier expected but ' ' found/
+      #check_error "3%", "<percentage >", GR.NoMatch, /'>' expected but ' ' found/
       check_tree "3%", "< percentage>", 1, VL.Percentage, value: 3
       check_tree "3%", "<percentage >", 1, VL.Percentage, value: 3
       check_tree "3%", "< percentage >", 1, VL.Percentage, value: 3
     it "cannot use unnamed type", ->
-      check_error "3%", "<asdf>", TP.UnknownType, "unknown type <asdf>"
+      check_error "3%", "<asdf>", GR.UnknownType, "unknown type <asdf>"
     it "can refer to a quoted type", ->
       check_tree "solid", "<'border-type'>", 1, VL.Keyword, value: "solid"
     it "can refer to a quoted type with no match", ->
       check_nomatch "asdf", "<'border-type'>", 0, "'solid' or 'dashed' or 'dotted' or 'none' expected but 'asdf' found"
     it "cannot use unnamed quoted type", ->
-      check_error "3%", "<'asdf'>", TP.UnknownType, "unknown type <'asdf'>"
+      check_error "3%", "<'asdf'>", GR.UnknownType, "unknown type <'asdf'>"
 
   describe "<ident>", ->
     it "can parse an ident", ->

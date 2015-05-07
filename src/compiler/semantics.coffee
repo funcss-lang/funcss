@@ -37,9 +37,9 @@ Semantics[k]=v for k,v of {
 #  handle: (atrule) ->
 #    throw new Error if atrule.value is undefined and @blockRequired
 #    throw new Error if atrule.value isnt undefined and !@blockCategory
-#    new TP.Full(@preludeType).parse new Stream(atrule.prelude)
+#    new GR.Full(@preludeType).parse new Stream(atrule.prelude)
 #    if atrule.value
-#      new TP.Full(@blockType).parse new Stream(Parser["parse_#{@blockCategory}"]atrule.prelude)
+#      new GR.Full(@blockType).parse new Stream(Parser["parse_#{@blockCategory}"]atrule.prelude)
 #
     
 
