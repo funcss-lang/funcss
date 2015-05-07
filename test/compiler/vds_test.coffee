@@ -2,7 +2,7 @@
 GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
-Vds = require "../../src/compiler/semantics/values/vds"
+VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 VL = require "../../src/compiler/semantics/values/vl_nodes"
 check = require "./check"
 SG = require "../../src/compiler/semantics/sg_nodes"
@@ -12,10 +12,10 @@ customFunctions =
   sign: Math.sign
   sqrt: Math.sqrt
 
-BorderType = Vds.parse(new Stream(Parser.parse_list_of_component_values("solid|dashed|dotted|none")))
+BorderType = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values("solid|dashed|dotted|none")))
 
 parse = (s, typeStr) ->
-  type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
   sg = new SG.SemanticGraph
   type.setSg(sg)
   sg.propertyValueTypes['border-type'] = BorderType
@@ -39,11 +39,11 @@ check_nomatch = (str, typeStr, pos, message) ->
 check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
-    type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+    type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
     type.setSg(new SG.SemanticGraph)
     t = type.parse(s)
 
-describe "Vds", ->
+describe "VdsGrammar", ->
   describe "keyword", ->
     it "can parse ident", ->
       check_tree "asdf", "asdf", 1, VL.Keyword, value: "asdf"

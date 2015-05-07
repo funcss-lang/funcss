@@ -1,11 +1,11 @@
 CS = require "./cascade/cs_nodes"
-Vds = require "./values/vds"
+VdsGrammar = require "./values/vds_grammar"
 
 exports.SemanticGraph = class SemanticGraph
   constructor: () ->
     @simpleRules = []
     @propertyValueTypes = {}
-    @types = Vds.TYPES
+    @types = VdsGrammar.TYPES
   getType: (name) ->
     @types[name]
   getQuotedType: (name) ->
