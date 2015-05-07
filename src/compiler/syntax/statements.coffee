@@ -7,7 +7,7 @@
 #
 
 Parser = require "./parser"
-SS = require "./ss_nodes"
+SS     = require "./ss_nodes"
 
 class SS.Statement
   constructor : (@value) ->

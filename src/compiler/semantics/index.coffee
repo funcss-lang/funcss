@@ -5,10 +5,10 @@
 # semantic functionality.
 #
 
-SS = require "./syntax/ss_nodes"
-SG = require "./semantics/sg_nodes"
-Cascade = require "./semantics/cascade"
-Def = require "./semantics/def"
+SS      = require "../syntax/ss_nodes"
+SG      = require "./sg_nodes"
+Cascade = require "./cascade"
+Def     = require "./def"
 
 module.exports = Semantics = (ss) ->
   sg = new SG.SemanticGraph

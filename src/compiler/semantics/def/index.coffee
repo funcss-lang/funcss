@@ -1,17 +1,16 @@
 # The custom functions/values/etc. module
 #
 
-Semantics = require "../semantics"
-Sel = require "./selectors/sel_grammar"
-Stream = require "../helpers/stream"
-GR = require "./../syntax/gr_nodes"
-CS = require "./cascade/cs_nodes"
-Parser = require "../syntax/parser"
-VdsGrammar = require "./values/vds_grammar"
-SS = require "../syntax/ss_nodes"
-SG = require "./sg_nodes"
-DefGrammar = require "./def/def_grammar"
-debugger
+Stream     = require "../../helpers/stream"
+Parser     = require "../../syntax/parser"
+SS         = require "../../syntax/ss_nodes"
+GR         = require "../../syntax/gr_nodes"
+Semantics  = require "../"
+SG         = require "../sg_nodes"
+Sel        = require "../selectors/sel_grammar"
+CS         = require "../cascade/cs_nodes"
+VdsGrammar = require "../values/vds_grammar"
+DefGrammar = require "./def_grammar"
 
 SG.SemanticGraph.prototype[k] = v for k,v of {
   insertDefinition: (def) ->

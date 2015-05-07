@@ -3,11 +3,11 @@
 # Trees made of these nodes represent the grammar of different sublanguages
 # (e.g. selectors, vds, and each property value type)
 
+assert    = require "../helpers/assert"
+Stream    = require "../helpers/stream"
 Tokenizer = require "./tokenizer"
-Parser = require "./parser"
-SS = require "./ss_nodes"
-Stream = require "../helpers/stream"
-assert = require "../helpers/assert"
+Parser    = require "./parser"
+SS        = require "./ss_nodes"
 
 GR = exports
 # helper error class to use for parsing

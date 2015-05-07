@@ -1,13 +1,13 @@
 # The qualified rules (normal CSS rules) module
 #
 
-Semantics = require "../semantics"
-Sel = require "./selectors/sel_grammar"
-Stream = require "../helpers/stream"
-GR = require "./../syntax/gr_nodes"
-CS = require "./cascade/cs_nodes"
-Parser = require "../syntax/parser"
-VdsGrammar = require "./values/vds_grammar"
+Stream     = require "../../helpers/stream"
+Parser     = require "../../syntax/parser"
+GR         = require "../../syntax/gr_nodes"
+Semantics  = require "../"
+Sel        = require "../selectors/sel_grammar"
+CS         = require "./cs_nodes"
+VdsGrammar = require "../values/vds_grammar"
 
 
 exports.qualifiedRule = (qrule, sg) ->

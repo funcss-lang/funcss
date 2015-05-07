@@ -1,7 +1,7 @@
-GR = require "../../syntax/gr_nodes"
 Parser = require "../../syntax/parser"
-SS = require "../../syntax/ss_nodes"
-DF = require "./df_nodes"
+SS     = require "../../syntax/ss_nodes"
+GR     = require "../../syntax/gr_nodes"
+DF     = require "./df_nodes"
 
 Snd = (_,y) ->y
 Colon  = new GR.DelimLike(new SS.ColonToken)

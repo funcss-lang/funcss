@@ -1,7 +1,7 @@
 
-IG = require "./generator/ig_nodes"
-SG = require "./semantics/sg_nodes"
-SS = require "./syntax/ss_nodes"
+SS = require "../syntax/ss_nodes"
+SG = require "../semantics/sg_nodes"
+IG = require "./ig_nodes"
 
 SG.SemanticGraph.prototype[k] = v for k,v of {
 
