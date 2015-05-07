@@ -2,7 +2,7 @@
 #
 
 Semantics = require "../semantics"
-Selectors = require "./selectors"
+Sel = require "./selectors/sel_grammar"
 Stream = require "../helpers/stream"
 GR = require "./../syntax/gr_nodes"
 CS = require "./cascade/cs_nodes"
