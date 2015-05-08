@@ -9,11 +9,19 @@
 #
 
 SS = require "../syntax/ss_nodes"
-CS         = require "./cascade/cs_nodes"
 VdsGrammar = require "./values/vds_grammar"
 IG         = require "../generator/ig_nodes"
 
 SG = exports
+
+class SG.SimpleRule
+  constructor: (opts) ->
+    {@mediaQuery, @selector, @name, @value, @important} = opts
+  isConstantMediaQuery: -> false
+  isConstantValue: -> false
+  isConstantSelector: -> false
+  selectorSpecificity: -> [0,0,0]
+
 
 class SG.SemanticGraph
   constructor: () ->

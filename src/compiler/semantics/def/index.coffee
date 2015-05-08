@@ -8,7 +8,6 @@ GR         = require "../../syntax/gr_nodes"
 Semantics  = require "../"
 SG         = require "../sg_nodes"
 Sel        = require "../selectors/sel_grammar"
-CS         = require "../cascade/cs_nodes"
 VdsGrammar = require "../values/vds_grammar"
 DefGrammar = require "./def_grammar"
 

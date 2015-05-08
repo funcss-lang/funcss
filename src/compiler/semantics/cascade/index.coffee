@@ -6,8 +6,8 @@ Parser     = require "../../syntax/parser"
 GR         = require "../../syntax/gr_nodes"
 Semantics  = require "../"
 Sel        = require "../selectors/sel_grammar"
-CS         = require "./cs_nodes"
 VdsGrammar = require "../values/vds_grammar"
+SG         = require "../sg_nodes"
 
 
 exports.qualifiedRule = (qrule, sg) ->
@@ -15,11 +15,10 @@ exports.qualifiedRule = (qrule, sg) ->
   for decl in Parser.parse_list_of_declarations qrule.value.value
     # TODO remove mock
     type = sg.propertyValueTypes[decl.name] || new GR.Full(VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values("<ident>"))))
-    # TODO remove this
     type.setSg(sg)
     if not type
       throw new Error "Undefined property: #{decl.name}"
-    sg.simpleRules.push new CS.SimpleRule
+    sg.simpleRules.push new SG.SimpleRule
       mediaQuery: null
       selector: sel
       name: decl.name
