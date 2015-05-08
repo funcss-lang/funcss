@@ -1,7 +1,17 @@
 ## The Grammar Nodes
 #
-# Trees made of these nodes represent the grammar of different sublanguages
-# (e.g. selectors, vds, and each property value type)
+# These nodes represent the grammar of different sublanguages
+# (e.g. selectors, vds, and each property value type).
+#
+# The last optional parameter of all `GR` constructors is the semantic function: a function
+# which returns the final value from the elements of the parsed string. The schema of the
+# semantic function varies between `GR` classes.
+#
+# *Output*
+# 
+# - `parse(s:Stream)`: tries to consume the first few tokens from the stream, calls the semantic 
+#     function, and returns the result.
+#
 
 assert    = require "../helpers/assert"
 Stream    = require "../helpers/stream"

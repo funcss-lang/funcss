@@ -1,8 +1,11 @@
+## The Definition nodes
+#
 # These nodes represent the AST of the body of the @def at-rule.
-
-
-# The subclasses of the `Pattern` class represent those patterns that can
-# be defined. These compile to a GR node.
+#
+# *Outputs*
+#
+# - `type()`: returns the generated type (GR tree with semantic functions returning VL trees)
+#
 
 DF = exports
 

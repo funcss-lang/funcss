@@ -1,5 +1,12 @@
-
-#### The Selector nodes
+## The Selector nodes
+#
+# These nodes represent the Selector class
+#
+# *Outputs*
+#
+# - `toString()`: returns a string that contains the selector in CSS format
+# - `matchjs()`: TODO returns a string that contains a JavaScript expression which evaluates to a
+#     boolean: whether the element matches or not 
 
 SL = exports
 

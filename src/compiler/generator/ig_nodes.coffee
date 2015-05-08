@@ -1,4 +1,11 @@
-#### JavaScript nodes
+## Imperative Graph nodes
+#
+# These nodes represent the imperative constructs of the final generated 
+# JavaScript code
+#
+# *Outputs*
+#
+# - *`toString()`*: returns the generated JavaScript code
 #
 
 IG = exports

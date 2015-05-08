@@ -1,3 +1,12 @@
+## The Cascade nodes
+#
+# These nodes represent the semantic representation of the cascade of elements
+#
+# *Outputs*
+#
+# - TODO
+#
+
 
 CS = exports
 

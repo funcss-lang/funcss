@@ -1,4 +1,11 @@
-# This file contains the nodes used in the abstract syntax tree
+## The Stylesheet nodes
+#
+# These nodes are used in the abstract syntax tree of FunCSS. They are
+# the same as the CSS AST nodes, according to CSS-SYNTAX level 3.
+# 
+# *Outputs*
+#
+# - `toString()` returns a string which is a good serialization of the AST.
 #
 
 

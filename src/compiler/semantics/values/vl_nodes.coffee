@@ -1,11 +1,12 @@
-
-#### The Value nodes
+## The Value nodes
 # 
-# These represent the data flow graph of CSS property values.
+# These nodes represent the data flow graph of CSS property values.
 #
-# The two outputs of this tree are the `jsjs()` and `ssjs()` methods. Both return a JavaScript
-# expression, which, if evaled, return a value for the user-written JS functions and for the 
-# CSS(OM), respectively.
+# *Outputs*:
+# - `jsjs()`: returns a string which contains a JavaScript expression. If it is evaled, it returns
+#     a JavaScript value representation of the value.
+# - `ssjs()`: returns a string which contains a JavaScript expression. If it is evaled, it returns
+#     a string which contains the CSS representation of the value.
 #
 
 # TODO
