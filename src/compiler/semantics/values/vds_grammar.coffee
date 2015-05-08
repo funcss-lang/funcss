@@ -249,9 +249,20 @@ FunctionalNotation.a = Combined
 
 
 # We wrap the root into an AnnotationRoot so that it can manage the annotations.
-# This might not be the best solution. We also wrap it into Full, so it must
-# consume all tokens from the stream
-module.exports = new GR.Full(Combined, (x)->new GR.AnnotationRoot(x, AddMarkings))
+Root = new GR.Just(Combined, (x)-> new GR.AnnotationRoot(x, AddMarkings))
+
+# This is an optional version of root. This is used e.g. for 
+# functional notation arguments.
+OptionalRoot = new GR.Optional(
+  Root,
+  (x)-> x ? new GR.Empty(->new VL.EmptyValue)
+)
+
+# We wrap the grammar into Full, so it must consume all tokens from the stream (except
+# starting and ending whitespace)
+# XXX is this needed?
+Vds = new GR.Full(Root)
+
 
 TYPES.ident = new GR.Ident((x)->new VL.Keyword(x.value))
 TYPES.number = new GR.Number((x)->new VL.Number(x.value))
@@ -263,8 +274,10 @@ TYPES.string = new GR.String((x)->new VL.String(x.value))
 # brackets are required when the user needs more complex types.
 Atom = Bracketed
 
+module.exports = Vds
 module.exports[k] = v for k,v of {
   TYPES
   Atom
   TypeReference
+  OptionalRoot
 }

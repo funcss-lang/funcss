@@ -1,7 +1,8 @@
-Parser = require "../../syntax/parser"
-SS     = require "../../syntax/ss_nodes"
-GR     = require "../../syntax/gr_nodes"
-DF     = require "./df_nodes"
+Parser     = require "../../syntax/parser"
+SS         = require "../../syntax/ss_nodes"
+GR         = require "../../syntax/gr_nodes"
+VdsGrammar = require "../values/vds_grammar"
+DF         = require "./df_nodes"
 
 Snd = (_,y) ->y
 Colon  = new GR.DelimLike(new SS.ColonToken)
@@ -11,8 +12,18 @@ Equals = new GR.DelimLike(new SS.DelimToken("="))
 # For now, only idents can be variable names. TODO dollar signs
 VariableName = new GR.Ident((x)->new DF.VariableName(x.value))
 
-# For now, only a variable with type can be used. TODO type inference
-Definable = VariableName
+
+# For now, only idents can be variable names. TODO dollar signs
+FunctionalNotation = new GR.AnyFunctionalNotation(
+  VdsGrammar.OptionalRoot,
+  (name, argument)->new DF.FunctionalNotation(name, argument)
+)
+
+# For now, only a variable with type can be used. 
+Definable = new GR.ExclusiveOr(
+  VariableName,
+  FunctionalNotation
+)
 
 # A definable (variable or function) and a type name:
 #
@@ -20,12 +31,14 @@ Definable = VariableName
 #
 # Contrary to VDS annotations, here no bracketed inline types are allowed. We want to
 # extend the named type, and extending an inline type makes no sense.
-DefinableWithType = new GR.Juxtaposition(
+DefinableWithOptionalType = new GR.Juxtaposition(
   Definable,
-  new GR.Juxtaposition(
-    Colon,
-    new GR.Ident,
-    Snd
+  new GR.Optional(
+    new GR.Juxtaposition(
+      Colon,
+      new GR.Ident,
+      Snd
+    )
   ),
   (variableName,typeName) -> [variableName,typeName]
 )
@@ -36,7 +49,7 @@ DefinableWithType = new GR.Juxtaposition(
 #
 # The value must be of the definition type.
 VariableDefinition = new GR.Juxtaposition(
-  DefinableWithType,
+  DefinableWithOptionalType,
   new GR.Juxtaposition(
     Equals,
     new GR.RawTokens(),

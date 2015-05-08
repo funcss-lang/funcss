@@ -315,6 +315,35 @@ describe 'GR', ->
       check_tree "asdf", f, 2, Object, x:"asdf"
     it "cannot parse asdf sth", ->
       check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
+    it "can parse _asdf", ->
+      check_tree " asdf", f, 3, Object, x:"asdf"
+    it "can parse asdf_", ->
+      check_tree "asdf ", f, 3, Object, x:"asdf"
+    it "can parse _asdf_", ->
+      check_tree " asdf ", f, 4, Object, x:"asdf"
+
+  describe "empty", ->
+    e = new GR.Empty(()->{x:"hello"})
+    it "can parse ''", ->
+      check_tree "", e, 0, Object, x:"hello"
+    it "does not mind ' '", ->
+      check_tree " ", e, 0, Object, x:"hello"
+
+  describe "full empty", ->
+    fe = new GR.Full(new GR.Empty(()->{x:"hello"}))
+    it "can parse ''", ->
+      check_tree "", fe, 1, Object, x:"hello"
+    it "can parse ' '", ->
+      check_tree " ", fe, 2, Object, x:"hello"
+    it "cannot parse asdf", ->
+      check_nomatch "asdf", fe, 0, "EOF expected but 'asdf' found"
+    it "cannot parse _asdf", ->
+      check_nomatch " asdf", fe, 1, "EOF expected but 'asdf' found"
+    it "can parse asdf_", ->
+      check_nomatch "asdf ", fe, 0, "EOF expected but 'asdf' found"
+    it "can parse _asdf_", ->
+      check_nomatch " asdf ", fe, 1, "EOF expected but 'asdf' found"
+
 
   describe "annotation", ->
     a = new GR.AnnotationRoot(new GR.Annotation("hello", new GR.Keyword("world")), (x,m)->m)

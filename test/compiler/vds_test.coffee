@@ -22,6 +22,10 @@ parse = (s, typeStr) ->
   value = type.parse(s)
   value
 
+check_grammar_optional = (typeStr, args...) ->
+  grammar = VdsGrammar.OptionalRoot.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  check grammar, args...
+  grammar
 
 check_tree = (str, typeStr, next, args...) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
@@ -44,6 +48,15 @@ check_error = (str, typeStr, errorClass, message) ->
     t = type.parse(s)
 
 describe "VdsGrammar", ->
+  describe "OptionalRoot", ->
+    it "works with empty", ->
+      g = check_grammar_optional "", GR.Empty
+      t = g.parse(new Stream(Parser.parse_list_of_component_values("  ")))
+      check t, VL.EmptyValue
+    it "works with non-empty", ->
+      g = check_grammar_optional "asdf", GR.AnnotationRoot
+      check g.a, GR.Keyword, value: "asdf"
+
   describe "keyword", ->
     it "can parse ident", ->
       check_tree "asdf", "asdf", 1, VL.Keyword, value: "asdf"

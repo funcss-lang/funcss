@@ -60,6 +60,8 @@ class GR.TokenTypeTokenType extends GR.Type
   props: {}
   parse: (s) ->
     next = s.next()
+    if !next?
+      throw new Error "Internal Error in FunCSS: nothing returned from stream"
     unless next instanceof @tokenClass
       throw new GR.NoMatch(@expected, "'#{next}'")
     for k,v of @props
@@ -274,6 +276,7 @@ class GR.Full extends GR.Type
   semantic: (x)->x
   constructor: (@a, @semantic = @semantic) ->
     assert.hasProp {@a}, "parse"
+    assert.notInstanceOf {@a}, GR.Full
   parse: (s) ->
     s.optionalWhitespace()
     result = @a.parse(s)
@@ -399,7 +402,14 @@ class GR.RawTokens extends GR.Type
       next = s.consume_next()
     @semantic result
 
+# This does not touch the input stream, just calls the semantic function
 class GR.Empty extends GR.Type
-  parse: (s) ->
+  semantic: ->
+  parse: (s) -> @semantic()
 
+# This is a pass-through grammar, it can be used to add an additional semantic function.
+class GR.Just extends GR.Type
+  semantic: Id
+  constructor: (@a, @semantic = @semantic) ->
+  parse: (s) -> @semantic @a.parse(s)
 

@@ -14,8 +14,28 @@ check_tree = (str, args...) ->
   t
 
 describe "DefGrammar", ->
-  it "can compile a variable definition", ->
+  it "can parse a variable definition", ->
     t = check_tree "x:number = 9", DF.Definition, type: "number"
     check t.definable, DF.VariableName, value: "x"
+    check t.rawValue, SS.ComponentValueList, length: 1
+    check t.rawValue[0], SS.NumberToken, value: 9, type: "integer"
+
+  it "can parse a variable definition witout type", ->
+    t = check_tree "x = 9", DF.Definition, type: undefined
+    check t.definable, DF.VariableName, value: "x"
+    check t.rawValue, SS.ComponentValueList, length: 1
+    check t.rawValue[0], SS.NumberToken, value: 9, type: "integer"
+
+  it "can parse a function definition", ->
+    t = check_tree "x():number = 9", DF.Definition, type: "number"
+    check t.definable, DF.FunctionalNotation, name: "x"
+    check t.definable.argument, GR.Empty
+    check t.rawValue, SS.ComponentValueList, length: 1
+    check t.rawValue[0], SS.NumberToken, value: 9, type: "integer"
+
+  it "can parse a function definition witout type", ->
+    t = check_tree "x() = 9", DF.Definition, type: undefined
+    check t.definable, DF.FunctionalNotation, name: "x"
+    check t.definable.argument, GR.Empty
     check t.rawValue, SS.ComponentValueList, length: 1
     check t.rawValue[0], SS.NumberToken, value: 9, type: "integer"

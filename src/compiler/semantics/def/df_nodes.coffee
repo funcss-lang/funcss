@@ -13,6 +13,9 @@ class DF.Definable
 class DF.VariableName extends DF.Definable
   constructor: (@value) ->
 
+class DF.FunctionalNotation extends DF.Definable
+  constructor: (@name, @argument) ->
+
 class DF.Definition
   constructor: (@definable, @type, @rawValue) ->
 

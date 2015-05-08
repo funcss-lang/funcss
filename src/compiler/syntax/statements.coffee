@@ -51,10 +51,9 @@ Parser.constructor.prototype[k] = v for k,v of {
     value.push @current
     @consume_next()
     until @current instanceof SS.EOFToken
-      # Unlike definitions, statements are parsed component value lists.
+      # Unlike definition values, statements are component value lists, not only token lists.
       @reconsume_current()
       value.push @consume_component_value()
       @consume_next()
-    # TODO !important check
     return new SS.Statement(value, false)
 }
