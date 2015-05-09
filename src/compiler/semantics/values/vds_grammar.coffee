@@ -6,8 +6,6 @@ GR = require "../../syntax/gr_nodes"
 SS = require "../../syntax/ss_nodes"
 VL = require "./vl_nodes"
 
-TYPES = {}
-
 # Helper functions
 Id = Fst = (x) -> x
 Snd = (_,y) -> y
@@ -264,11 +262,6 @@ OptionalRoot = new GR.Optional(
 Vds = new GR.Full(Root)
 
 
-TYPES.ident = new GR.Ident((x)->new VL.Keyword(x.value))
-TYPES.number = new GR.Number((x)->new VL.Number(x.value))
-TYPES.integer = new GR.Integer((x)->new VL.Number(x.value))
-TYPES.percentage = new GR.Percentage((x)->new VL.Percentage(x.value))
-TYPES.string = new GR.String((x)->new VL.String(x.value))
 
 # This is used in syntactic contexts where a single type atom is allowed and
 # brackets are required when the user needs more complex types.
@@ -276,7 +269,6 @@ Atom = Bracketed
 
 module.exports = Vds
 module.exports[k] = v for k,v of {
-  TYPES
   Atom
   TypeReference
   OptionalRoot

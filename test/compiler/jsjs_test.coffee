@@ -4,7 +4,7 @@ Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 check = require "./check"
-SG = require "../../src/compiler/semantics/sg_nodes"
+FS = require "../../src/compiler/semantics/fs_nodes"
 
 customFunctions =
   abs: Math.abs
@@ -13,7 +13,7 @@ customFunctions =
 
 parse = (s, typeStr) ->
   type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setSg(new SG.SemanticGraph)
+  type.setFs(new FS.FunctionalStylesheet())
   value = type.parse(s)
   jsjs = value.jsjs()
   eval("#{jsjs}")
@@ -42,7 +42,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    type.setSg(new SG.SemanticGraph)
+    type.setFs(new FS.FunctionalStylesheet())
     t = type.parse(s)
 
 describe "Jsjs", ->

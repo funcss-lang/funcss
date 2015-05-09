@@ -61,9 +61,9 @@ Snd = (x,y) -> y
 # base class for all types
 class GR.Type
   constructor: (@semantic = @semantic) ->
-  setSg: (@sg) ->
-    @a?.setSg(@sg)
-    @b?.setSg(@sg)
+  setFs: (@fs) ->
+    @a?.setFs(@fs)
+    @b?.setFs(@fs)
 
 # a type which matches a single token of a single class, with optional property restrictions
 class GR.TokenTypeTokenType extends GR.Type
@@ -366,16 +366,11 @@ class GR.TypeReference extends GR.Type
   constructor: (@name, @quoted = no, @semantic = @semantic) ->
     @expected = @name
   parse: (s) ->
-    if ! @sg
-      throw new Error "sg is not set up correctly"
-    type = if @quoted then @sg.getQuotedType(@name) else @sg.getType(@name)
-    throw new GR.UnknownType(@name, @quoted) if not type?
+    if ! @fs
+      throw new Error "Internal error in FunCSS: fs is not set up correctly"
+    type = if @quoted then @fs.getPropertyType(@name) else @fs.getType(@name)
     type.parse(s)
 
-# This error is thrown when a user tries to reference a type that does not exist
-class GR.UnknownType extends Error
-  constructor: (@type, @quoted) ->
-    @message = if @quoted then "unknown type <'#{@type}'>" else "unknown type <#{@type}>"
 
 class GR.FunctionalNotation extends GR.Type
   semantic: Id

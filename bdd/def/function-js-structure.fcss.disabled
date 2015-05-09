@@ -1,0 +1,7 @@
+@def {
+  stru($from: yes, $bee:[[to: [<number>*] $from:boolean]*]) = yes, to: {
+    if ($bee[0].to === "no") {
+      return "helo";
+    }
+  }
+}

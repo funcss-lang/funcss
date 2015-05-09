@@ -1,8 +1,8 @@
 SS = require "../syntax/ss_nodes"
 
 class Stream
-  constructor: (items) ->
-    (@items = (t for t in items)).push new SS.EOFToken
+  constructor: (items, @eof) ->
+    (@items = (t for t in items)).push new SS.EOFToken(@eof)
     @position = 0
   consume_next: ->
     @current = @items[@position++]

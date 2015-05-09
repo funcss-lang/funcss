@@ -1,11 +1,12 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
+ER = require "../../src/compiler/errors/er_nodes"
 GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 VL = require "../../src/compiler/semantics/values/vl_nodes"
 check = require "./check"
-SG = require "../../src/compiler/semantics/sg_nodes"
+FS = require "../../src/compiler/semantics/fs_nodes"
 
 customFunctions =
   abs: Math.abs
@@ -16,9 +17,9 @@ BorderType = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values("
 
 parse = (s, typeStr) ->
   type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  sg = new SG.SemanticGraph
-  type.setSg(sg)
-  sg.propertyValueTypes['border-type'] = BorderType
+  fs = new FS.FunctionalStylesheet
+  type.setFs(fs)
+  fs.setPropertyType('border-type', BorderType)
   value = type.parse(s)
   value
 
@@ -44,7 +45,7 @@ check_error = (str, typeStr, errorClass, message) ->
   s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
     type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    type.setSg(new SG.SemanticGraph)
+    type.setFs(new FS.FunctionalStylesheet)
     t = type.parse(s)
 
 describe "VdsGrammar", ->
@@ -76,13 +77,13 @@ describe "VdsGrammar", ->
       check_tree "3%", "<percentage >", 1, VL.Percentage, value: 3
       check_tree "3%", "< percentage >", 1, VL.Percentage, value: 3
     it "cannot use unnamed type", ->
-      check_error "3%", "<asdf>", GR.UnknownType, "unknown type <asdf>"
+      check_error "3%", "<asdf>", ER.UnknownType, "Unknown type: asdf"
     it "can refer to a quoted type", ->
       check_tree "solid", "<'border-type'>", 1, VL.Keyword, value: "solid"
     it "can refer to a quoted type with no match", ->
       check_nomatch "asdf", "<'border-type'>", 0, "'solid' or 'dashed' or 'dotted' or 'none' expected but 'asdf' found"
     it "cannot use unnamed quoted type", ->
-      check_error "3%", "<'asdf'>", GR.UnknownType, "unknown type <'asdf'>"
+      check_error "3%", "<'asdf'>", ER.UnknownProperty, "Unknown property: asdf"
 
   describe "<ident>", ->
     it "can parse an ident", ->

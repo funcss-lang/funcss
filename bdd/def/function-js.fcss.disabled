@@ -1,0 +1,9 @@
+@def {
+  abs(x:number):number {
+    return Math.abs(x);
+  }
+}
+body {
+  opacity: abs(-0.3);
+}
+

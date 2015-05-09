@@ -16,11 +16,18 @@ IG.camel = camel = (s) ->
 
 class IG.JSCode
 class IG.Statement extends IG.JSCode
+
+class IG.Empty extends IG.Statement
+  toString: -> ""
+
 class IG.BlockStatement extends IG.Statement
   constructor: (@value...) ->
   push: (newStatement) ->
     @value.push newStatement
 
+class IG.Sequence extends IG.BlockStatement
+  toString: ->
+    @value.join('\n')
 
 #
 # `JavaScript` is the main script class that outputs the target code.

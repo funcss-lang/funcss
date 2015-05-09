@@ -104,7 +104,8 @@ class SS.OpeningCurlyToken extends SS.SimpleToken
 class SS.ClosingCurlyToken extends SS.SimpleToken
   toString: -> "}"
 class SS.EOFToken
-  toString: -> ""
+  constructor: (@nextToken = "") ->
+  toString: -> @nextToken
 
 #### Parser output nodes
 # These nodes are created by the parser

@@ -4,8 +4,8 @@ Generator = require "./generator"
 
 exports.compile = (str) ->
   ss = Syntax(str)
-  sg = Semantics(ss)
-  ig = Generator(sg)
+  fs = Semantics(ss)
+  ig = Generator(fs)
   ig.toString()
 
 

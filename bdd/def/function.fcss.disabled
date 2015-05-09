@@ -1,0 +1,7 @@
+@def {
+  mirror-y($y:number) = translate(0,$y) scale(1,-1) translate(0,calc(- $y));
+}
+body {
+  transform: mirror-y(25px);
+}
+

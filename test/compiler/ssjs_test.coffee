@@ -3,11 +3,11 @@ Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 check = require "./check"
-SG = require "../../src/compiler/semantics/sg_nodes"
+FS = require "../../src/compiler/semantics/fs_nodes"
 
 parse = (s, typeStr) ->
   type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  type.setSg(new SG.SemanticGraph)
+  type.setFs(new FS.FunctionalStylesheet())
   value = type.parse(s)
   ssjs = value.ssjs()
   eval("#{ssjs}")
