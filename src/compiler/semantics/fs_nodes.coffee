@@ -11,7 +11,6 @@
 #
 
 ER         = require "../errors/er_nodes"
-Stream     = require "../helpers/stream"
 Parser     = require "../syntax/parser"
 SS         = require "../syntax/ss_nodes"
 GR         = require "../syntax/gr_nodes"
@@ -25,6 +24,9 @@ SelGrammar = require "./selectors/sel_grammar"
 
 FS = exports
 
+vds = (str) ->
+  VdsGrammar.parse(str)
+
 class FS.FunctionalStylesheet
   constructor: (ss) ->
     @definitions = new Definitions(@)
@@ -33,8 +35,9 @@ class FS.FunctionalStylesheet
       def: @definitions
     }
     @_propertyTypes = {
-      'background-color': Values.primitiveTypes.ident
-      'background': Values.primitiveTypes.ident
+      'background-color': vds("<ident>")
+      'background': vds("<ident>")
+      'opacity': vds("<number>")
     }
     @_typeStack = [
       Values.primitiveTypes,
@@ -89,14 +92,18 @@ class FS.FunctionalStylesheet
       if rule instanceof SS.QualifiedRule
         @consume_qualified_rule(rule)
       else if rule instanceof SS.AtRule
-        handler = @atRuleHandlers[rule.name]
-        throw new ER.UnknownAtRule(rule.name) unless handler?
-        handler.consume_at_rule(rule)
+        @consume_at_rule(rule)
       else
         throw new Error "Internal error in FunCSS: Unknown rule type in SS.Stylesheet"
+
+  consume_at_rule: (rule) ->
+    handler = @atRuleHandlers[rule.name]
+    throw new ER.UnknownAtRule(rule.name) unless handler?
+    handler.consume_at_rule(rule)
+
     
   consume_qualified_rule: (qrule) ->
-    sel = SelGrammar.parse new Stream qrule.prelude
+    sel = SelGrammar.parse(qrule.prelude)
     for decl in Parser.parse_list_of_declarations qrule.value.value
       @cascade.consume_declaration(sel, decl)
 

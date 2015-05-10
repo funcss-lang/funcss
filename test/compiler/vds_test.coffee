@@ -1,7 +1,6 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
 ER = require "../../src/compiler/errors/er_nodes"
 GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
-Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 VL = require "../../src/compiler/semantics/values/vl_nodes"
@@ -13,46 +12,46 @@ customFunctions =
   sign: Math.sign
   sqrt: Math.sqrt
 
-BorderType = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values("solid|dashed|dotted|none")))
+BorderType = VdsGrammar.parse("solid|dashed|dotted|none")
 
 parse = (s, typeStr) ->
-  type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  type = VdsGrammar.parse(typeStr)
   fs = new FS.FunctionalStylesheet
   type.setFs(fs)
   fs.setPropertyType('border-type', BorderType)
-  value = type.parse(s)
+  value = type.consume(s)
   value
 
 check_grammar_optional = (typeStr, args...) ->
-  grammar = VdsGrammar.OptionalRoot.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+  grammar = VdsGrammar.OptionalRoot.parse(typeStr)
   check grammar, args...
   grammar
 
 check_tree = (str, typeStr, next, args...) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
   t = parse(s, typeStr)
   check t, args...
   s.position.should.be.equal(next)
   t
 
 check_nomatch = (str, typeStr, pos, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
   check.error GR.NoMatch, message: message, ->
     parse(s, typeStr)
   s.position.should.be.equal(pos)
 
 check_error = (str, typeStr, errorClass, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
-    type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+    type = VdsGrammar.parse(typeStr)
     type.setFs(new FS.FunctionalStylesheet)
-    t = type.parse(s)
+    t = type.consume(s)
 
 describe "VdsGrammar", ->
   describe "OptionalRoot", ->
     it "works with empty", ->
       g = check_grammar_optional "", GR.Empty
-      t = g.parse(new Stream(Parser.parse_list_of_component_values("  ")))
+      t = g.parse("  ")
       check t, VL.EmptyValue
     it "works with non-empty", ->
       g = check_grammar_optional "asdf", GR.AnnotationRoot

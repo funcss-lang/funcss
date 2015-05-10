@@ -1,5 +1,4 @@
 GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
-Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 Tokenizer = require "../../src/compiler/syntax/tokenizer"
 SS = require "../../src/compiler/syntax/ss_nodes"
@@ -7,15 +6,15 @@ check = require "./check"
 
 
 check_tree = (str, type, next, args...) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
-  t = type.parse(s)
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
+  t = type.consume(s)
   check t, args...
   s.position.should.be.equal(next)
 
 check_nomatch = (str, type, pos, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
   check.error GR.NoMatch, message: message, ->
-    t = type.parse(s)
+    t = type.consume(s)
   s.position.should.be.equal(pos)
 
 Value = (x)->x.value
@@ -30,7 +29,7 @@ describe 'GR', ->
       check_tree "asdf", asdf, 1, SS.IdentToken, value: "asdf"
 
     it "can parse $x:ident", ->
-      result = new GR.Keyword("asdf", (x)->{x:x}).parse(new Stream(Parser.parse_list_of_component_values("asdf")))
+      result = new GR.Keyword("asdf", (x)->{x:x}).consume(new GR.Stream(Parser.parse_list_of_component_values("asdf")))
       check result, Object
       check result.x, SS.IdentToken, value: "asdf"
 
@@ -97,32 +96,32 @@ describe 'GR', ->
   describe 'InclusiveOr', ->
     it "can parse first branch", ->
       result = new GR.InclusiveOr(new GR.Ident((x)->x),
-        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black")))
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).consume(new GR.Stream(Parser.parse_list_of_component_values("black")))
       check result, Object, x:"black", y:undefined
 
     it "can parse the second branch", ->
       result = new GR.InclusiveOr(new GR.Ident((x)->x),
-        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3")))
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).consume(new GR.Stream(Parser.parse_list_of_component_values("3.3")))
       check result, Object, x:undefined, y:3.3
 
     it "can parse first second", ->
       result = new GR.InclusiveOr(new GR.Ident((x)->x),
-        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black 3.3")))
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).consume(new GR.Stream(Parser.parse_list_of_component_values("black 3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second first", ->
       result = new GR.InclusiveOr(new GR.Ident((x)->x),
-        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3 black")))
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).consume(new GR.Stream(Parser.parse_list_of_component_values("3.3 black")))
       check result, Object, x:"black", y:3.3
 
     it "can parse first/**/second", ->
       result = new GR.InclusiveOr(new GR.Ident((x)->x),
-        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("black/**/3.3")))
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).consume(new GR.Stream(Parser.parse_list_of_component_values("black/**/3.3")))
       check result, Object, x:"black", y:3.3
 
     it "can parse second/**/first", ->
       result = new GR.InclusiveOr(new GR.Ident((x)->x),
-        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("3.3/**/black")))
+        new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).consume(new GR.Stream(Parser.parse_list_of_component_values("3.3/**/black")))
       check result, Object, x:"black", y:3.3
 
     describe "for three arguments", ->
@@ -147,12 +146,12 @@ describe 'GR', ->
 
     it "can fail for invalid", ->
       err = undefined
-      try
-        result = new GR.InclusiveOr(new GR.Ident((x)->x),
-          new GR.Number((x)->x), (x,y)->{x:x?.value,y:y?.value}).parse(new Stream(Parser.parse_list_of_component_values("2px")))
-      catch e
-        err = e
-      check err, GR.NoMatch, message:"identifier or number expected but '2px' found"
+      check.error GR.NoMatch, message:"identifier or number expected but '2px' found", ->
+        new GR.InclusiveOr(
+          new GR.Ident((x)->x),
+          new GR.Number((x)->x),
+          (x,y)->{x:x?.value,y:y?.value}
+        ).consume(new GR.Stream(Parser.parse_list_of_component_values("2px")))
 
   describe "OneOrMore", ->
     pl = new GR.OneOrMore(new GR.Ident(Value))
@@ -302,25 +301,12 @@ describe 'GR', ->
   describe "Eof", ->
     eof = new GR.Eof
     it "can parse empty string", ->
-      s = new Stream(Parser.parse_list_of_component_values(""))
-      t = eof.parse(s)
+      s = new GR.Stream(Parser.parse_list_of_component_values(""))
+      t = eof.consume(s)
       throw "t must be undefined" unless t is undefined
       s.position.should.be.equal(1)
     it "cannot parse anything else", ->
       check_nomatch "3", eof, 0, "EOF expected but '3' found"
-
-  describe "full", ->
-    f = new GR.Full(new GR.Keyword("asdf", (x)->{x:x.value}))
-    it "can parse asdf", ->
-      check_tree "asdf", f, 2, Object, x:"asdf"
-    it "cannot parse asdf sth", ->
-      check_nomatch "asdf sth", f, 2, "EOF expected but 'sth' found"
-    it "can parse _asdf", ->
-      check_tree " asdf", f, 3, Object, x:"asdf"
-    it "can parse asdf_", ->
-      check_tree "asdf ", f, 3, Object, x:"asdf"
-    it "can parse _asdf_", ->
-      check_tree " asdf ", f, 4, Object, x:"asdf"
 
   describe "empty", ->
     e = new GR.Empty(()->{x:"hello"})
@@ -328,22 +314,6 @@ describe 'GR', ->
       check_tree "", e, 0, Object, x:"hello"
     it "does not mind ' '", ->
       check_tree " ", e, 0, Object, x:"hello"
-
-  describe "full empty", ->
-    fe = new GR.Full(new GR.Empty(()->{x:"hello"}))
-    it "can parse ''", ->
-      check_tree "", fe, 1, Object, x:"hello"
-    it "can parse ' '", ->
-      check_tree " ", fe, 2, Object, x:"hello"
-    it "cannot parse asdf", ->
-      check_nomatch "asdf", fe, 0, "EOF expected but 'asdf' found"
-    it "cannot parse _asdf", ->
-      check_nomatch " asdf", fe, 1, "EOF expected but 'asdf' found"
-    it "can parse asdf_", ->
-      check_nomatch "asdf ", fe, 0, "EOF expected but 'asdf' found"
-    it "can parse _asdf_", ->
-      check_nomatch " asdf ", fe, 1, "EOF expected but 'asdf' found"
-
 
   describe "annotation", ->
     a = new GR.AnnotationRoot(new GR.Annotation("hello", new GR.Keyword("world")), (x,m)->m)

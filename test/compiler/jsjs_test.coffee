@@ -1,6 +1,5 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
 GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
-Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 check = require "./check"
@@ -11,39 +10,32 @@ customFunctions =
   sign: Math.sign
   sqrt: Math.sqrt
 
-parse = (s, typeStr) ->
-  type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+parse = (str, typeStr) ->
+  type = VdsGrammar.parse(typeStr)
   type.setFs(new FS.FunctionalStylesheet())
-  value = type.parse(s)
+  value = type.parse(str)
   jsjs = value.jsjs()
   eval("#{jsjs}")
 
 
 check_value = (str, typeStr, next, value) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
-  t = parse(s, typeStr)
+  t = parse(str, typeStr)
   t.should.equal(value) unless t is undefined and value is undefined
-  s.position.should.be.equal(next)
 
 check_tree = (str, typeStr, next, args...) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
-  t = parse(s, typeStr)
+  t = parse(str, typeStr)
   check t, args...
-  s.position.should.be.equal(next)
   t
 
 check_nomatch = (str, typeStr, pos, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
   check.error GR.NoMatch, message: message, ->
-    parse(s, typeStr)
-  s.position.should.be.equal(pos)
+    parse(str, typeStr)
 
 check_error = (str, typeStr, errorClass, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
-    type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+    type = VdsGrammar.parse(typeStr)
     type.setFs(new FS.FunctionalStylesheet())
-    t = type.parse(s)
+    t = type.parse(str)
 
 describe "Jsjs", ->
   describe "keyword", ->
@@ -141,8 +133,6 @@ describe "Jsjs", ->
       check_tree "1 2", "<number>*", 3, Array, length: 2, 0:1, 1:2
     it "works for three", ->
       check_tree "1 2 3", "<number>*", 5, Array, length: 3, 0:1, 1:2, 2:3
-    it "works for sth", ->
-      check_tree "black", "<number>*", 0, Array, length: 0
 
   describe "Plus", ->
     it "works for one", ->
@@ -159,10 +149,6 @@ describe "Jsjs", ->
       check_value "", "<number>?", 0, undefined
     it "works for one", ->
       check_value "3.3", "<number>?", 1, 3.3
-    it "works for two", ->
-      check_value "3.3 2", "<number>?", 1, 3.3
-    it "works for sth", ->
-      check_value "black", "<number>?", 0, undefined
 
   describe "Range", ->
     it "works for one", ->
@@ -171,8 +157,6 @@ describe "Jsjs", ->
       check_tree "1 2", "<number>{1,3}", 3, Array, length: 2, 0:1, 1:2
     it "works for three", ->
       check_tree "1 2 3", "<number>{1,3}", 5, Array, length: 3, 0:1, 1:2, 2:3
-    it "works for four", ->
-      check_tree "1 2 3 4", "<number>{1,3}", 6, Array, length: 3, 0:1, 1:2, 2:3
 
   describe "Hashmark", ->
     it "works for one", ->

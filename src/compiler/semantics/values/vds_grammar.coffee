@@ -256,10 +256,7 @@ OptionalRoot = new GR.Optional(
   (x)-> x ? new GR.Empty(->new VL.EmptyValue)
 )
 
-# We wrap the grammar into Full, so it must consume all tokens from the stream (except
-# starting and ending whitespace)
-# XXX is this needed?
-Vds = new GR.Full(Root)
+Vds = Root
 
 
 

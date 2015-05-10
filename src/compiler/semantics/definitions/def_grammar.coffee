@@ -7,10 +7,18 @@ DF         = require "./df_nodes"
 Snd = (_,y) ->y
 Colon  = new GR.DelimLike(new SS.ColonToken)
 Equals = new GR.DelimLike(new SS.DelimToken("="))
+Dollar = new GR.DelimLike(new SS.DelimToken("$"))
 
 
 # For now, only idents can be variable names. TODO dollar signs
-VariableName = new GR.Ident((x)->new DF.VariableName(x.value))
+VariableName = new GR.ExclusiveOr(
+  new GR.Ident((x)->new DF.VariableName(x.value)),
+  new GR.CloselyJuxtaposed(
+    Dollar,
+    new GR.Ident((x)->new DF.VariableName('$'+x.value)),
+    Snd
+  )
+)
 
 
 # For now, only idents can be variable names. TODO dollar signs
@@ -48,7 +56,7 @@ DefinableWithOptionalType = new GR.Juxtaposition(
 #     x:string = "hello"
 #
 # The value must be of the definition type.
-VariableDefinition = new GR.Juxtaposition(
+DefinitionInStylesheet = new GR.Juxtaposition(
   DefinableWithOptionalType,
   new GR.Juxtaposition(
     Equals,
@@ -58,7 +66,7 @@ VariableDefinition = new GR.Juxtaposition(
   ([pattern, typeName], rawValue)-> new DF.Definition(pattern, typeName, rawValue)
 )
 
-# For now, only variables are defined. TODO function definitions
-Definition = VariableDefinition
+# For now, only variables are defined. TODO JS definitions
+Definition = DefinitionInStylesheet
 
 module.exports = Definition

@@ -11,8 +11,11 @@ SS     = require "./ss_nodes"
 
 class SS.Statement
   constructor : (@value) ->
+  toString: ->
+    "#{@value};"
 class SS.StatementList
   @prototype: []
+  toString: -> @join("\n")
 
 Parser.constructor.prototype[k] = v for k,v of {
   parse_list_of_statements: (tokens) ->

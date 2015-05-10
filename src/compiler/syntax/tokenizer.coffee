@@ -32,7 +32,6 @@
 # usage.
 
 
-Stream = require "../helpers/stream"
 SS     = require "./ss_nodes"
 
 class Tokenizer

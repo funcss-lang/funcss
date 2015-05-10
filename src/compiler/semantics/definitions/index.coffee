@@ -1,7 +1,6 @@
 # The custom functions/values/etc. module
 #
 
-Stream     = require "../../helpers/stream"
 Parser     = require "../../syntax/parser"
 SS         = require "../../syntax/ss_nodes"
 GR         = require "../../syntax/gr_nodes"
@@ -17,11 +16,10 @@ module.exports = class Definitions
     @definitions
   consume_at_rule: (atrule) ->
     throw new ER.BlockRequired("@def") if atrule.value is undefined
-    new GR.Full(new GR.Empty).parse new Stream(atrule.prelude, '{')
+    new GR.Empty().parse(atrule.prelude, '{')
     statements = Parser.parse_list_of_statements(atrule.value.value)
     for s in statements
-      debugger
-      def = new GR.Full(new GR.Optional(DefGrammar)).parse(new Stream(s))
+      def = new GR.Optional(DefGrammar).parse(s.value)
       if def?
         @consume_definition(def)
 

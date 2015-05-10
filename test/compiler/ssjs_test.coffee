@@ -1,23 +1,20 @@
 GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
-Stream = require "../../src/compiler/helpers/stream"
 Parser = require "../../src/compiler/syntax/parser"
 VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
 check = require "./check"
 FS = require "../../src/compiler/semantics/fs_nodes"
 
-parse = (s, typeStr) ->
-  type = VdsGrammar.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
+parse = (str, typeStr) ->
+  type = VdsGrammar.parse(typeStr)
   type.setFs(new FS.FunctionalStylesheet())
-  value = type.parse(s)
+  value = type.parse(str)
   ssjs = value.ssjs()
   eval("#{ssjs}")
 
 
 check_value = (str, typeStr, next, value) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
-  t = parse(s, typeStr)
+  t = parse(str, typeStr)
   t.should.equal(value) unless t is undefined and value is undefined
-  s.position.should.be.equal(next)
 
 describe "LL ss() of", ->
   describe "keyword", ->
@@ -98,8 +95,6 @@ describe "LL ss() of", ->
       check_value "1 2", "<number>*", 3, "1 2"
     it "works for three", ->
       check_value "1 2 3", "<number>*", 5, "1 2 3"
-    it "works for sth", ->
-      check_value "black", "<number>*", 0, ""
 
   describe "Plus", ->
     it "works for one", ->
@@ -116,10 +111,6 @@ describe "LL ss() of", ->
       check_value "", "<number>?", 0, ""
     it "works for one", ->
       check_value "3.3", "<number>?", 1, "3.3"
-    it "works for two", ->
-      check_value "3.3 2", "<number>?", 1, "3.3"
-    it "works for sth", ->
-      check_value "black", "<number>?", 0, ""
 
   describe "Range", ->
     it "works for one", ->
@@ -128,8 +119,6 @@ describe "LL ss() of", ->
       check_value "1 2", "<number>{1,3}", 3, "1 2"
     it "works for three", ->
       check_value "1 2 3", "<number>{1,3}", 5, "1 2 3"
-    it "works for four", ->
-      check_value "1 2 3 4", "<number>{1,3}", 6, "1 2 3"
 
   describe "Hashmark", ->
     it "works for one", ->

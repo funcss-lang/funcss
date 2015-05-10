@@ -9,22 +9,56 @@
 #
 # *Output*
 # 
-# - `parse(s:Stream)`: tries to consume the first few tokens from the stream, calls the semantic 
+# - `parse(s:String | Array)`: creates a stream from the string or array, then calls `consume()`
+# - `consume(s:GR.Stream)`: tries to consume the first few tokens from the stream, calls the semantic 
 #     function, and returns the result.
 #
 
 assert    = require "../helpers/assert"
-Stream    = require "../helpers/stream"
 Tokenizer = require "./tokenizer"
 Parser    = require "./parser"
 SS        = require "./ss_nodes"
 
 GR = exports
+
+
+
+class GR.Stream
+  constructor: (items, @eof) ->
+    (@items = (t for t in items)).push new SS.EOFToken(@eof)
+    @position = 0
+  consume_next: ->
+    @current = @items[@position++]
+  next: ->
+    @items[@position]
+  reconsume_current: ->
+    @items.unshift(@current)
+
+  # `options` has two fields: `try` and `fallback`. `try` is a function to
+  # call. When a `NoMatch` is thrown from `try`, then `fallback` is called.
+  backtrack: (options) ->
+    try
+      p = @position
+      return options.try()
+    catch e
+      if e instanceof GR.NoMatch
+        @position = p
+        return options.fallback(e)
+      else
+        throw e
+
+  optionalWhitespace: () ->
+    while @next() instanceof SS.WhitespaceToken
+      @consume_next()
+
 # helper error class to use for parsing
 class GR.NoMatch extends Error
   constructor: (@expected, @found, message) ->
     @name = "No match"
     @message = message ? "#{@expected} expected but #{@found} found"
+    @stack = """
+    #{@message}
+    Stack trace not implemented yet."""
   toString: () ->
     @name+  ": "+@message
   merge: (f) ->
@@ -33,21 +67,7 @@ class GR.NoMatch extends Error
     else
       new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
 
-# backtrack algorithm for the stream
-Stream.prototype.backtrack = (options) ->
-  try
-    p = @position
-    return options.try()
-  catch e
-    if e instanceof GR.NoMatch
-      @position = p
-      return options.fallback(e)
-    else
-      throw e
 
-Stream.prototype.optionalWhitespace = () ->
-  while @next() instanceof SS.WhitespaceToken
-    @consume_next()
 
 # helper functions
 Id = (x) -> x
@@ -61,6 +81,19 @@ Snd = (x,y) -> y
 # base class for all types
 class GR.Type
   constructor: (@semantic = @semantic) ->
+
+  # This is the main entry point for parsing for each subclass. It prepares the input if needed
+  # and then redirects to `consume`
+  parse: (input, eof="EOF") ->
+    assert.notInstanceOf {input}, GR.Stream
+    input = Parser.parse_list_of_component_values(input) unless input instanceof SS.ComponentValueList
+    s = new GR.Stream(input, eof)
+    s.optionalWhitespace()
+    result = @consume s
+    s.optionalWhitespace()
+    throw new GR.NoMatch(eof, "'#{next}'") unless (next = s.next()) instanceof SS.EOFToken
+    result
+
   setFs: (@fs) ->
     @a?.setFs(@fs)
     @b?.setFs(@fs)
@@ -68,7 +101,7 @@ class GR.Type
 # a type which matches a single token of a single class, with optional property restrictions
 class GR.TokenTypeTokenType extends GR.Type
   props: {}
-  parse: (s) ->
+  consume: (s) ->
     next = s.next()
     if !next?
       throw new Error "Internal Error in FunCSS: nothing returned from stream"
@@ -147,10 +180,10 @@ class GR.Comma extends GR.TokenTypeTokenType
 # semantic = (a) -> a ? default
 class GR.Optional extends GR.Type
   constructor: (@a, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     s.backtrack
       try: =>
-        @semantic(@a.parse(s))
+        @semantic(@a.consume(s))
       fallback: =>
         @semantic(undefined)
   semantic: Id
@@ -158,61 +191,62 @@ class GR.Optional extends GR.Type
 # semantic = (a,b) -> [a,b]
 class GR.Juxtaposition extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
-  parse: (s) ->
-    x = @a.parse(s)
+  consume: (s) ->
+    x = @a.consume(s)
     s.optionalWhitespace()
-    y = @b.parse(s)
+    y = @b.consume(s)
     @semantic(x,y)
     
 # semantic = (a,b) -> [a,b]
 class GR.CloselyJuxtaposed extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
-  parse: (s) ->
-    x = @a.parse(s)
-    y = @b.parse(s)
+    assert.function {@semantic}
+  consume: (s) ->
+    x = @a.consume(s)
+    y = @b.consume(s)
     @semantic(x,y)
 
 # semantic = (a) -> a
 class GR.ExclusiveOr extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     s.backtrack
       try: =>
-        @semantic(@a.parse(s))
+        @semantic(@a.consume(s))
       fallback: (e)=>
         s.backtrack
           try: =>
-            @semantic(@b.parse(s))
+            @semantic(@b.consume(s))
           fallback: (f)=>
             throw e.merge(f)
   semantic: Id
 
 class GR.And extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     #new Or(new GR.Juxtaposition(@a,@b,@semantic),
-    #new GR.Juxtaposition(@b,@a,Swap(@semantic))).parse(s)
+    #new GR.Juxtaposition(@b,@a,Swap(@semantic))).consume(s)
     res = s.backtrack
       try: =>
-        a: @a.parse(s)
+        a: @a.consume(s)
       fallback: (e)=>
         s.backtrack
           try: =>
-            b: @b.parse(s)
+            b: @b.consume(s)
           fallback: (f)=>
             throw e.merge(f)
     s.optionalWhitespace()
     if "a" of res
-      @semantic(res.a, @b.parse(s))
+      @semantic(res.a, @b.consume(s))
     else
-      @semantic(@a.parse(s), res.b)
+      @semantic(@a.consume(s), res.b)
   semantic: Cons
 
 class GR.InclusiveOr extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     new GR.ExclusiveOr(new GR.Juxtaposition(@a,new GR.Optional(@b),@semantic),
-            new GR.Juxtaposition(@b,new GR.Optional(@a),Swap(@semantic))).parse(s)
+            new GR.Juxtaposition(@b,new GR.Optional(@a),Swap(@semantic))).consume(s)
   semantic: Cons
 
 
@@ -223,7 +257,7 @@ max = (m, a, s) ->
     return []
   s.backtrack
     try: =>
-      head = a.parse(s)
+      head = a.consume(s)
       s.optionalWhitespace()
       tail = max(m-1, a, s)
       tail.unshift head
@@ -235,11 +269,11 @@ max = (m, a, s) ->
 class GR.Range extends GR.Type
   semantic: Id
   constructor: (@n,@m,@a,@semantic=@semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     result = []
     i = 0
     while i < @n
-      result.push @a.parse(s)
+      result.push @a.consume(s)
       s.optionalWhitespace()
       ++i
     tail = max(@m-@n, @a, s)
@@ -260,7 +294,7 @@ class GR.OneOrMore extends GR.Range
 class GR.DelimitedBy extends GR.Type
   semantic: Id
   constructor: (@delim, @a, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     # we create a proxy type for it. The target type, then any number of pairs of
     # the delimiter and the target type. We take the values of the target types
     # and concatenate them in an array.
@@ -271,7 +305,7 @@ class GR.DelimitedBy extends GR.Type
       # Finally we add the first target type value then we call the semantic function
       # with the array.
       (x,y)=>y.unshift(x); @semantic(y)
-    ).parse(s)
+    ).consume(s)
 
 class GR.DelimitedByComma extends GR.DelimitedBy
   constructor: (@a, @semantic = @semantic) ->
@@ -282,17 +316,7 @@ class GR.Eof extends GR.TokenTypeTokenType
   expected: "EOF"
   tokenClass: SS.EOFToken
     
-class GR.Full extends GR.Type
-  semantic: (x)->x
-  constructor: (@a, @semantic = @semantic) ->
-    assert.hasProp {@a}, "parse"
-    assert.notInstanceOf {@a}, GR.Full
-  parse: (s) ->
-    s.optionalWhitespace()
-    result = @a.parse(s)
-    s.optionalWhitespace()
-    new GR.Eof().parse(s)
-    @semantic result
+
 
 # This class does not affect the parsing, it only keeps track of a mapping
 # of the annotations directly (without another GR.Annotation in between) below
@@ -319,15 +343,15 @@ class GR.AnnotationRoot extends GR.Type
   # annotations to their subtree.
   parseWithAnnotations: (s) ->
     @mappings = {}
-    # `a.parse(s)` will add mappings to `@mappings`
-    result = @a.parse(s)
+    # `a.consume(s)` will add mappings to `@mappings`
+    result = @a.consume(s)
     @semantic result, @mappings
 
-  parse: (s) ->
+  consume: (s) ->
     if @hasAnnotations
       @parseWithAnnotations(s)
     else
-      @semantic @a.parse(s)
+      @semantic @a.consume(s)
 
 # This node represents the `x:` annotations in the type tree.
 # This is a subclass of  GR.AnnotationRoot, as the annotations below this
@@ -335,13 +359,13 @@ class GR.AnnotationRoot extends GR.Type
 class GR.Annotation extends GR.AnnotationRoot
   root: undefined
   constructor: (@name, @a, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     if @root
       # Here we add the mapping to the closes GR.AnnotationRoot in the parent chain.
       @root.mappings[@name] = if @hasAnnotations
         @parseWithAnnotations(s)
       else
-        @semantic @a.parse(s)
+        @semantic @a.consume(s)
     else
       throw new Error "GR.Annotation used without an GR.AnnotationRoot correctly configured"
 
@@ -351,55 +375,55 @@ class GR.SimpleBlock extends GR.Type
   semantic: (x)->x
   constructor: (@tokenClass, @a, @semantic = @semantic) ->
     @expected = "'#{new @tokenClass}'"
-  parse: (s) ->
+  consume: (s) ->
     next = s.next()
     unless next instanceof SS.SimpleBlock
       throw new GR.NoMatch(@expected, "'#{next}'")
     unless next.token instanceof @tokenClass
       throw new GR.NoMatch(@expected, "'#{next}'")
     s.consume_next()
-    return @semantic new GR.Full(@a).parse(new Stream(next.value))
+    return @semantic @a.parse(next.value)
 
 # A special type that refers to another type.
 class GR.TypeReference extends GR.Type
   semantic: Id
   constructor: (@name, @quoted = no, @semantic = @semantic) ->
     @expected = @name
-  parse: (s) ->
+  consume: (s) ->
     if ! @fs
       throw new Error "Internal error in FunCSS: fs is not set up correctly"
     type = if @quoted then @fs.getPropertyType(@name) else @fs.getType(@name)
-    type.parse(s)
+    type.consume(s)
 
 
 class GR.FunctionalNotation extends GR.Type
   semantic: Id
   constructor: (@name, @a, @semantic=@semantic) ->
     @expected = "'#{@name}('"
-  parse: (s) ->
+  consume: (s) ->
     next = s.next()
     unless next instanceof SS.Function
       throw new GR.NoMatch(@expected, "'#{next}'")
     unless next.name is @name
       throw new GR.NoMatch(@expected, "'#{next}'")
     s.consume_next()
-    return @semantic new GR.Full(@a).parse(new Stream(next.value))
+    return @semantic @a.parse(next.value)
 
 class GR.AnyFunctionalNotation extends GR.Type
   expected: "function"
   semantic: (name, x) -> throw Error "No semantic function for GR.AnyFunctionalNotation"
   constructor: (@a, @semantic = @semantic) ->
-  parse: (s) ->
+  consume: (s) ->
     next = s.next()
     unless next instanceof SS.Function
       throw new GR.NoMatch(@expected, "'#{next}'")
     s.consume_next()
-    return @semantic next.name, new GR.Full(@a).parse(new Stream(next.value))
+    return @semantic next.name, @a.parse(next.value)
 
 class GR.RawTokens extends GR.Type
   semantic: Id
   constructor: (@semantic = @semantic)->
-  parse: (s) ->
+  consume: (s) ->
     result = new SS.ComponentValueList
     next = s.consume_next()
     until next instanceof SS.EOFToken
@@ -410,11 +434,11 @@ class GR.RawTokens extends GR.Type
 # This does not touch the input stream, just calls the semantic function
 class GR.Empty extends GR.Type
   semantic: ->
-  parse: (s) -> @semantic()
+  consume: (s) -> @semantic()
 
 # This is a pass-through grammar, it can be used to add an additional semantic function.
 class GR.Just extends GR.Type
   semantic: Id
   constructor: (@a, @semantic = @semantic) ->
-  parse: (s) -> @semantic @a.parse(s)
+  consume: (s) -> @semantic @a.consume(s)
 

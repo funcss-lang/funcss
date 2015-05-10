@@ -1,4 +1,3 @@
-Stream     = require "../../helpers/stream"
 SS         = require "../../syntax/ss_nodes"
 GR         = require "../../syntax/gr_nodes"
 FS         = require "../fs_nodes"
@@ -10,14 +9,14 @@ module.exports = class Cascade
     @simpleRules = []
 
   consume_declaration: (sel, decl) ->
-    type = new GR.Full(@fs.getPropertyType(decl.name))
+    type = @fs.getPropertyType(decl.name)
     type.setFs(@fs)
 
     @simpleRules.push new FS.SimpleRule
       mediaQuery: null
       selector: sel
       name: decl.name
-      value: type.parse(new Stream decl.value)
+      value: type.parse(decl.value)
       important: decl.important
 
   # One technique to implement custom values is to use a puppet stylesheet. We

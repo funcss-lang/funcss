@@ -1,6 +1,0 @@
-@def {
-  x:number = 0.3;
-}
-body {
-  opacity: x();
-}

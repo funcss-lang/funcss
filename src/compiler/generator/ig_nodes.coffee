@@ -116,7 +116,7 @@ class IG.DomReady extends IG.BlockStatement
 
 class IG.SetDeclarationValue extends IG.Statement
   constructor: (@ruleIndex, @name, @value) ->
-  toString: () -> debugger; """
+  toString: () -> """
     rule#{@ruleIndex}.style[#{JSON.stringify camel(@name)}] = #{@value.ssjs()};
   """
   
