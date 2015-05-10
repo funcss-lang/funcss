@@ -51,21 +51,42 @@ class GR.Stream
     while @next() instanceof SS.WhitespaceToken
       @consume_next()
 
+  noMatchNext: (expected) ->
+    throw new GR.NoMatch(expected, @next(), @, @position)
+
+  toStringUntil: (position) ->
+    (t for t in @items.slice(0,position)).join("")
+
+  toStringFrom: (position) ->
+    (t for t in @items.slice(position)).join("")
+
 # helper error class to use for parsing
 class GR.NoMatch extends Error
-  constructor: (@expected, @found, message) ->
+  constructor: (@expected, @found, @stream, @position) ->
+    if @found instanceof SS.SimpleBlock
+      @found = @found.token
+    else if @found instanceof SS.Function
+      @found = new SS.FunctionToken(@found.name)
     @name = "No match"
-    @message = message ? "#{@expected} expected but #{@found} found"
+    @message = message ? "#{@expected} expected but '#{@found}' found"
     @stack = """
     #{@message}
-    Stack trace not implemented yet."""
+    #{@stackTrace()}"""
   toString: () ->
     @name+  ": "+@message
   merge: (f) ->
-    if @.found is f.found
-      new GR.NoMatch(@.expected + " or " + f.expected, @.found)
+    if @.position is f.position
+      new GR.NoMatch(@.expected + " or " + f.expected, @.found, @.stream, @.position)
     else
-      new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
+      throw (if @.position < f.position then @ else f)
+      #new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
+  stackTrace: ->
+    before = @stream.toStringUntil(@position)
+    after = @stream.toStringFrom(@position)
+    """
+    #{before}#{after}
+    #{("-" for i in [1..before.length]).join("")+"^"}
+    """
 
 
 
@@ -84,14 +105,14 @@ class GR.Type
 
   # This is the main entry point for parsing for each subclass. It prepares the input if needed
   # and then redirects to `consume`
-  parse: (input, eof="EOF") ->
+  parse: (input, eof="") ->
     assert.notInstanceOf {input}, GR.Stream
     input = Parser.parse_list_of_component_values(input) unless input instanceof SS.ComponentValueList
     s = new GR.Stream(input, eof)
     s.optionalWhitespace()
     result = @consume s
     s.optionalWhitespace()
-    throw new GR.NoMatch(eof, "'#{next}'") unless (next = s.next()) instanceof SS.EOFToken
+    s.noMatchNext("'#{eof}'") unless (next = s.next()) instanceof SS.EOFToken
     result
 
   setFs: (@fs) ->
@@ -106,10 +127,10 @@ class GR.TokenTypeTokenType extends GR.Type
     if !next?
       throw new Error "Internal Error in FunCSS: nothing returned from stream"
     unless next instanceof @tokenClass
-      throw new GR.NoMatch(@expected, "'#{next}'")
+      s.noMatchNext(@expected)
     for k,v of @props
       unless next[k] is v
-        throw new GR.NoMatch(@expected, "'#{next}'")
+        s.noMatchNext(@expected)
     return @semantic s.consume_next()
   semantic: (token) ->
 
@@ -312,11 +333,6 @@ class GR.DelimitedByComma extends GR.DelimitedBy
     @delim = new GR.Comma
 
 
-class GR.Eof extends GR.TokenTypeTokenType
-  expected: "EOF"
-  tokenClass: SS.EOFToken
-    
-
 
 # This class does not affect the parsing, it only keeps track of a mapping
 # of the annotations directly (without another GR.Annotation in between) below
@@ -378,11 +394,11 @@ class GR.SimpleBlock extends GR.Type
   consume: (s) ->
     next = s.next()
     unless next instanceof SS.SimpleBlock
-      throw new GR.NoMatch(@expected, "'#{next}'")
+      s.noMatchNext(@expected)
     unless next.token instanceof @tokenClass
-      throw new GR.NoMatch(@expected, "'#{next}'")
+      s.noMatchNext(@expected)
     s.consume_next()
-    return @semantic @a.parse(next.value)
+    return @semantic @a.parse(next.value, "#{new((new @tokenClass).mirror())}")
 
 # A special type that refers to another type.
 class GR.TypeReference extends GR.Type
@@ -403,11 +419,11 @@ class GR.FunctionalNotation extends GR.Type
   consume: (s) ->
     next = s.next()
     unless next instanceof SS.Function
-      throw new GR.NoMatch(@expected, "'#{next}'")
+      s.noMatchNext(@expected)
     unless next.name is @name
-      throw new GR.NoMatch(@expected, "'#{next}'")
+      s.noMatchNext(@expected)
     s.consume_next()
-    return @semantic @a.parse(next.value)
+    return @semantic @a.parse(next.value, ")")
 
 class GR.AnyFunctionalNotation extends GR.Type
   expected: "function"
@@ -416,19 +432,20 @@ class GR.AnyFunctionalNotation extends GR.Type
   consume: (s) ->
     next = s.next()
     unless next instanceof SS.Function
-      throw new GR.NoMatch(@expected, "'#{next}'")
+      s.noMatchNext(@expected)
     s.consume_next()
-    return @semantic next.name, @a.parse(next.value)
+    return @semantic next.name, @a.parse(next.value, ")")
 
 class GR.RawTokens extends GR.Type
   semantic: Id
   constructor: (@semantic = @semantic)->
   consume: (s) ->
     result = new SS.ComponentValueList
-    next = s.consume_next()
+    next = s.next()
     until next instanceof SS.EOFToken
       result.push next
-      next = s.consume_next()
+      s.consume_next()
+      next = s.next()
     @semantic result
 
 # This does not touch the input stream, just calls the semantic function

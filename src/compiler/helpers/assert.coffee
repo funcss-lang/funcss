@@ -7,6 +7,11 @@ exports.hasProp = (values, property) ->
     throw new Error "#{name} must be present" unless value?
     throw new Error "#{name} must have property #{property}" unless value[property]?
 
+exports.instanceOf = (values, clazz) ->
+  for name, value of values
+    throw new Error "#{name} must be present" unless value?
+    throw new Error "#{name} must be instance of #{clazz.name}" unless value instanceof clazz
+
 exports.notInstanceOf = (values, clazz) ->
   for name, value of values
     throw new Error "#{name} must be present" unless value?

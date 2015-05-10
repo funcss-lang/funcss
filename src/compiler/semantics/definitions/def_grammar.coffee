@@ -56,7 +56,7 @@ DefinableWithOptionalType = new GR.Juxtaposition(
 #     x:string = "hello"
 #
 # The value must be of the definition type.
-DefinitionInStylesheet = new GR.Juxtaposition(
+DefinitionInStylesheetLangauge = new GR.Juxtaposition(
   DefinableWithOptionalType,
   new GR.Juxtaposition(
     Equals,
@@ -67,6 +67,6 @@ DefinitionInStylesheet = new GR.Juxtaposition(
 )
 
 # For now, only variables are defined. TODO JS definitions
-Definition = DefinitionInStylesheet
+Definition = DefinitionInStylesheetLangauge
 
 module.exports = Definition

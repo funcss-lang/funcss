@@ -28,10 +28,7 @@ module.exports = class Definitions
     throw new ER.TypeInferenceNotImplemented(def.definable) unless def.type?
 
     # We insert the new type into the table.
-    @fs.types[def.type] = new GR.ExclusiveOr(
-      def.grammar(@)
-      @fs.types[def.type]
-    )
+    @fs.setType(def.type, def.grammar(@fs))
 
   ig: ->
     new IG.Empty

@@ -10,6 +10,7 @@ check_tree = (str, type, next, args...) ->
   t = type.consume(s)
   check t, args...
   s.position.should.be.equal(next)
+  t
 
 check_nomatch = (str, type, pos, message) ->
   s = new GR.Stream(Parser.parse_list_of_component_values(str))
@@ -298,16 +299,6 @@ describe 'GR', ->
           it "can parse three sth", ->
             check_tree "hello 5% world 30%/**/haha 40%/**/1", c, 10, Array, length:3, 0:"0.05=hello", 1:"0.3=world", 2:"0.4=haha"
 
-  describe "Eof", ->
-    eof = new GR.Eof
-    it "can parse empty string", ->
-      s = new GR.Stream(Parser.parse_list_of_component_values(""))
-      t = eof.consume(s)
-      throw "t must be undefined" unless t is undefined
-      s.position.should.be.equal(1)
-    it "cannot parse anything else", ->
-      check_nomatch "3", eof, 0, "EOF expected but '3' found"
-
   describe "empty", ->
     e = new GR.Empty(()->{x:"hello"})
     it "can parse ''", ->
@@ -324,14 +315,14 @@ describe 'GR', ->
     sb = new GR.SimpleBlock(SS.OpeningCurlyToken, new GR.Keyword("hello"), (x)->hello:x)
     it "works", ->
       check_tree "{hello}", sb, 1, Object, hello:"hello"
-    it "works", ->
-      # TODO change error message to '}' expected...
-      check_nomatch "{hello world}", sb, 1, "EOF expected but 'world' found"
+    it "fails for late closing", ->
+      check_nomatch "{hello world}", sb, 1, "'}' expected but 'world' found"
+    it "fails for early closing", ->
+      check_nomatch "{ }", sb, 1, "'hello' expected but '}' found"
     it "fails for sth", ->
       check_nomatch "sth", sb, 0, "'{' expected but 'sth' found"
     it "fails for ()", ->
-      # TODO change error message to '(' found... maybe
-      check_nomatch "(hello world)", sb, 0, "'{' expected but '(hello world)' found"
+      check_nomatch "(hello world)", sb, 0, "'{' expected but '(' found"
     
   describe "functional notation", ->
     fn = new GR.FunctionalNotation("tan", new GR.Keyword("hello"), (x)->hello:x)
@@ -339,9 +330,10 @@ describe 'GR', ->
       check_tree "tan(hello)", fn, 1, Object, hello:"hello"
     it "works with whitespace", ->
       check_tree "tan(  hello  )", fn, 1, Object, hello:"hello"
-    it "works", ->
-      # TODO change error message to ')' expected...
-      check_nomatch "tan(hello world)", fn, 1, "EOF expected but 'world' found"
+    it "fails for late closing", ->
+      check_nomatch "tan(hello world)", fn, 1, "')' expected but 'world' found"
+    it "fails for early closing", ->
+      check_nomatch "tan()", fn, 1, "'hello' expected but ')' found"
     it "fails for sth", ->
       check_nomatch "sth", fn, 0, "'tan(' expected but 'sth' found"
 
@@ -351,8 +343,21 @@ describe 'GR', ->
       check_tree "f(hello)", fn, 1, Object, name:"f", hello:"hello"
     it "works with whitespace", ->
       check_tree "f(  hello  )", fn, 1, Object, name:"f", hello:"hello"
-    it "works", ->
-      # TODO change error message to ')' expected...
-      check_nomatch "f(hello world)", fn, 1, "EOF expected but 'world' found"
+    it "fails for late closing", ->
+      check_nomatch "f(hello world)", fn, 1, "')' expected but 'world' found"
+    it "fails for early closing", ->
+      check_nomatch "f()", fn, 1, "'hello' expected but ')' found"
     it "fails for sth", ->
       check_nomatch "sth", fn, 0, "function expected but 'sth' found"
+
+  describe "RawTokens", ->
+    rt = new GR.RawTokens()
+    it "works", ->
+      t = check_tree "hello 3 f(x)", rt, 5, SS.ComponentValueList, length: 5
+      check t[0], SS.IdentToken, value: "hello"
+      check t[1], SS.WhitespaceToken
+      check t[2], SS.NumberToken, value: 3
+      check t[3], SS.WhitespaceToken
+      check t[4], SS.Function, name: "f"
+      check t[4].value, SS.ComponentValueList, length:1
+      check t[4].value[0], SS.IdentToken, value:"x"
