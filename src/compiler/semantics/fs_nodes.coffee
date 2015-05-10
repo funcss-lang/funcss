@@ -70,22 +70,26 @@ class FS.FunctionalStylesheet
     throw new ER.UnknownType(name) if require
 
   setType: (name, newType) ->
+    debugger
     oldType = @getType(name, false)
     @_typeStack[@_typeStack.length-1][name] =
       if oldType?
-        new GR.ExclusiveOr(oldType, newType)
+        new GR.ExclusiveOr(oldType, newType).setFs(@)
       else
         newType
+    return
 
     
 
   push_scope: () ->
     @_typeStack.push {}
     @_dimensionStack.push {}
+    return
 
   pop_scope: () ->
     @_typeStack.pop {}
     @_dimensionStack.pop {}
+    return
 
   consume_stylesheet: (ss) ->
     for rule in ss.value
@@ -95,17 +99,20 @@ class FS.FunctionalStylesheet
         @consume_at_rule(rule)
       else
         throw new Error "Internal error in FunCSS: Unknown rule type in SS.Stylesheet"
+    return
 
   consume_at_rule: (rule) ->
     handler = @atRuleHandlers[rule.name]
     throw new ER.UnknownAtRule(rule.name) unless handler?
     handler.consume_at_rule(rule)
+    return
 
     
   consume_qualified_rule: (qrule) ->
     sel = SelGrammar.parse(qrule.prelude)
     for decl in Parser.parse_list_of_declarations qrule.value.value
       @cascade.consume_declaration(sel, decl)
+    return
 
   ig: ->
     ig = new IG.FunctionBlock

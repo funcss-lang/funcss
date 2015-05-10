@@ -23,11 +23,14 @@ class DF.Definable
 class DF.VariableName extends DF.Definable
   constructor: (@value) ->
   grammar: (semantic) ->
-    new GR.CloselyJuxtaposed(
-      new GR.DelimLike(new SS.DelimToken('$')),
-      new GR.Keyword(@value),
-      semantic
-    )
+    if @value.charAt(0) is "$"
+      new GR.CloselyJuxtaposed(
+        new GR.DelimLike(new SS.DelimToken('$')),
+        new GR.Keyword(@value.substr(1)),
+        semantic
+      )
+    else
+      new GR.Keyword(@value.substr(1), semantic)
 
 class DF.FunctionalNotation extends DF.Definable
   constructor: (@name, @argument) ->

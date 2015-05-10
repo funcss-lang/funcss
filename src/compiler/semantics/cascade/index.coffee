@@ -19,6 +19,8 @@ module.exports = class Cascade
       value: type.parse(decl.value)
       important: decl.important
 
+    return
+
   # One technique to implement custom values is to use a puppet stylesheet. We
   # insert a stylesheet with the apporopriate rules, and change the property
   # values in it. This cannot be used if the selector contains custom elements.

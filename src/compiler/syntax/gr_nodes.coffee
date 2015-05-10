@@ -50,6 +50,7 @@ class GR.Stream
   optionalWhitespace: () ->
     while @next() instanceof SS.WhitespaceToken
       @consume_next()
+    return
 
   noMatchNext: (expected) ->
     throw new GR.NoMatch(expected, @next(), @, @position)
@@ -118,6 +119,7 @@ class GR.Type
   setFs: (@fs) ->
     @a?.setFs(@fs)
     @b?.setFs(@fs)
+    @
 
 # a type which matches a single token of a single class, with optional property restrictions
 class GR.TokenTypeTokenType extends GR.Type
