@@ -113,7 +113,7 @@ class GR.Type
     s.optionalWhitespace()
     result = @consume s
     s.optionalWhitespace()
-    s.noMatchNext("'#{eof}'") unless (next = s.next()) instanceof SS.EOFToken
+    s.noMatchNext("'#{eof}'") unless s.next() instanceof SS.EOFToken
     result
 
   setFs: (@fs) ->
@@ -203,6 +203,24 @@ class GR.Comma extends GR.TokenTypeTokenType
 # semantic = (a) -> a ? default
 class GR.Optional extends GR.Type
   constructor: (@a, @semantic = @semantic) ->
+
+  # This is reimplemented so that a more meaningful error message can be thrown.
+  #
+  # This happens for new `Optional("hello world").parse("hello wld")`. The superclass
+  # behavior would throw a NoMatch for the first item - "" expected but "hello" found, which
+  # is true but not at all helpful.
+  #
+  parse: (input, eof="") ->
+    # TODO these lines could be deduplicated
+    assert.notInstanceOf {input}, GR.Stream
+    input = Parser.parse_list_of_component_values(input) unless input instanceof SS.ComponentValueList
+    s = new GR.Stream(input, eof)
+    s.optionalWhitespace()
+    return @semantic(undefined) if s.next() instanceof SS.EOFToken
+    result = @semantic(@a.consume(s))
+    s.optionalWhitespace()
+    s.noMatchNext("'#{eof}'") unless s.next() instanceof SS.EOFToken
+    result
   consume: (s) ->
     s.backtrack
       try: =>
