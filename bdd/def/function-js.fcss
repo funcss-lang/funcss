@@ -2,6 +2,9 @@
   abs(x:number):number {
     return Math.abs(x);
   }
+  sin(x:number):number {
+    return Math.sin(x);
+  }
 }
 body {
   opacity: abs(-0.3);

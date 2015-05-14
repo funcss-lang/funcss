@@ -2,16 +2,27 @@
   "name": "funcss",
   "version": "0.0.1",
   "description": "An advanced stylesheet language.",
-  "scripts": {
-    "test": "mocha"
-  },
   "license": "MIT",
   "dependencies": {
+    "browserify": "^10.2.0"
+  },
+  "devDependencies": {
     "coffee-script": "^1.9.1",
     "mocha": "^2.2.1",
-    "should": "^5.0.1"
+    "should": "^5.0.1",
+    "rimraf": "latest",
+    "uglifyjs": ""
   },
   "engines": {
-      "node": ">=0.10.37 <0.13"
+    "node": ">=0.10.37 <0.13"
+  },
+  "scripts": {
+    "test": "mocha",
+    "prepublish": "npm run build",
+    "build": "npm run build:coffee",
+    "build:coffee": "rimraf lib/ && coffee -o lib/ -c src/",
+    "build:browserify": "browserify -o dist/funcss.js build/compiler",
+    "build:uglify": "uglifyjs dist/funcss.js > dist/funcss.min.js",
+    "clean": "rimraf lib/ dist/funcss.js dist/funcss.min.js"
   }
 }
