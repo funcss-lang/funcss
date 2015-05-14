@@ -27,8 +27,7 @@
     "clean": "rimraf lib/ dist/funcss.js dist/funcss.min.js",
 
     "push": "git push",
-    "prepush": "npm run commit",
-    "commit": "git add . && git commit --all",
-    "precommit": "npm test"
+    "prepush": "npm test && npm run commit",
+    "commit": "git add . && git commit --all"
   }
 }
