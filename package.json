@@ -18,11 +18,17 @@
   },
   "scripts": {
     "test": "mocha",
+
     "prepublish": "npm run build",
     "build": "npm run build:coffee",
     "build:coffee": "rimraf lib/ && coffee -o lib/ -c src/",
     "build:browserify": "browserify -o dist/funcss.js build/compiler",
     "build:uglify": "uglifyjs dist/funcss.js > dist/funcss.min.js",
-    "clean": "rimraf lib/ dist/funcss.js dist/funcss.min.js"
+    "clean": "rimraf lib/ dist/funcss.js dist/funcss.min.js",
+
+    "push": "git push",
+    "prepush": "npm run commit",
+    "commit": "git add . && git commit --all",
+    "precommit": "npm test"
   }
 }
