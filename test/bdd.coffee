@@ -30,7 +30,9 @@ describe "FunCSS compiler", ->
     it "compiles #{basename}", do (basename) -> ->
       fcss = fs.readFileSync("#{basename}.fcss", encoding: 'utf-8')
       js =  fs.readFileSync("#{basename}.js", encoding: 'utf-8')
-      result = FunCSS.compile(fcss)
+      result = FunCSS.compile fcss,
+        includeReactiveVar: false
+        includeTracker: false
       result = result.trim().replace(/\s+/g, " ")
       expected = js.trim().replace(/\s+/g, " ")
       result.should.equal(expected)

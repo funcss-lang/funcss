@@ -20,6 +20,11 @@ class IG.Statement extends IG.JSCode
 class IG.Empty extends IG.Statement
   toString: -> ""
 
+class IG.Require extends IG.Statement
+  constructor: (@fileName) ->
+  toString: ->
+    "require(#{JSON.stringify(@fileName)});"
+
 class IG.BlockStatement extends IG.Statement
   constructor: (@value...) ->
   push: (newStatement) ->

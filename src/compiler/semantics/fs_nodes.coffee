@@ -6,7 +6,11 @@
 #
 # *Outputs*
 #
-# - `ig()` returns the IG graph implementing the behavior of the functional stylesheet
+# - `ig(options)` returns the IG graph implementing the behavior of the functional stylesheet.
+#    The valid options are:
+#
+#    * `includeTracker` if false, Tracker will not be included
+#    * `includeReactiveVar` if false, ReactiveVar will not be included
 #
 #
 
@@ -114,8 +118,12 @@ class FS.FunctionalStylesheet
       @cascade.consume_declaration(sel, decl)
     return
 
-  ig: ->
+  ig: (options) ->
     ig = new IG.FunctionBlock
+    unless options.includeTracker is false
+      ig.push new IG.Require "#{__dirname}/../../../bdd/tracker.js"
+    unless options.includeReactiveVar is false
+      ig.push new IG.Require "#{__dirname}/../../../bdd/reactive-var.js"
     ig.push @definitions.ig()
     ig.push @cascade.ig()
     ig
