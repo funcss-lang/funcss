@@ -10,14 +10,35 @@ Parser = require "./parser"
 SS     = require "./ss_nodes"
 
 class SS.Statement
-  constructor : (@value) ->
+  constructor : (@prelude, @block = undefined) ->
   toString: ->
-    "#{@value};"
+    "#{@prelude}#{@block ? ';'}"
 class SS.StatementList
   @prototype: []
   toString: -> @join("\n")
 
 Parser.constructor.prototype[k] = v for k,v of {
+  parse_a_statement: (tokens) ->
+    @init(tokens)
+    @consume_next()
+    while @current instanceof SS.WhitespaceToken
+      @consume_next()
+    if @current instanceof SS.EOFToken
+      return new SS.SyntaxError
+    if @current instanceof SS.AtKeywordToken
+      result = @consume_at_rule()
+    else
+      @reconsume_current()
+      result = @consume_a_statement()
+      if not result?
+        return new SS.SyntaxError
+    @consume_next()
+    while @current instanceof SS.WhitespaceToken
+      @consume_next()
+    if @current instanceof SS.EOFToken
+      return result
+    return new SS.SyntaxError
+
   parse_list_of_statements: (tokens) ->
     @init(tokens)
     return @consume_list_of_statements()
@@ -34,29 +55,26 @@ Parser.constructor.prototype[k] = v for k,v of {
         when @current instanceof SS.AtKeywordToken
           result.push @consume_at_rule()
         else
-          list = [@current]
-          @consume_next()
-          while not (@current instanceof SS.SemicolonToken or @current instanceof SS.EOFToken)
-            list.push @current
-            @consume_next()
-          temp_stream = @stream
-          try
-            @stream = list
-            @consume_next()
-            statement = @consume_a_statement()
-          finally
-            @stream = temp_stream
+          @reconsume_current()
+          statement = @consume_a_statement()
           if statement?
             result.push statement
 
   consume_a_statement: () ->
-    value = new SS.ComponentValueList
-    value.push @current
-    @consume_next()
-    until @current instanceof SS.EOFToken
-      # Unlike definition values, statements are component value lists, not only token lists.
-      @reconsume_current()
-      value.push @consume_component_value()
+    prelude = new SS.ComponentValueList
+    while true
       @consume_next()
-    return new SS.Statement(value, false)
+      switch
+        when @current instanceof SS.EOFToken or @current instanceof SS.SemicolonToken
+          return new SS.Statement(prelude)
+        when @current instanceof SS.OpeningCurlyToken
+          block = @consume_simple_block()
+          return new SS.Statement(prelude, block)
+        when @current instanceof SS.SimpleBlock and @current.token instanceof SS.OpeningCurlyToken
+          return new SS.Statement(prelude, @current)
+        else
+          @reconsume_current()
+          prelude.push @consume_component_value()
+
+
 }

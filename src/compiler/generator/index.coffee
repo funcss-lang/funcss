@@ -1,5 +1,5 @@
 
-module.exports = (fs, options = {}) ->
+module.exports = (fs, options) ->
   fs.ig(options)
 
 

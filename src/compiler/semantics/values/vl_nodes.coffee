@@ -97,5 +97,12 @@ class VL.FunctionalNotation extends VL.Value
   ssjs: ->
     JSON.stringify("#{escape(@name)}(") + " + " + @arg.ssjs() + " + " + JSON.stringify(")")
 
+class VL.JavaScriptFunction extends VL.Value
+  constructor: (@type, @block) ->
+    # TODO arguments
+  jsjs: ->
+    "(function()#{@block})()"
+  ssjs: ->
+    @type.decodejs(@jsjs())
 
 

@@ -121,6 +121,9 @@ class GR.Type
     @b?.setFs(@fs)
     @
 
+  decodejs: ->
+    throw new Error "Internal error in FunCSS: decodejs not implemented for #{@constructor.name}"
+
 # a type which matches a single token of a single class, with optional property restrictions
 class GR.TokenTypeTokenType extends GR.Type
   props: {}

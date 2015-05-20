@@ -48,25 +48,42 @@ DefinableWithOptionalType = new GR.Juxtaposition(
       Snd
     )
   ),
-  (variableName,typeName) -> [variableName,typeName]
+  (definable,typeName) -> [definable,typeName]
 )
+
 
 # A definition is a definable, an equals sign and a value.
 #
 #     x:string = "hello"
 #
 # The value must be of the definition type.
-DefinitionInStylesheetLangauge = new GR.Juxtaposition(
+SignatureWithOptionalDefinition = new GR.Juxtaposition(
   DefinableWithOptionalType,
-  new GR.Juxtaposition(
-    Equals,
-    new GR.RawTokens(),
-    Snd
+  new GR.Optional(
+    new GR.Juxtaposition(
+      Equals,
+      new GR.RawTokens(),
+      Snd
+    )
   ),
-  ([pattern, typeName], rawValue)-> new DF.Definition(pattern, typeName, rawValue)
+  ([definable, typeName], rawValue)-> new DF.Definition(definable, typeName, rawValue)
 )
 
 # For now, only variables are defined. TODO JS definitions
-Definition = DefinitionInStylesheetLangauge
+DefinitionPrelude = SignatureWithOptionalDefinition
 
-module.exports = Definition
+
+# This is the main entry point, for taking into account blocks and empty statements
+
+exports.parseStatement = (s) ->
+  def = new GR.Optional(DefinitionPrelude).parse(s.prelude)
+  if def?
+    if def.rawValue? and s.block?
+      throw new ER.SyntaxError "Definition has both CSS and JS body. #{s}"
+    def.block = s.block
+    def
+
+exports.parse = (str) ->
+  @parseStatement(Parser.parse_a_statement(str))
+
+

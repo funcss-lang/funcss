@@ -11,6 +11,8 @@ SS = require "../../syntax/ss_nodes"
 GR = require "../../syntax/gr_nodes"
 assert = require "../../helpers/assert"
 FS = require "../fs_nodes"
+VL = require "../values/vl_nodes"
+
 DF = exports
 
 Snd = (_,y) -> y
@@ -41,20 +43,33 @@ class DF.FunctionalNotation extends DF.Definable
     )
 
 class DF.Definition
-  constructor: (@definable, @type, @rawValue) ->
+  constructor: (@definable, @typeName, @rawValue, @block) ->
   grammar: (fs) ->
     assert.instanceOf {fs}, FS.FunctionalStylesheet
     if @definable instanceof DF.VariableName
-      # Here we can parse the value now, create the VL graph and use it for all
-      # references of the variable.
-      value = fs.getType(@type).parse(@rawValue)
-      gr = @definable.grammar -> value
+      if !@typeName?
+        throw new ER.TypeInferenceNotImplemented(@definable)
+      type = fs.getType(@typeName)
+      if !type?
+        throw new ER.UnknownType(@typeName)
+      if @rawValue?
+        # Here we can parse the value now, create the VL graph and use it for all
+        # references of the variable.
+        value = @type.parse(@rawValue)
+        gr = @definable.grammar -> value
+      else if @block
+        console.log "hello"
+        value = new VL.JavaScriptFunction type, @block
+        gr = @definable.grammar -> value
+        console.log gr
+      else
+        throw new ER.SyntaxError "Definition does not have a body. Please add `= someValue` or `{ return someValue }`"
     else if @definable instanceof DF.FunctionalNotation
       gr = @definable.grammar ->
         # We create a separate VL tree for each invocation of the function so
         # we can bind it with the arguments. TODO optimize this for nullary
         # functions?
-        value = fs.types[@type].parse(@rawValue)
+        value = fs.types[@typeName].parse(@rawValue)
         # TODO create the binding between the argument and the value
         value
     else

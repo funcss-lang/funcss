@@ -25,6 +25,10 @@ class ER.TypeInferenceNotImplemented extends ER.TypeError
   constructor: (@definable) ->
     super  "Automatic type inference is not yet implemented. Please provide an explicit type for #{@definable}"
     
+class ER.NotImplemented extends ER.TypeError
+  constructor: (@message) ->
+    super  @message
+
 class ER.UnknownAtRule extends ER.SyntaxError
   constructor: (@name) ->
     super "Unknown at-rule: #{@name}"

@@ -1,6 +1,7 @@
 # The custom functions/values/etc. module
 #
 
+ER         = require "../../errors/er_nodes"
 Parser     = require "../../syntax/parser"
 SS         = require "../../syntax/ss_nodes"
 GR         = require "../../syntax/gr_nodes"
@@ -21,7 +22,7 @@ module.exports = class Definitions
     new GR.Empty().parse(atrule.prelude, '{')
     statements = Parser.parse_list_of_statements(atrule.value.value)
     for s in statements
-      def = new GR.Optional(DefGrammar).parse(s.value)
+      def = DefGrammar.parseStatement(s)
       if def?
         @consume_definition(def)
 
@@ -29,10 +30,10 @@ module.exports = class Definitions
 
   consume_definition: (def) ->
     # TODO Do type inference
-    throw new ER.TypeInferenceNotImplemented(def.definable) unless def.type?
+    throw new ER.TypeInferenceNotImplemented(def.definable) unless def.typeName?
 
     # We insert the new type into the table.
-    @fs.setType(def.type, def.grammar(@fs))
+    @fs.setType(def.typeName, def.grammar(@fs))
 
     return
 

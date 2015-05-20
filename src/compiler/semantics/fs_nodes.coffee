@@ -15,6 +15,7 @@
 #
 
 ER         = require "../errors/er_nodes"
+assert     = require "../helpers/assert"
 Parser     = require "../syntax/parser"
 SS         = require "../syntax/ss_nodes"
 GR         = require "../syntax/gr_nodes"
@@ -74,7 +75,7 @@ class FS.FunctionalStylesheet
     throw new ER.UnknownType(name) if require
 
   setType: (name, newType) ->
-    debugger
+    assert.present {name}
     oldType = @getType(name, false)
     @_typeStack[@_typeStack.length-1][name] =
       if oldType?
@@ -121,9 +122,9 @@ class FS.FunctionalStylesheet
   ig: (options) ->
     ig = new IG.FunctionBlock
     unless options.includeTracker is false
-      ig.push new IG.Require "#{__dirname}/../../../bdd/tracker.js"
+      ig.push new IG.Require "tracker"
     unless options.includeReactiveVar is false
-      ig.push new IG.Require "#{__dirname}/../../../bdd/reactive-var.js"
+      ig.push new IG.Require "reactive-var"
     ig.push @definitions.ig()
     ig.push @cascade.ig()
     ig
