@@ -7,7 +7,7 @@ ER = exports
 
 class ER.FunCSSError extends Error
   constructor: (@message) ->
-    @stack = (new Error()).stack
+    @stack = @message + "\n" + (new Error()).stack
 
 class ER.TypeError extends ER.FunCSSError
 
@@ -30,18 +30,22 @@ class ER.NotImplemented extends ER.TypeError
     super  @message
 
 class ER.UnknownAtRule extends ER.SyntaxError
-  constructor: (@name) ->
-    super "Unknown at-rule: #{@name}"
+  constructor: (@atRuleName) ->
+    super "Unknown at-rule: #{@atRuleName}"
 
 class ER.UnknownProperty extends ER.TypeError
-  constructor: (@name) ->
-    super "Unknown property: #{@name}"
+  constructor: (@propertyName) ->
+    super "Unknown property: #{@propertyName}"
     
 
 class ER.UnknownType extends ER.TypeError
-  constructor: (@name) ->
-    super "Unknown type: #{@name}"
+  constructor: (@typeName) ->
+    super "Unknown type: #{@typeName}"
     
 class ER.DecodingNotSupported extends ER.TypeError
   constructor: (@type) ->
     super "Decoding from JS is not supported for type #{@type}"
+
+class ER.InvalidColor extends ER.TypeError
+  constructor: (@color) ->
+    super "Invalid color: #{@color}"

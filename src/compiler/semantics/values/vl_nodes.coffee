@@ -40,11 +40,6 @@ class VL.Number extends VL.Constant
   ssjs: ->
     JSON.stringify("#{@value}")
 
-class VL.EmptyValue extends VL.Constant
-  jsjs: ->
-    "(void 0)"
-  ssjs: ->
-    JSON.stringify("")
 
 class VL.String extends VL.Constant
   constructor: (@value) ->
@@ -52,6 +47,23 @@ class VL.String extends VL.Constant
     JSON.stringify(@value)
   ssjs: ->
     JSON.stringify(JSON.stringify(@value))
+
+class VL.EmptyValue extends VL.Constant
+  jsjs: ->
+    "(void 0)"
+  ssjs: ->
+    JSON.stringify("")
+
+
+class VL.Color extends VL.Value
+  constructor: ({@r,@g,@b,@a})->
+  jsjs: ->
+    "{r:#{@r.jsjs()}, g:#{@g.jsjs()}, b:#{@b.jsjs()}, a: #{@a.jsjs()}}"
+  ssjs: ->
+    if @a
+      "'rgba('+#{@r.ssjs()}+','+#{@g.ssjs()}+','+#{@b.ssjs()}+','+#{@a.ssjs()}+')'"
+    else
+      "'rgb('+#{@r.ssjs()}+','+#{@g.ssjs()}+','+#{@b.ssjs()}+')'"
 
 
 class VL.Collection extends VL.Value

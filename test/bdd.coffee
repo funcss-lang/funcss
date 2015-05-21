@@ -43,18 +43,17 @@ describe "FunCSS compiler", ->
         includeTracker: false
         browserify: false
         done: (e, result) ->
-          if e?
-            if err?
-              err.should.equal(e.stack)
-              done()
-              return
-            else
+          if js?
+            if e?
               throw e
-          if !js?
-            throw new Error "#{basename} should have failed with an error, but it succeeded."
-          result = result.trim().replace(/\s+/g, " ")
-          expected = js.trim().replace(/\s+/g, " ")
-          result.should.equal(expected)
+            result = result.trim().replace(/\s+/g, " ")
+            expected = js.trim().replace(/\s+/g, " ")
+            result.should.equal(expected)
+          else if err?
+            if e?
+              err.should.equal(e.stack)
+            else
+              throw new Error "#{basename} should have failed with an error, but it succeeded."
           if fs.existsSync("#{basename}.verify")
             throw new Error "`#{basename}` needs manual verification. Use `./script/bdd #{path.basename basename} ok` to confirm it."
           done()

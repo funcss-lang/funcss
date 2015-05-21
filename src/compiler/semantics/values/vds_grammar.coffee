@@ -47,7 +47,7 @@ Comma        = new GR.DelimLike(new SS.CommaToken)
 Dollar       = new GR.DelimLike(new SS.DelimToken('$'))
 
 
-# We use this class to create recursive types. We define the type with the placeholder, and then replace it afterwards.
+# We use this class to create recursive grammars. We define the type with the placeholder, and then replace it afterwards.
 PLACEHOLDER =
   parse: -> throw new Error "PLACEHOLDER not replaced"
 

@@ -175,9 +175,11 @@ class GR.String extends GR.TokenTypeTokenType
   semantic: (token) ->
     token.value
 
-class Whitespace extends GR.TokenTypeTokenType
-  expected: "whitespace"
-  tokenClass: SS.WhitespaceToken
+class GR.Hash extends GR.TokenTypeTokenType
+  expected: "#"
+  tokenClass: SS.HashToken
+  semantic: (token) ->
+    token.value
 
 class GR.DelimLike extends GR.TokenTypeTokenType
   semantic: -> "#{@token}"

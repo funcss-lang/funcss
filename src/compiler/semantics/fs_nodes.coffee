@@ -43,6 +43,7 @@ class FS.FunctionalStylesheet
       'background-color': vds("<ident>")
       'background': vds("<ident>")
       'opacity': vds("<number>")
+      'color': vds("<color>")
     }
     @_typeStack = [
       Values.primitiveTypes,
