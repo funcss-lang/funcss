@@ -15,7 +15,6 @@ basename = bdd.find(process.argv[2]).replace(/\.fcss$/, "")
 
 switch process.argv[3]
   when "try"
-    # We compile the .fcss file to the .js file
     fcss = fs.readFileSync("#{basename}.fcss", encoding: 'utf-8')
     try
       fs.unlinkSync("#{basename}.js")
@@ -26,27 +25,30 @@ switch process.argv[3]
     catch e
       "never mind"
     failed = false
-    output = null
-    try
-      output = FunCSS.compile(fcss)
-    catch e
-      fs.writeFileSync("#{basename}.err", e.stack, encoding: 'utf-8')
-      failed = true
-    if !failed
-      fs.writeFileSync("#{basename}.js", output, encoding: 'utf-8')
+    result = null
+    # We compile the .fcss file to the .js file
+    FunCSS.compile fcss,
+      includeReactiveVar: false
+      includeTracker: false
+      browserify: false
+      done: (err, js) ->
+        if err
+          fs.writeFile("#{basename}.err", err.stack, encoding: 'utf-8')
+        else
+          fs.writeFile("#{basename}.js", js, encoding: 'utf-8')
 
     # Touch the <test name>.verify file so that the bdd framework knows
     # that the file needs manual verification
-    fs.writeFileSync("#{basename}.verify", "")
+    fs.writeFile("#{basename}.verify", "")
   when "ok"
     # We remove the .verify file to indicate that the test passed
-    fs.unlinkSync("#{basename}.verify", "")
+    fs.unlink("#{basename}.verify", "")
 
   when "fail"
     # We write the message to the .fail file
-    fs.writeFileSync("#{basename}.fail", "#{process.argv[4] ? "no message"}\n", encoding: 'utf-8')
+    fs.writeFile("#{basename}.fail", "#{process.argv[4] ? "no message"}\n", encoding: 'utf-8')
 
     # We remove the .verify file to indicate that the test does not need to be
     # verified.
-    fs.unlinkSync("#{basename}.verify")
+    fs.unlink("#{basename}.verify")
 

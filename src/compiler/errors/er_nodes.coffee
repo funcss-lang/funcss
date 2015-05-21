@@ -42,3 +42,6 @@ class ER.UnknownType extends ER.TypeError
   constructor: (@name) ->
     super "Unknown type: #{@name}"
     
+class ER.DecodingNotSupported extends ER.TypeError
+  constructor: (@type) ->
+    super "Decoding from JS is not supported for type #{@type}"

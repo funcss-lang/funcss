@@ -27,7 +27,7 @@ return unless describe?
 describe "FunCSS compiler", ->
   for filename in search("bdd")
     basename = filename.replace(/\.fcss$/, "")
-    it "compiles #{basename}", do (basename) -> ->
+    it "compiles #{basename}", do (basename) -> (done) ->
       if fs.existsSync("#{basename}.fail")
         message = fs.readFileSync("#{basename}.fail", encoding: 'utf-8')
         throw new Error "`#{basename}` failed manual verification: #{message}"
@@ -38,24 +38,26 @@ describe "FunCSS compiler", ->
         err =  fs.readFileSync("#{basename}.err", encoding: 'utf-8')
       else
         throw new Error "#{basename} does not have a result. Use `./script/bdd #{path.basename basename} try` to generate one, then verify it manually."
-      try
-        result = FunCSS.compile fcss,
-          includeReactiveVar: false
-          includeTracker: false
-          browserify: false
-      catch e
-        if err?
-          err.should.equal(e.stack)
-          return
-        else
-          throw e
-      if !js?
-        throw new Error "#{basename} should have failed with an error, but it succeeded."
-      result = result.trim().replace(/\s+/g, " ")
-      expected = js.trim().replace(/\s+/g, " ")
-      result.should.equal(expected)
-      if fs.existsSync("#{basename}.verify")
-        throw new Error "`#{basename}` needs manual verification. Use `./script/bdd #{path.basename basename} ok` to confirm it."
+      result = FunCSS.compile fcss,
+        includeReactiveVar: false
+        includeTracker: false
+        browserify: false
+        done: (e, result) ->
+          if e?
+            if err?
+              err.should.equal(e.stack)
+              done()
+              return
+            else
+              throw e
+          if !js?
+            throw new Error "#{basename} should have failed with an error, but it succeeded."
+          result = result.trim().replace(/\s+/g, " ")
+          expected = js.trim().replace(/\s+/g, " ")
+          result.should.equal(expected)
+          if fs.existsSync("#{basename}.verify")
+            throw new Error "`#{basename}` needs manual verification. Use `./script/bdd #{path.basename basename} ok` to confirm it."
+          done()
 
 
 

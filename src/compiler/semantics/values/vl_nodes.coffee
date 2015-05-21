@@ -9,6 +9,8 @@
 #     a string which contains the CSS representation of the value.
 #
 
+assert = require "../../helpers/assert"
+
 # TODO
 VL = exports
 VL.escape = escape = (s) -> s
@@ -99,6 +101,7 @@ class VL.FunctionalNotation extends VL.Value
 
 class VL.JavaScriptFunction extends VL.Value
   constructor: (@type, @block) ->
+    assert.hasProp {@type}, "decodejs"
     # TODO arguments
   jsjs: ->
     "(function()#{@block})()"

@@ -1,12 +1,18 @@
+assert    = require "./helpers/assert"
 Syntax    = require "./syntax"
 Semantics = require "./semantics"
 Generator = require "./generator"
 
 exports.compile = (str, options = {}) ->
-  ss = Syntax(str, options)
-  fs = Semantics(ss, options)
-  ig = Generator(fs, options)
-  js = ig.toString()
+  assert.hasProp {options}, "done"
+  try
+    ss = Syntax(str, options)
+    fs = Semantics(ss, options)
+    ig = Generator(fs, options)
+    js = ig.toString()
+  catch e
+    options.done(e)
+    return
   unless options.browserify is false
     browserify = require "browserify"
     stream     = require "stream"
@@ -21,10 +27,10 @@ exports.compile = (str, options = {}) ->
         path.join(__dirname, "../../rtlib")
       ]
     b.bundle (err,buf) ->
-      console.log buf.toString("utf-8")
+      options.done(err,buf.toString("utf-8"))
   else
-    return js
-      
+    options.done(null, js)
+     
     
 
 

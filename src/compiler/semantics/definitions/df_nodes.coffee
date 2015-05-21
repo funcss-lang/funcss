@@ -7,11 +7,12 @@
 # - `grammar()`: returns the generated type (GR tree with semantic functions returning VL trees)
 #
 
-SS = require "../../syntax/ss_nodes"
-GR = require "../../syntax/gr_nodes"
-assert = require "../../helpers/assert"
-FS = require "../fs_nodes"
-VL = require "../values/vl_nodes"
+ER         = require "../../errors/er_nodes"
+SS         = require "../../syntax/ss_nodes"
+GR         = require "../../syntax/gr_nodes"
+assert     = require "../../helpers/assert"
+FS         = require "../fs_nodes"
+VL         = require "../values/vl_nodes"
 
 DF = exports
 
@@ -54,14 +55,14 @@ class DF.Definition
         throw new ER.UnknownType(@typeName)
       if @rawValue?
         # Here we can parse the value now, create the VL graph and use it for all
-        # references of the variable.
-        value = @type.parse(@rawValue)
+        # references of the variable. TODO but what if elem() is used?
+        value = type.parse(@rawValue)
         gr = @definable.grammar -> value
       else if @block
-        console.log "hello"
+        if not type.decodejs?
+          throw new ER.DecodingNotSupported type
         value = new VL.JavaScriptFunction type, @block
         gr = @definable.grammar -> value
-        console.log gr
       else
         throw new ER.SyntaxError "Definition does not have a body. Please add `= someValue` or `{ return someValue }`"
     else if @definable instanceof DF.FunctionalNotation
