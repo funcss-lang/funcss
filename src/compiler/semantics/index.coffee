@@ -8,8 +8,8 @@
 SS      = require "../syntax/ss_nodes"
 FS      = require "./fs_nodes"
 
-module.exports = Semantics = (ss) ->
-  new FS.FunctionalStylesheet(ss)
+module.exports = Semantics = (ss, options) ->
+  new FS.FunctionalStylesheet(ss, options)
 
 
     

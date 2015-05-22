@@ -16,6 +16,8 @@ VL = exports
 VL.escape = escape = (s) -> s
 
 VL.Value = class VL.Value
+  toString: ->
+    "[#{@constructor.name} #{"#{k}:#{v}" for k,v of @ when @hasOwnProperty(k)}]"
 
 class VL.Constant extends VL.Value
 
@@ -92,7 +94,11 @@ class VL.And extends VL.Collection
 
 class VL.InclusiveOr extends VL.Collection
 
-# This class is responsible for using a mapping from an AnnotationRoot object
+# This class is responsible for providing a different value in JavaScript than in 
+# SS output. The JavaScript value in this case is always an object.
+#
+# Also, this class is responsible for providing an argument list for inlined JavaScript
+# functions.
 class VL.Marking extends VL.Value
   constructor: (@value, @marking) ->
   jsjs: ->
@@ -101,6 +107,16 @@ class VL.Marking extends VL.Value
     "({#{("#{JSON.stringify(k)}:#{v.jsjs()}" for k,v of @marking).join(", ")}})"
   ssjs: ->
     @value.ssjs()
+
+  # This outputs the formal argument list for an inline function
+  formalArguments: ->
+    (k for k,v of @marking).join(", ")
+  # this outputs the actual argument list for an inline function
+  actualArguments: ->
+    (v.jsjs() for k,v of @marking).join(", ")
+  toString: ->
+    "[Marking marking:{#{"#{k}:#{v}" for k,v of @marking}} value:#{@value}]"
+        
 
 #### Functions
 #
@@ -112,11 +128,11 @@ class VL.FunctionalNotation extends VL.Value
     JSON.stringify("#{escape(@name)}(") + " + " + @arg.ssjs() + " + " + JSON.stringify(")")
 
 class VL.JavaScriptFunction extends VL.Value
-  constructor: (@type, @block) ->
+  constructor: (@type, @argument, @block) ->
     assert.hasProp {@type}, "decodejs"
-    # TODO arguments
+    assert.instanceOf {@argument}, VL.Marking
   jsjs: ->
-    "(function()#{@block})()"
+    "(function(#{@argument.formalArguments()})#{@block})(#{@argument.actualArguments()})"
   ssjs: ->
     @type.decodejs(@jsjs())
 

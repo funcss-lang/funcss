@@ -23,6 +23,7 @@ VdsGrammar = require "./values/vds_grammar"
 Values     = require "./values"
 IG         = require "../generator/ig_nodes"
 Definitions= require "./definitions"
+Imports    = require "./imports"
 Cascade    = require "./cascade"
 SelGrammar = require "./selectors/sel_grammar"
 
@@ -33,11 +34,11 @@ vds = (str) ->
   VdsGrammar.parse(str)
 
 class FS.FunctionalStylesheet
-  constructor: (ss) ->
-    @definitions = new Definitions(@)
+  constructor: (ss,@options) ->
     @cascade = new Cascade(@)
     @atRuleHandlers = {
-      def: @definitions
+      def: @definitions = new Definitions(@)
+      import: @imports = new Imports(@)
     }
     @_propertyTypes = {
       'background-color': vds("<ident>")
@@ -72,27 +73,33 @@ class FS.FunctionalStylesheet
   getType: (name, require=true) ->
     for i in [@_typeStack.length-1..0]
       if (type = @_typeStack[i][name])?
+        console.debug "read type <#{name}> = #{type}" if console.debug
         return type
     throw new ER.UnknownType(name) if require
 
   setType: (name, newType) ->
+    console.debug "saved type <#{name}> = #{newType}" if console.debug
     assert.present {name}
     oldType = @getType(name, false)
     @_typeStack[@_typeStack.length-1][name] =
       if oldType?
-        new GR.ExclusiveOr(oldType, newType).setFs(@)
+        type = new GR.ExclusiveOr(newType, oldType).setFs(@)
+        type.decodejs = oldType.decodejs
+        type
       else
         newType
-    return
+    return oldType
 
     
 
-  push_scope: () ->
+  pushScope: () ->
+    console.debug "pushed stack" if console.debug
     @_typeStack.push {}
     @_dimensionStack.push {}
     return
 
-  pop_scope: () ->
+  popScope: () ->
+    console.debug "popped stack" if console.debug
     @_typeStack.pop {}
     @_dimensionStack.pop {}
     return

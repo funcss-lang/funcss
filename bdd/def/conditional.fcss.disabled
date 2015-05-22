@@ -1,18 +1,7 @@
 @def {
-
-  $a=213;
-
-  $x = $seconds;
-
-}
-
-
-- - - - - - - - 
-@def {
   @template T, U {
-    if(x():T = y():T, then():U, els_():U) {
+    if(x:T = y:T, then:U, else:U) : T {
       return x() === y() ? then() : els_();
     }
   }
 }
-- - - - - - - - 

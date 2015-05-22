@@ -3,6 +3,10 @@ Syntax    = require "./syntax"
 Semantics = require "./semantics"
 Generator = require "./generator"
 
+# Debugging output
+#console.debug = console.error
+console.debug = null
+
 exports.compile = (str, options = {}) ->
   assert.hasProp {options}, "done"
   try

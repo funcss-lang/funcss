@@ -51,7 +51,7 @@ describe "FunCSS compiler", ->
             result.should.equal(expected)
           else if err?
             if e?
-              err.should.equal(e.stack)
+              e.stack.should.equal(err)
             else
               throw new Error "#{basename} should have failed with an error, but it succeeded."
           if fs.existsSync("#{basename}.verify")

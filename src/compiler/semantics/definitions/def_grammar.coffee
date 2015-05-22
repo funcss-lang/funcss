@@ -9,7 +9,6 @@ Colon  = new GR.DelimLike(new SS.ColonToken)
 Equals = new GR.DelimLike(new SS.DelimToken("="))
 Dollar = new GR.DelimLike(new SS.DelimToken("$"))
 
-
 # For now, only idents can be variable names. TODO dollar signs
 VariableName = new GR.ExclusiveOr(
   new GR.Ident((x)->new DF.VariableName(x.value)),
@@ -21,7 +20,6 @@ VariableName = new GR.ExclusiveOr(
 )
 
 
-# For now, only idents can be variable names. TODO dollar signs
 FunctionalNotation = new GR.AnyFunctionalNotation(
   VdsGrammar.OptionalRoot,
   (name, argument)->new DF.FunctionalNotation(name, argument)

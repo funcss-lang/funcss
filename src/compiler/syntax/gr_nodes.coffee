@@ -145,6 +145,7 @@ class GR.Keyword extends GR.TokenTypeTokenType
     @props = {@value}
   semantic: (token) ->
     token.value
+  toString: -> @value
     
 class GR.Ident extends GR.TokenTypeTokenType
   expected: "identifier"
@@ -193,6 +194,7 @@ class GR.DelimLike extends GR.TokenTypeTokenType
       return
     else
       throw new Error "GR.DelimLike expects a DelimToken or a SimpleToken, #{@token.constructor.name} got instead"
+  toString: -> @token.toString()
 
 
 
@@ -200,6 +202,7 @@ class GR.DelimLike extends GR.TokenTypeTokenType
 class GR.Comma extends GR.TokenTypeTokenType
   expected: "','"
   tokenClass: SS.CommaToken
+  toString: -> ","
 
 #### Parser combinators
 #
@@ -231,6 +234,8 @@ class GR.Optional extends GR.Type
       fallback: =>
         @semantic(undefined)
   semantic: Id
+  toString: ->
+    "[#{@a}]?"
 
 # semantic = (a,b) -> [a,b]
 class GR.Juxtaposition extends GR.Type
@@ -240,6 +245,8 @@ class GR.Juxtaposition extends GR.Type
     s.optionalWhitespace()
     y = @b.consume(s)
     @semantic(x,y)
+  toString: ->
+    "[#{@a}] [#{@b}]"
     
 # semantic = (a,b) -> [a,b]
 class GR.CloselyJuxtaposed extends GR.Type
@@ -249,6 +256,8 @@ class GR.CloselyJuxtaposed extends GR.Type
     x = @a.consume(s)
     y = @b.consume(s)
     @semantic(x,y)
+  toString: ->
+    "[#{@a}]~[#{@b}]"
 
 # semantic = (a) -> a
 class GR.ExclusiveOr extends GR.Type
@@ -264,6 +273,8 @@ class GR.ExclusiveOr extends GR.Type
           fallback: (f)=>
             throw e.merge(f)
   semantic: Id
+  toString: ->
+    "[#{@a}]|[#{@b}]"
 
 class GR.And extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
@@ -285,6 +296,8 @@ class GR.And extends GR.Type
     else
       @semantic(@a.consume(s), res.b)
   semantic: Cons
+  toString: ->
+    "[#{@a}]&&[#{@b}]"
 
 class GR.InclusiveOr extends GR.Type
   constructor: (@a, @b, @semantic = @semantic) ->
@@ -292,6 +305,8 @@ class GR.InclusiveOr extends GR.Type
     new GR.ExclusiveOr(new GR.Juxtaposition(@a,new GR.Optional(@b),@semantic),
             new GR.Juxtaposition(@b,new GR.Optional(@a),Swap(@semantic))).consume(s)
   semantic: Cons
+  toString: ->
+    "[#{@a}]||[#{@b}]"
 
 
 # `m` optional elements of type `a`
@@ -324,16 +339,22 @@ class GR.Range extends GR.Type
     for i in tail
       result.push i
     @semantic result
+  toString: ->
+    "[#{@a}]{#{@n},#{@m}}"
 
 class GR.ZeroOrMore extends GR.Range
   constructor: (@a,@semantic = @semantic) ->
     @n = 0
     @m = Infinity
+  toString: ->
+    "[#{@a}]*"
 
 class GR.OneOrMore extends GR.Range
   constructor: (@a,@semantic = @semantic) ->
     @n = 1
     @m = Infinity
+  toString: ->
+    "[#{@a}]+"
 
 class GR.DelimitedBy extends GR.Type
   semantic: Id
@@ -350,41 +371,54 @@ class GR.DelimitedBy extends GR.Type
       # with the array.
       (x,y)=>y.unshift(x); @semantic(y)
     ).consume(s)
+  toString: ->
+    "[#{@a}] [[#{@delim}] [#{@a}]]*"
 
 class GR.DelimitedByComma extends GR.DelimitedBy
   constructor: (@a, @semantic = @semantic) ->
     @delim = new GR.Comma
+  toString: ->
+    "[#{@a}]#"
 
 
 
-# This class does not affect the parsing, it only keeps track of a mapping
+# This class does not affect the parsing, it only keeps track of a marking
 # of the annotations directly (without another GR.Annotation in between) below
 # this node.
 class GR.AnnotationRoot extends GR.Type
   semantic: Id
   hasAnnotations: false
   constructor: (@a, @semantic = @semantic) ->
-    @prepareMappings(@a)
-  prepareMappings: (node) ->
+    @markings = []
+    @prepareMarkings(@a)
+  prepareMarkings: (node) ->
     if node instanceof GR.AnnotationRoot
       if node instanceof GR.Annotation
         @hasAnnotations = true
         node.root = @
-      node.prepareMappings(node.a)
+      node.prepareMarkings(node.a)
     else
       if node.a
-        @prepareMappings(node.a)
+        @prepareMarkings(node.a)
       if node.b
-        @prepareMappings(node.b)
+        @prepareMarkings(node.b)
+  toString: ->
+    "#{@a}"
     
-  # This parses the tree as usual, but also passes a mapping
-  # to the semantic function. The mapping maps the names of the direct descendant
+  # This parses the tree as usual, but also passes a marking
+  # to the semantic function. The marking maps the names of the direct descendant
   # annotations to their subtree.
   parseWithAnnotations: (s) ->
-    @mappings = {}
-    # `a.consume(s)` will add mappings to `@mappings`
-    result = @a.consume(s)
-    @semantic result, @mappings
+    @markings.push {}
+    try
+      # `a.consume(s)` will add markings to `@markings`
+      result = @a.consume(s)
+      @semantic result, @markings[@markings.length-1]
+    finally
+      @markings.pop()
+
+  setMarking: (name, value) ->
+    @markings[@markings.length-1][name] = value
 
   consume: (s) ->
     if @hasAnnotations
@@ -394,19 +428,22 @@ class GR.AnnotationRoot extends GR.Type
 
 # This node represents the `x:` annotations in the type tree.
 # This is a subclass of  GR.AnnotationRoot, as the annotations below this
-# will collect their mappings here.
+# will collect their markings here.
 class GR.Annotation extends GR.AnnotationRoot
   root: undefined
   constructor: (@name, @a, @semantic = @semantic) ->
+    @markings = []
   consume: (s) ->
     if @root
-      # Here we add the mapping to the closes GR.AnnotationRoot in the parent chain.
-      @root.mappings[@name] = if @hasAnnotations
+      # Here we add the marking to the closest GR.AnnotationRoot in the parent chain.
+      @root.setMarking @name, if @hasAnnotations
         @parseWithAnnotations(s)
       else
         @semantic @a.consume(s)
     else
       throw new Error "GR.Annotation used without an GR.AnnotationRoot correctly configured"
+  toString: ->
+    "#{@name}:[#{@a}]"
 
 
 # block types - these simply match a block, with the interior matching the given type
@@ -422,6 +459,8 @@ class GR.SimpleBlock extends GR.Type
       s.noMatchNext(@expected)
     s.consume_next()
     return @semantic @a.parse(next.value, "#{new((new @tokenClass).mirror())}")
+  toString: ->
+    "#{new @tokenClass} #{@a} #{new((new @tokenClass).mirror())}"
 
 # A special type that refers to another type.
 class GR.TypeReference extends GR.Type
@@ -433,6 +472,8 @@ class GR.TypeReference extends GR.Type
       throw new Error "Internal error in FunCSS: fs is not set up correctly"
     type = if @quoted then @fs.getPropertyType(@name) else @fs.getType(@name)
     type.consume(s)
+  toString: ->
+    "<#{if @quoted then JSON.stringify(@name) else @name}>"
 
 
 class GR.FunctionalNotation extends GR.Type
@@ -447,6 +488,8 @@ class GR.FunctionalNotation extends GR.Type
       s.noMatchNext(@expected)
     s.consume_next()
     return @semantic @a.parse(next.value, ")")
+  toString: ->
+    "#{@name}(#{@a})"
 
 class GR.AnyFunctionalNotation extends GR.Type
   expected: "function"
@@ -458,6 +501,8 @@ class GR.AnyFunctionalNotation extends GR.Type
       s.noMatchNext(@expected)
     s.consume_next()
     return @semantic next.name, @a.parse(next.value, ")")
+  toString: ->
+    "<-funcss-any-functional-notation>"
 
 class GR.RawTokens extends GR.Type
   semantic: Id
@@ -470,15 +515,20 @@ class GR.RawTokens extends GR.Type
       s.consume_next()
       next = s.next()
     @semantic result
+  toString: ->
+    "<-funcss-raw-tokens>"
 
 # This does not touch the input stream, just calls the semantic function
 class GR.Empty extends GR.Type
   semantic: ->
   consume: (s) -> @semantic()
+  toString: -> ""
 
 # This is a pass-through grammar, it can be used to add an additional semantic function.
 class GR.Just extends GR.Type
   semantic: Id
   constructor: (@a, @semantic = @semantic) ->
   consume: (s) -> @semantic @a.consume(s)
+  toString: ->
+    "#{@a}"
 

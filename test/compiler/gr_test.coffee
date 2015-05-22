@@ -307,9 +307,12 @@ describe 'GR', ->
       check_tree " ", e, 0, Object, x:"hello"
 
   describe "annotation", ->
-    a = new GR.AnnotationRoot(new GR.Annotation("hello", new GR.Keyword("world")), (x,m)->m)
+    a = new GR.AnnotationRoot(new GR.Annotation("hello", new GR.ExclusiveOr(
+      new GR.Keyword("world"),
+      new GR.Keyword("john"))), (x,m)->m)
     it "works", ->
       check_tree "world", a, 1, Object, hello:"world"
+      check_tree "john", a, 1, Object, hello:"john"
 
   describe "simple block", ->
     sb = new GR.SimpleBlock(SS.OpeningCurlyToken, new GR.Keyword("hello"), (x)->hello:x)

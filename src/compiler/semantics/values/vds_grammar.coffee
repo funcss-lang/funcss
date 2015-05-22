@@ -69,7 +69,7 @@ AddMarkings = (x,markings) ->
 
 # CSS separators
 # Separators have a JS representation of their string value. This is useful when using it in
-# a mapping, to decide whether the delimiter is there, or what delimiter is there.
+# a marking, to decide whether the delimiter is there, or what delimiter is there.
 # For example,
 #
 #   @fun f(a:<number> [comma:,|slash:/]? b:<number>) {

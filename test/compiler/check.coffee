@@ -15,6 +15,7 @@ module.exports = check = (tree, clazz, data={}) ->
           tree[k].should.match(v)
         else
           tree[k].should.be.equal(v)
+  tree
 
 check.error = (clazz, data, fn) ->
   err = null

@@ -1,9 +1,10 @@
 @def {
-  $x : number {
-    return -(-0.3);
-  }
+  f():number {
+    return 3/10;
+  };
 }
+
 body {
-  opacity: $x;
+  opacity: f();
 }
 

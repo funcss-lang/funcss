@@ -15,7 +15,6 @@ require "../../syntax/statements"
 
 module.exports = class Definitions
   constructor: (@fs) ->
-    @definitions
 
   consume_at_rule: (atrule) ->
     throw new ER.BlockRequired("@def") if atrule.value is undefined
@@ -32,8 +31,11 @@ module.exports = class Definitions
     # TODO Do type inference
     throw new ER.TypeInferenceNotImplemented(def.definable) unless def.typeName?
 
+    newType = def.grammar(@fs)
+
     # We insert the new type into the table.
-    @fs.setType(def.typeName, def.grammar(@fs))
+    @fs.setType(def.typeName, newType)
+
 
     return
 

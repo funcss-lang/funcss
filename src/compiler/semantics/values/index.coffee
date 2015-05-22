@@ -14,14 +14,14 @@ exports.primitiveTypes =
     if /^[0-9a-fA-F]{3,6}$/.exec v
       if v.length is 3
         new VL.Color
-          r: new VL.Number Number.parseInt v.charAt(0), 16
-          g: new VL.Number Number.parseInt v.charAt(1), 16
-          b: new VL.Number Number.parseInt v.charAt(2), 16
+          r: new VL.Number parseInt (r=v.charAt(0))+r, 16
+          g: new VL.Number parseInt (g=v.charAt(1))+g, 16
+          b: new VL.Number parseInt (b=v.charAt(2))+b, 16
       else if v.length is 6
         new VL.Color
-          r: new VL.Number Number.parseInt v.substr(0,2), 16
-          g: new VL.Number Number.parseInt v.substr(2,2), 16
-          b: new VL.Number Number.parseInt v.substr(4,2), 16
+          r: new VL.Number parseInt v.substr(0,2), 16
+          g: new VL.Number parseInt v.substr(2,2), 16
+          b: new VL.Number parseInt v.substr(4,2), 16
       else
         throw new Error "Internal error in FuncSS"
     else
