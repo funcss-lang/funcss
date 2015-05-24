@@ -5,7 +5,7 @@
   var rule0 = S.sheet.cssRules[0];
   window.addEventListener("load", function() {
     Tracker.autorun(function() {
-      rule0.style.opacity = .3;
+      rule0.style.opacity = .66 + Math.sin(.1);
     });
   });
 }();

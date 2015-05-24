@@ -114,6 +114,9 @@ class VL.Marking extends VL.Value
   # this outputs the actual argument list for an inline function
   actualArguments: ->
     (v.jsjs() for k,v of @marking).join(", ")
+  get: (name) ->
+    @marking[name]
+
   toString: ->
     "[Marking marking:{#{"#{k}:#{v}" for k,v of @marking}} value:#{@value}]"
         
@@ -131,8 +134,19 @@ class VL.JavaScriptFunction extends VL.Value
   constructor: (@type, @argument, @block) ->
     assert.hasProp {@type}, "decodejs"
     assert.instanceOf {@argument}, VL.Marking
+    @optimized = @block.toString().match(/^\{ ?return ?([()a-zA-Z$_0-9+/*.-][()a-zA-Z$_0-9+/*. -]*) ?;? ?\}$/)?[1]
   jsjs: ->
-    "(function(#{@argument.formalArguments()})#{@block})(#{@argument.actualArguments()})"
+    if @optimized
+      x = (" "+@optimized).replace /([^a-zA-Z0-9$_.])([a-zA-Z$_][a-zA-Z$_0-9]*)/g, (s) =>
+        before = s.charAt(0)
+        identifier = s.substr(1)
+        if (value = @argument.get(identifier))?
+          before + value.jsjs()
+        else
+          before + identifier
+      x
+    else
+      "(function(#{@argument.formalArguments()})#{@block})(#{@argument.actualArguments()})"
   ssjs: ->
     @type.decodejs(@jsjs())
 

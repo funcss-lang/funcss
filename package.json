@@ -4,7 +4,8 @@
   "description": "An advanced stylesheet language.",
   "license": "MIT",
   "dependencies": {
-    "browserify": "^10.2.0"
+    "browserify": "^10.2.0",
+    "uglify-js": "^2.4.23"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",
@@ -18,14 +19,12 @@
   },
   "scripts": {
     "test": "mocha",
-
     "prepublish": "npm run build",
     "build": "npm run build:coffee",
     "build:coffee": "rimraf lib/ && coffee -o lib/ -c src/",
     "build:browserify": "browserify -o dist/funcss.js build/compiler",
     "build:uglify": "uglifyjs dist/funcss.js > dist/funcss.min.js",
     "clean": "rimraf lib/ dist/funcss.js dist/funcss.min.js",
-
     "push": "git push",
     "prepush": "npm test && npm run commit",
     "commit": "git add . && git commit --all"

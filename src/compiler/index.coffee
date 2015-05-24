@@ -2,6 +2,7 @@ assert    = require "./helpers/assert"
 Syntax    = require "./syntax"
 Semantics = require "./semantics"
 Generator = require "./generator"
+Beautifier= require "./beautifier"
 
 # Debugging output
 #console.debug = console.error
@@ -31,9 +32,12 @@ exports.compile = (str, options = {}) ->
         path.join(__dirname, "../../rtlib")
       ]
     b.bundle (err,buf) ->
-      options.done(err,buf.toString("utf-8"))
+      if err
+        options.done(err)
+      else
+        Beautifier(buf.toString("utf-8"), options)
   else
-    options.done(null, js)
+    Beautifier(js, options)
      
     
 

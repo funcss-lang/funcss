@@ -1,0 +1,9 @@
+@def {
+  f(x:number, y:number):number {
+    return (13*0.2*x+(y*0.2)+Math.sin(x*y/2));
+  }
+}
+body {
+  opacity: f(0.1,2);
+}
+
