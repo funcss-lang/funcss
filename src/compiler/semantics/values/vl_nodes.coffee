@@ -50,12 +50,29 @@ class VL.String extends VL.Constant
   ssjs: ->
     JSON.stringify(JSON.stringify(@value))
 
+class VL.Dimension extends VL.Constant
+  constructor: (@value, @canonicalUnit) ->
+  jsjs: ->
+    @value.jsjs()
+  ssjs: ->
+    "#{@value.ssjs()}+#{JSON.stringify(@canonicalUnit)}"
+
 class VL.EmptyValue extends VL.Constant
   jsjs: ->
     "(void 0)"
   ssjs: ->
     JSON.stringify("")
 
+# This is a multiplication of two numbers or numeric values
+# The two arguments must have a jsjs() that return a js expression
+# that evaluates to a `Number`, and does not have unparenthesized
+# operations
+class VL.Multiply extends VL.Value
+  constructor: (@a, @b) ->
+  jsjs: ->
+    "(#{@a.jsjs()}*#{@b.jsjs()})"
+  ssjs: ->
+    "(\"\"+#{@a.jsjs()}*#{@b.jsjs()})"
 
 class VL.Color extends VL.Value
   constructor: ({@r,@g,@b,@a})->

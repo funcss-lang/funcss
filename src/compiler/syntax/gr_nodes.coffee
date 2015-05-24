@@ -54,6 +54,8 @@ class GR.Stream
 
   noMatchNext: (expected) ->
     throw new GR.NoMatch(expected, @next(), @, @position)
+  noMatchCurrent: (expected) ->
+    throw new GR.NoMatch(expected, @current, @, @position-1)
 
   toStringUntil: (position) ->
     (t for t in @items.slice(0,position)).join("")
@@ -79,7 +81,7 @@ class GR.NoMatch extends Error
     if @.position is f.position
       new GR.NoMatch(@.expected + " or " + f.expected, @.found, @.stream, @.position)
     else
-      throw (if @.position < f.position then @ else f)
+      throw (if @.position > f.position then @ else f)
       #new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
   stackTrace: ->
     before = @stream.toStringUntil(@position)
@@ -101,7 +103,7 @@ Snd = (x,y) -> y
 
 
 # base class for all types
-class GR.Type
+class GR.Grammar
   constructor: (@semantic = @semantic) ->
 
   # This is the main entry point for parsing for each subclass. It prepares the input if needed
@@ -123,7 +125,7 @@ class GR.Type
 
 
 # a type which matches a single token of a single class, with optional property restrictions
-class GR.TokenTypeTokenType extends GR.Type
+class GR.TokenTypeGrammar extends GR.Grammar
   props: {}
   consume: (s) ->
     next = s.next()
@@ -138,7 +140,7 @@ class GR.TokenTypeTokenType extends GR.Type
   semantic: (token) ->
 
 # helper function to create a type for a token for a specific ident 
-class GR.Keyword extends GR.TokenTypeTokenType
+class GR.Keyword extends GR.TokenTypeGrammar
   tokenClass: SS.IdentToken
   constructor: (@value, @semantic = @semantic) ->
     @expected = "'#{@value}'"
@@ -147,20 +149,20 @@ class GR.Keyword extends GR.TokenTypeTokenType
     token.value
   toString: -> @value
     
-class GR.Ident extends GR.TokenTypeTokenType
+class GR.Ident extends GR.TokenTypeGrammar
   expected: "identifier"
   tokenClass: SS.IdentToken
   semantic: (token) ->
     token.value
 
 
-class GR.Percentage extends GR.TokenTypeTokenType
+class GR.Percentage extends GR.TokenTypeGrammar
   expected: "percentage"
   tokenClass: SS.PercentageToken
   semantic: (token) ->
     token.value / 100
 
-class GR.Number extends GR.TokenTypeTokenType
+class GR.Number extends GR.TokenTypeGrammar
   expected: "number"
   tokenClass: SS.NumberToken
   semantic: (token) ->
@@ -170,19 +172,29 @@ class GR.Integer extends GR.Number
   expected: "integer"
   props: {type: "integer"}
 
-class GR.String extends GR.TokenTypeTokenType
+class GR.String extends GR.TokenTypeGrammar
   expected: "string"
   tokenClass: SS.StringToken
   semantic: (token) ->
     token.value
 
-class GR.Hash extends GR.TokenTypeTokenType
+class GR.Hash extends GR.TokenTypeGrammar
   expected: "#"
   tokenClass: SS.HashToken
   semantic: (token) ->
     token.value
 
-class GR.DelimLike extends GR.TokenTypeTokenType
+class GR.Dimension extends GR.TokenTypeGrammar
+  constructor: (@metricName, @semantic = @semantic) ->
+    @expected = @metricName
+  tokenClass: SS.DimensionToken
+  consume: (s) ->
+    # We need to save a reference to the stream so that the semantic function can issue a noMatch
+    @stream = s
+    # otherwise everything the same
+    super(s)
+
+class GR.DelimLike extends GR.TokenTypeGrammar
   semantic: -> "#{@token}"
   constructor: (@token, @semantic = @semantic) ->
     @tokenClass = @token.constructor
@@ -199,7 +211,7 @@ class GR.DelimLike extends GR.TokenTypeTokenType
 
 
 
-class GR.Comma extends GR.TokenTypeTokenType
+class GR.Comma extends GR.TokenTypeGrammar
   expected: "','"
   tokenClass: SS.CommaToken
   toString: -> ","
@@ -207,7 +219,7 @@ class GR.Comma extends GR.TokenTypeTokenType
 #### Parser combinators
 #
 # semantic = (a) -> a ? default
-class GR.Optional extends GR.Type
+class GR.Optional extends GR.Grammar
   constructor: (@a, @semantic = @semantic) ->
 
   # This is reimplemented so that a more meaningful error message can be thrown.
@@ -238,7 +250,7 @@ class GR.Optional extends GR.Type
     "[#{@a}]?"
 
 # semantic = (a,b) -> [a,b]
-class GR.Juxtaposition extends GR.Type
+class GR.Juxtaposition extends GR.Grammar
   constructor: (@a, @b, @semantic = @semantic) ->
   consume: (s) ->
     x = @a.consume(s)
@@ -249,7 +261,7 @@ class GR.Juxtaposition extends GR.Type
     "[#{@a}] [#{@b}]"
     
 # semantic = (a,b) -> [a,b]
-class GR.CloselyJuxtaposed extends GR.Type
+class GR.CloselyJuxtaposed extends GR.Grammar
   constructor: (@a, @b, @semantic = @semantic) ->
     assert.function {@semantic}
   consume: (s) ->
@@ -260,7 +272,7 @@ class GR.CloselyJuxtaposed extends GR.Type
     "[#{@a}]~[#{@b}]"
 
 # semantic = (a) -> a
-class GR.ExclusiveOr extends GR.Type
+class GR.ExclusiveOr extends GR.Grammar
   constructor: (@a, @b, @semantic = @semantic) ->
   consume: (s) ->
     s.backtrack
@@ -276,7 +288,7 @@ class GR.ExclusiveOr extends GR.Type
   toString: ->
     "[#{@a}]|[#{@b}]"
 
-class GR.And extends GR.Type
+class GR.And extends GR.Grammar
   constructor: (@a, @b, @semantic = @semantic) ->
   consume: (s) ->
     #new Or(new GR.Juxtaposition(@a,@b,@semantic),
@@ -299,7 +311,7 @@ class GR.And extends GR.Type
   toString: ->
     "[#{@a}]&&[#{@b}]"
 
-class GR.InclusiveOr extends GR.Type
+class GR.InclusiveOr extends GR.Grammar
   constructor: (@a, @b, @semantic = @semantic) ->
   consume: (s) ->
     new GR.ExclusiveOr(new GR.Juxtaposition(@a,new GR.Optional(@b),@semantic),
@@ -325,7 +337,7 @@ max = (m, a, s) ->
       # no more available
       []
 
-class GR.Range extends GR.Type
+class GR.Range extends GR.Grammar
   semantic: Id
   constructor: (@n,@m,@a,@semantic=@semantic) ->
   consume: (s) ->
@@ -356,7 +368,7 @@ class GR.OneOrMore extends GR.Range
   toString: ->
     "[#{@a}]+"
 
-class GR.DelimitedBy extends GR.Type
+class GR.DelimitedBy extends GR.Grammar
   semantic: Id
   constructor: (@delim, @a, @semantic = @semantic) ->
   consume: (s) ->
@@ -385,7 +397,7 @@ class GR.DelimitedByComma extends GR.DelimitedBy
 # This class does not affect the parsing, it only keeps track of a marking
 # of the annotations directly (without another GR.Annotation in between) below
 # this node.
-class GR.AnnotationRoot extends GR.Type
+class GR.AnnotationRoot extends GR.Grammar
   semantic: Id
   hasAnnotations: false
   constructor: (@a, @semantic = @semantic) ->
@@ -447,7 +459,7 @@ class GR.Annotation extends GR.AnnotationRoot
 
 
 # block types - these simply match a block, with the interior matching the given type
-class GR.SimpleBlock extends GR.Type
+class GR.SimpleBlock extends GR.Grammar
   semantic: (x)->x
   constructor: (@tokenClass, @a, @semantic = @semantic) ->
     @expected = "'#{new @tokenClass}'"
@@ -463,7 +475,7 @@ class GR.SimpleBlock extends GR.Type
     "#{new @tokenClass} #{@a} #{new((new @tokenClass).mirror())}"
 
 # A special type that refers to another type.
-class GR.TypeReference extends GR.Type
+class GR.TypeReference extends GR.Grammar
   semantic: Id
   constructor: (@name, @quoted = no, @semantic = @semantic) ->
     @expected = @name
@@ -476,7 +488,7 @@ class GR.TypeReference extends GR.Type
     "<#{if @quoted then JSON.stringify(@name) else @name}>"
 
 
-class GR.FunctionalNotation extends GR.Type
+class GR.FunctionalNotation extends GR.Grammar
   semantic: Id
   constructor: (@name, @a, @semantic=@semantic) ->
     @expected = "'#{@name}('"
@@ -491,7 +503,7 @@ class GR.FunctionalNotation extends GR.Type
   toString: ->
     "#{@name}(#{@a})"
 
-class GR.AnyFunctionalNotation extends GR.Type
+class GR.AnyFunctionalNotation extends GR.Grammar
   expected: "function"
   semantic: (name, x) -> throw Error "No semantic function for GR.AnyFunctionalNotation"
   constructor: (@a, @semantic = @semantic) ->
@@ -504,7 +516,7 @@ class GR.AnyFunctionalNotation extends GR.Type
   toString: ->
     "<-funcss-any-functional-notation>"
 
-class GR.RawTokens extends GR.Type
+class GR.RawTokens extends GR.Grammar
   semantic: Id
   constructor: (@semantic = @semantic)->
   consume: (s) ->
@@ -519,13 +531,13 @@ class GR.RawTokens extends GR.Type
     "<-funcss-raw-tokens>"
 
 # This does not touch the input stream, just calls the semantic function
-class GR.Empty extends GR.Type
+class GR.Empty extends GR.Grammar
   semantic: ->
   consume: (s) -> @semantic()
   toString: -> ""
 
 # This is a pass-through grammar, it can be used to add an additional semantic function.
-class GR.Just extends GR.Type
+class GR.Just extends GR.Grammar
   semantic: Id
   constructor: (@a, @semantic = @semantic) ->
   consume: (s) -> @semantic @a.consume(s)

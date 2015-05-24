@@ -1,8 +1,12 @@
 
 GR = require "../../syntax/gr_nodes"
 VL = require "./vl_nodes"
+FS = require "../fs_nodes"
+Dimensions =  require "./dimensions"
+Values = exports
 
-exports.primitiveTypes =
+
+Values.primitiveTypes =
   ident:      new GR.Ident((x)->new VL.Keyword(x.value))
   number:     new GR.Number((x)->new VL.Number(x.value))
   integer:    new GR.Integer((x)->new VL.Number(x.value))
@@ -28,6 +32,13 @@ exports.primitiveTypes =
       throw new ER.InvalidColor "#"+v
   )
 
+  length:      Dimensions.metrics.length.grammar()
+  time:        Dimensions.metrics.time.grammar()
+  angle:       Dimensions.metrics.angle.grammar()
+  frequency:   Dimensions.metrics.frequency.grammar()
+  resolution:  Dimensions.metrics.resolution.grammar()
+
+
 # decodejs(x) functions
 #
 # This returns a JS code which, when evaled, returns the CSS representation of the value
@@ -40,9 +51,6 @@ exports.primitiveTypes.string.decodejs = (x) -> "JSON.stringify(#{x})" # TODO ad
 exports.primitiveTypes.color.decodejs = (x) ->
   "(function(){var c=#{x}; return 'rgb('+c.r+','+c.g+','+c.b+')'})()"
 
-exports.dimensions =
-  length:
-    px: "TODO"
 
 
 

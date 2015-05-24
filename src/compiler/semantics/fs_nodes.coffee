@@ -45,15 +45,13 @@ class FS.FunctionalStylesheet
       'background': vds("<ident>")
       'opacity': vds("<number>")
       'color': vds("<color>")
+      'margin-left': vds("<length>")
     }
     @_typeStack = [
       Values.primitiveTypes,
       {}
     ]
-    @_dimensionStack = [
-      Values.dimensions,
-      {}
-    ]
+    
 
     @consume_stylesheet(ss) if ss?
 
@@ -93,15 +91,13 @@ class FS.FunctionalStylesheet
     
 
   pushScope: () ->
-    console.debug "pushed stack" if console.debug
+    console.debug? "pushed stack"
     @_typeStack.push {}
-    @_dimensionStack.push {}
     return
 
   popScope: () ->
-    console.debug "popped stack" if console.debug
+    console.debug? "popped stack"
     @_typeStack.pop {}
-    @_dimensionStack.pop {}
     return
 
   consume_stylesheet: (ss) ->
@@ -140,8 +136,7 @@ class FS.FunctionalStylesheet
 
 
 
-
-
+    
 class FS.SimpleRule
   constructor: (opts) ->
     {@mediaQuery, @selector, @name, @value, @important} = opts

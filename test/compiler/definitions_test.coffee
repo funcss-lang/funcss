@@ -16,7 +16,7 @@ check_type = (str, args...) ->
   t
 
 describe "@def", ->
-  it "can make a type", ->
-    t = check_type "x() : number = 4", GR.Type
+  it "can make a grammar", ->
+    t = check_type "x() : number = 4", GR.Grammar
 
 

@@ -52,8 +52,8 @@
     var x = 0;
   }*/
 
-  linear(x:number, y0:number x0:number, y1:number x1:number):number { return y0 + x*(y1-y0)/(x1-x0); }
-  linear(x:number, y0:length x0:number, y1:length x1:number):length { return y0 + x*(y1-y0)/(x1-x0); }
+  /*linear(x:number, y0:number x0:number, y1:number x1:number):number { return y0 + x*(y1-y0)/(x1-x0); }*/
+  /*linear(x:number, y0:length x0:number, y1:length x1:number):length { return y0 + x*(y1-y0)/(x1-x0); }*/
 
   /*best()*/
 
