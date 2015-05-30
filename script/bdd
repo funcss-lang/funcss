@@ -15,7 +15,7 @@ basename = bdd.find(process.argv[2]).replace(/\.fcss$/, "")
 
 switch process.argv[3]
   when "try"
-    fcss = fs.readFileSync("#{basename}.fcss", encoding: 'utf-8')
+    fcss = fs.readFileSync("#{basename}.fcss").toString("utf-8")
     try
       fs.unlinkSync("#{basename}.js")
     catch e
@@ -30,10 +30,10 @@ switch process.argv[3]
     FunCSS.compile fcss,
       includeReactiveVar: false
       includeTracker: false
-      browserify: false
+      browserify: !!fcss.match(/require/)
       done: (err, js) ->
         if err
-          fs.writeFile("#{basename}.err", err.stack, encoding: 'utf-8')
+          fs.writeFile("#{basename}.err", err.stack ? err.toString(), encoding: 'utf-8')
         else
           fs.writeFile("#{basename}.js", js, encoding: 'utf-8')
 

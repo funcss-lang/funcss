@@ -1,0 +1,6 @@
+@import "vanilla-1.0.0";
+/* uses requires */
+
+body::before {
+  content: string(number(page-mouse-x() px)) "," string(number(page-mouse-y() px));
+}

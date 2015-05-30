@@ -1,0 +1,3 @@
+angle expected but 'linear(' found
+linear(seconds(1s), 0 0, 1turn 60s))
+--^

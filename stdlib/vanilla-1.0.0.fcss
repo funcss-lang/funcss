@@ -1,13 +1,13 @@
 
 @def {
-  E:number { return Math.E(x) }
-  LN10:number { return Math.LN10 }
-  LN2:number { return Math.LN2 }
-  LOG2E:number { return Math.LOG2E }
-  LOG10E:number { return Math.LOG10E }
-  PI:number { return Math.PI }
-  SQRT1_2:number { return Math.SQRT1_2 }
-  SQRT2:number { return Math.SQRT2 }
+  $e:number { return Math.E }
+  $ln10:number { return Math.LN10 }
+  $ln2:number { return Math.LN2 }
+  $log2e:number { return Math.LOG2E }
+  $log10e:number { return Math.LOG10E }
+  $pi:number { return Math.PI }
+  $sqrt1-2:number { return Math.SQRT1_2 }
+  $sqrt2:number { return Math.SQRT2 }
   random():number { return Math.random() }
   abs(x:number):number { return Math.abs(x) }
   acos(x:number):number { return Math.acos(x) }
@@ -52,18 +52,62 @@
     var x = 0;
   }*/
 
-  /*linear(x:number, y0:number x0:number, y1:number x1:number):number { return y0 + x*(y1-y0)/(x1-x0); }*/
-  /*linear(x:number, y0:length x0:number, y1:length x1:number):length { return y0 + x*(y1-y0)/(x1-x0); }*/
+  linear(x:number, y0:number x0:number, y1:number x1:number):number { return y0 + x*(y1-y0)/(x1-x0); }
+  linear(x:length, y0:number x0:length, y1:number x1:length):number { return y0 + x*(y1-y0)/(x1-x0); }
+  linear(x:time, y0:number x0:time, y1:number x1:time):number { return y0 + x*(y1-y0)/(x1-x0); }
+
+  linear(x:number, y0:length x0:number, y1:length x1:number):length { return y0 + x*(y1-y0)/(x1-x0); }
+  linear(x:length, y0:length x0:length, y1:length x1:length):length { return y0 + x*(y1-y0)/(x1-x0); }
+  linear(x:time, y0:length x0:time, y1:length x1:time):length { return y0 + x*(y1-y0)/(x1-x0); }
+
+  linear(x:number, y0:color x0:number, y1:color x1:number):color { 
+    return {
+      r: y0.r + x*(y1.r-y0.r)/(x1-x0),
+      g: y0.g + x*(y1.g-y0.g)/(x1-x0),
+      b: y0.b + x*(y1.b-y0.b)/(x1-x0)
+    }
+  };
+  linear(x:length, y0:color x0:length, y1:color x1:length):color { 
+    return {
+      r: y0.r + x*(y1.r-y0.r)/(x1-x0),
+      g: y0.g + x*(y1.g-y0.g)/(x1-x0),
+      b: y0.b + x*(y1.b-y0.b)/(x1-x0)
+    }
+  };
+  linear(x:time, y0:color x0:time, y1:color x1:time):color { 
+    return {
+      r: y0.r + x*(y1.r-y0.r)/(x1-x0),
+      g: y0.g + x*(y1.g-y0.g)/(x1-x0),
+      b: y0.b + x*(y1.b-y0.b)/(x1-x0)
+    }
+  };
+
+  linear(x:number, y0:time x0:number, y1:time x1:number):time { return y0 + x*(y1-y0)/(x1-x0); }
+  linear(x:length, y0:time x0:length, y1:time x1:length):time { return y0 + x*(y1-y0)/(x1-x0); }
+
+  page-mouse-x():length {
+    return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseX();
+  }
+  page-mouse-y():length {
+    return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseY();
+  }
+  rgb(r:number, g:number, b:number):color { return {r:r,g:g,b:b}; }
+  
 
   /*best()*/
 
   red:color = #ff0000;
   yellow:color = #ffff00;
 
+  
   /**rgb(r:color, g:color: b:color):color = --css-rgb(r,g,b);**/
 
   /**@prop background-color: <color>;**/
   /*@prop opacity: <number>;*/
+
+  string(x:number):string { return x; }
+  number(x:length px):number { return x; }
+
 
 }
 

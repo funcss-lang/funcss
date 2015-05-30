@@ -36,12 +36,25 @@ class SL.TypeSelector extends SL.SimpleSelector
   toString: ->
     "#{@nodeName}"
 
+class SL.ClassSelector extends SL.SimpleSelector
+  constructor: (@className) ->
+  toString: ->
+    ".#{@className}"
+
 class SL.DescendantCombinator extends SL.Combinator
   constructor: (@a, @b) ->
   toString: ->
     "#{@a} #{@b}"
 
+class SL.ChildCombinator extends SL.Combinator
+  constructor: (@a, @b) ->
+  toString: ->
+    "#{@a}>#{@b}"
 
+class SL.Pseudoelement extends SL.Selector
+  constructor: (@name, @a) ->
+  toString: ->
+    "#{@a}::#{@name}"
 
 
 

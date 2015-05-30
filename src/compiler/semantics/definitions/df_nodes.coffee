@@ -33,7 +33,7 @@ class DF.VariableName extends DF.Definable
         semantic
       )
     else
-      new GR.Keyword(@value.substr(1), semantic)
+      new GR.Keyword(@value, semantic)
   toString: ->
     @value
 

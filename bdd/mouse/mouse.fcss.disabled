@@ -1,5 +1,0 @@
-@import "vanilla-1.2";
-
-body {
-  background: linear(page-mouse-x(), #ff0000 0, #ffffff 130px);
-}

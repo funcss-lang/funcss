@@ -1,4 +1,8 @@
 @def {
-  $x = linear(0.4, 5.9 0, 3.2 1);
+  $x:length = linear(0.4, 5.9 0, 3.2 1);
+}
+
+body {
+  margin-left: $x;
 }
 

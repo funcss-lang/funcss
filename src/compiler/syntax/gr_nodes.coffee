@@ -81,6 +81,7 @@ class GR.NoMatch extends Error
     if @.position is f.position
       new GR.NoMatch(@.expected + " or " + f.expected, @.found, @.stream, @.position)
     else
+      # FIXME they might not be in the same stream...
       throw (if @.position > f.position then @ else f)
       #new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
   stackTrace: ->
@@ -175,6 +176,12 @@ class GR.Integer extends GR.Number
 class GR.String extends GR.TokenTypeGrammar
   expected: "string"
   tokenClass: SS.StringToken
+  semantic: (token) ->
+    token.value
+
+class GR.Url extends GR.TokenTypeGrammar
+  expected: "url"
+  tokenClass: SS.UrlToken
   semantic: (token) ->
     token.value
 
@@ -283,7 +290,19 @@ class GR.ExclusiveOr extends GR.Grammar
           try: =>
             @semantic(@b.consume(s))
           fallback: (f)=>
-            throw e.merge(f)
+            # 
+            if e.stream is s and f.stream is s
+              throw e.merge(f)
+            # If one of the branches went into a sub-stream, it means some level of success,
+            # so we report the error from that branch.
+            else if e.stream is s
+              throw f
+            else if f.stream is s
+              throw e
+            else
+              # If both branches made it into the same sub-stream, it means that we can merge them
+              # FIXME we don't know if they are in the same branch
+              throw e.merge(f)
   semantic: Id
   toString: ->
     "[#{@a}]|[#{@b}]"
@@ -483,7 +502,14 @@ class GR.TypeReference extends GR.Grammar
     if ! @fs
       throw new Error "Internal error in FunCSS: fs is not set up correctly"
     type = if @quoted then @fs.getPropertyType(@name) else @fs.getType(@name)
-    type.consume(s)
+    pos = s.position
+    try
+      type.consume(s)
+    catch e
+      if e instanceof GR.NoMatch and e.stream is s and e.position is pos
+        throw new GR.NoMatch(@expected, e.found, s, pos)
+      else
+        throw e
   toString: ->
     "<#{if @quoted then JSON.stringify(@name) else @name}>"
 

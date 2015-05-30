@@ -1,0 +1,9 @@
+.clock > .second-hand {
+  transform: rotate(linear(seconds(1s), 0 0, 1turn 60s));
+}
+.clock > .minute-hand {
+  transform: rotate(linear(minutes(1s), 0 0, 1turn 3600s));
+}
+.clock > .hour-hand {
+  transform: rotate(linear(hours(1m), 1turn / 0.5day));
+}

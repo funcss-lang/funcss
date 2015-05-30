@@ -30,8 +30,6 @@ SelGrammar = require "./selectors/sel_grammar"
 
 FS = exports
 
-vds = (str) ->
-  VdsGrammar.parse(str)
 
 class FS.FunctionalStylesheet
   constructor: (ss,@options) ->
@@ -40,15 +38,75 @@ class FS.FunctionalStylesheet
       def: @definitions = new Definitions(@)
       import: @imports = new Imports(@)
     }
+    vds = (str) =>
+      VdsGrammar.parse(str).setFs(@)
     @_propertyTypes = {
-      'background-color': vds("<ident>")
-      'background': vds("<ident>")
-      'opacity': vds("<number>")
-      'color': vds("<color>")
-      'margin-left': vds("<length>")
+      'font-family': vds "[[<family-name> | <generic-family>],]* [<family-name> | <generic-family>]"
+      'font-style': vds "normal | italic | oblique"
+      'font-variant': vds "normal | small-caps"
+      #'font-weight': vds "normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900"
+      'font-weight': vds "normal | bold | bolder | lighter"
+      'font-size': vds "<absolute-size> | <relative-size> | <length> | <percentage>"
+      'font': vds "[ <'font-style'> || <'font-variant'> || <'font-weight'> ]? <'font-size'> [ / <'line-height'> ]? <'font-family'>"
+      'color': vds "<color>"
+      'background-image': vds "<url> | none"
+      'background-repeat': vds "repeat | repeat-x | repeat-y | no-repeat"
+      'background-attachment': vds "scroll | fixed"
+      'background-color': vds "<color> | transparent"
+      'background-position': vds "[<percentage> | <length>]{1,2} | [top | center | bottom] || [left | center | right]"
+      'background': vds "<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-attachment'> || <'background-position'>"
+      'word-spacing': vds "normal | <length> "
+      'letter-spacing': vds "normal | <length> "
+      'text-decoration': vds "none | [ underline || overline || line-through || blink ]"
+      'vertical-align': vds "baseline | sub | super | top | text-top | middle | bottom | text-bottom | <percentage> "
+      'text-transform': vds "capitalize | uppercase | lowercase | none"
+      'text-align': vds "left | right | center | justify"
+      'text-indent': vds "<length> | <percentage>"
+      'line-height': vds "normal | <number> | <length> | <percentage>"
+      'margin-top': vds "<length> | <percentage> | auto"
+      'margin-right': vds "<length> | <percentage> | auto"
+      'margin-bottom': vds "<length> | <percentage> | auto"
+      'margin-left': vds "<length> | <percentage> | auto"
+      'margin': vds "[ <length> | <percentage> | auto ]{1,4} "
+      'padding-top': vds "<length> | <percentage>"
+      'padding-right': vds "<length> | <percentage>"
+      'padding-bottom': vds "<length> | <percentage>"
+      'padding-left': vds "<length> | <percentage>"
+      'padding': vds "[ <length> | <percentage> ]{1,4}"
+      'border-top-width': vds "thin | medium | thick | <length>"
+      'border-right-width': vds "thin | medium | thick | <length>"
+      'border-bottom-width': vds "thin | medium | thick | <length>"
+      'border-left-width': vds "thin | medium | thick | <length>"
+      'border-width': vds "[thin | medium | thick | <length>]{1,4}"
+      'border-color': vds "<color>{1,4}"
+      'border-style': vds "none | dotted | dashed | solid | double | groove | ridge | inset | outset"
+      'border-top': vds "<border-top-width> || <border-style> || <color>"
+      'border-right': vds "<border-right-width> || <border-style> || <color>"
+      'border-bottom': vds "<border-bottom-width> || <border-style> || <color>"
+      'border-left': vds "<border-left-width> || <border-style> || <color>"
+      'border': vds "<border-width> || <border-style> || <color>"
+      'width': vds "<length> | <percentage> | auto"
+      'height': vds "<length> | auto"
+      'float': vds "left | right | none"
+      'clear': vds "none | left | right | both"
+      'display': vds "block | inline | list-item | none"
+      'white-space': vds "normal | pre | nowrap"
+      'list-style-type': vds "disc | circle | square | decimal | lower-roman | upper-roman | lower-alpha | upper-alpha | none"
+      'list-style-image': vds "<url> | none"
+      'list-style-position': vds "inside | outside"
+      'list-style': vds "[disc | circle | square | decimal | lower-roman | upper-roman | lower-alpha | upper-alpha | none] || [inside | outside] || [<url> | none]"
+      'opacity': vds "<number>"
+      'content': vds "none | [<string>]+" # TODO mockup
+      'transform': vds "none | rotate(<angle>)" # TODO mockup
     }
     @_typeStack = [
       Values.primitiveTypes,
+      {
+        'family-name': vds "<string>"
+        'generic-family': vds "serif|sans-serif|cursive|fantasy|monospace"
+        'absolute-size': vds "[ xx-small | x-small | small | medium | large | x-large | xx-large ]"
+        'relative-size': vds "[ larger | smaller ]"
+      },
       {}
     ]
     

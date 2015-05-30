@@ -50,6 +50,13 @@ class VL.String extends VL.Constant
   ssjs: ->
     JSON.stringify(JSON.stringify(@value))
 
+class VL.Url extends VL.Constant
+  constructor: (@value) ->
+  jsjs: ->
+    JSON.stringify(@value)
+  ssjs: ->
+    JSON.stringify("url(#{JSON.stringify(@value)})")
+
 class VL.Dimension extends VL.Constant
   constructor: (@value, @canonicalUnit) ->
   jsjs: ->
@@ -77,12 +84,12 @@ class VL.Multiply extends VL.Value
 class VL.Color extends VL.Value
   constructor: ({@r,@g,@b,@a})->
   jsjs: ->
-    "{r:#{@r.jsjs()}, g:#{@g.jsjs()}, b:#{@b.jsjs()}, a: #{@a.jsjs()}}"
+    "{r:#{@r.jsjs()}, g:#{@g.jsjs()}, b:#{@b.jsjs()}#{if @a? then ", a:"+@a.jsjs() else ""}}"
   ssjs: ->
-    if @a
-      "'rgba('+#{@r.ssjs()}+','+#{@g.ssjs()}+','+#{@b.ssjs()}+','+#{@a.ssjs()}+')'"
+    if @a?
+      "'rgba('+Math.round(#{@r.ssjs()})+','+Math.round(#{@g.ssjs()})+','+Math.round(#{@b.ssjs()})+','+Math.round(#{@a.ssjs()})+')'"
     else
-      "'rgb('+#{@r.ssjs()}+','+#{@g.ssjs()}+','+#{@b.ssjs()}+')'"
+      "'rgb('+Math.round(#{@r.ssjs()})+','+Math.round(#{@g.ssjs()})+','+Math.round(#{@b.ssjs()})+')'"
 
 
 class VL.Collection extends VL.Value
