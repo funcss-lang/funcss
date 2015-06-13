@@ -24,7 +24,9 @@ GR = exports
 
 
 class GR.Stream
-  constructor: (items, @eof) ->
+  # We use a `deltaPosition` property to give better error messages
+  # TODO use real token stream index
+  constructor: (items, @eof, @deltaPosition = 0) ->
     (@items = (t for t in items)).push new SS.EOFToken(@eof)
     @position = 0
   consume_next: ->
@@ -72,17 +74,18 @@ class GR.NoMatch extends Error
       @found = new SS.FunctionToken(@found.name)
     @name = "No match"
     @message = message ? "#{@expected} expected but '#{@found}' found"
+  toString: () ->
+    @name+  ": "+@message
+  createStack: () ->
     @stack = """
     #{@message}
     #{@stackTrace()}"""
-  toString: () ->
-    @name+  ": "+@message
   merge: (f) ->
-    if @.position is f.position
+    if @.stream.deltaPosition is f.stream.deltaPosition and @.position is f.position
       new GR.NoMatch(@.expected + " or " + f.expected, @.found, @.stream, @.position)
     else
       # FIXME they might not be in the same stream...
-      throw (if @.position > f.position then @ else f)
+      throw (if @.stream.deltaPosition+@.position > f.stream.deltaPosition+f.position then @ else f)
       #new GR.NoMatch(@.expected + " or " + f.expected, @.found + " and " + f.found, "#{@.message}, #{f.message}")
   stackTrace: ->
     before = @stream.toStringUntil(@position)
@@ -109,10 +112,10 @@ class GR.Grammar
 
   # This is the main entry point for parsing for each subclass. It prepares the input if needed
   # and then redirects to `consume`
-  parse: (input, eof="") ->
+  parse: (input, eof="", deltaPosition) ->
     assert.notInstanceOf {input}, GR.Stream
     input = Parser.parse_list_of_component_values(input) unless input instanceof SS.ComponentValueList
-    s = new GR.Stream(input, eof)
+    s = new GR.Stream(input, eof, deltaPosition)
     s.optionalWhitespace()
     result = @consume s
     s.optionalWhitespace()
@@ -191,15 +194,20 @@ class GR.Hash extends GR.TokenTypeGrammar
   semantic: (token) ->
     token.value
 
-class GR.Dimension extends GR.TokenTypeGrammar
+class GR.Dimension extends GR.Grammar
   constructor: (@metricName, @semantic = @semantic) ->
     @expected = @metricName
-  tokenClass: SS.DimensionToken
   consume: (s) ->
-    # We need to save a reference to the stream so that the semantic function can issue a noMatch
+    # We save a reference to the stream so that the semantic function can issue a noMatch
     @stream = s
-    # otherwise everything the same
-    super(s)
+    # parsing is almost the same as for TokenTypeGrammar
+    next = s.next()
+    if !next?
+      throw new Error "Internal Error in FunCSS: nothing returned from stream"
+    unless next instanceof SS.DimensionToken or (next instanceof SS.NumberToken and next.value is 0)
+      s.noMatchNext(@expected)
+    return @semantic s.consume_next()
+  semantic: (dimension_or_zero_token) ->
 
 class GR.DelimLike extends GR.TokenTypeGrammar
   semantic: -> "#{@token}"
@@ -235,11 +243,12 @@ class GR.Optional extends GR.Grammar
   # behavior would throw a NoMatch for the first item - "" expected but "hello" found, which
   # is true but not at all helpful.
   #
-  parse: (input, eof="") ->
+  parse: (input, eof="", deltaPosition = 0) ->
     # TODO these lines could be deduplicated
+    # TODO the farthest-nomatch rule makes this unnecessary?
     assert.notInstanceOf {input}, GR.Stream
     input = Parser.parse_list_of_component_values(input) unless input instanceof SS.ComponentValueList
-    s = new GR.Stream(input, eof)
+    s = new GR.Stream(input, eof, deltaPosition)
     s.optionalWhitespace()
     return @semantic(undefined) if s.next() instanceof SS.EOFToken
     result = @semantic(@a.consume(s))
@@ -290,7 +299,6 @@ class GR.ExclusiveOr extends GR.Grammar
           try: =>
             @semantic(@b.consume(s))
           fallback: (f)=>
-            # 
             if e.stream is s and f.stream is s
               throw e.merge(f)
             # If one of the branches went into a sub-stream, it means some level of success,
@@ -489,7 +497,7 @@ class GR.SimpleBlock extends GR.Grammar
     unless next.token instanceof @tokenClass
       s.noMatchNext(@expected)
     s.consume_next()
-    return @semantic @a.parse(next.value, "#{new((new @tokenClass).mirror())}")
+    return @semantic @a.parse(next.value, "#{new((new @tokenClass).mirror())}", s.deltaPosition+s.position)
   toString: ->
     "#{new @tokenClass} #{@a} #{new((new @tokenClass).mirror())}"
 
@@ -525,7 +533,7 @@ class GR.FunctionalNotation extends GR.Grammar
     unless next.name is @name
       s.noMatchNext(@expected)
     s.consume_next()
-    return @semantic @a.parse(next.value, ")")
+    return @semantic @a.parse(next.value, ")", s.deltaPosition+s.position)
   toString: ->
     "#{@name}(#{@a})"
 
@@ -538,7 +546,7 @@ class GR.AnyFunctionalNotation extends GR.Grammar
     unless next instanceof SS.Function
       s.noMatchNext(@expected)
     s.consume_next()
-    return @semantic next.name, @a.parse(next.value, ")")
+    return @semantic next.name, @a.parse(next.value, ")", s.deltaPosition+s.position)
   toString: ->
     "<-funcss-any-functional-notation>"
 

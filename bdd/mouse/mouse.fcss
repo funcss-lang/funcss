@@ -4,3 +4,7 @@
 body::before {
   content: string(number(page-mouse-x() px)) "," string(number(page-mouse-y() px));
 }
+
+body {
+  background-color: linear(page-mouse-x(), #ff0000 0, #ffff00 1000px);
+}

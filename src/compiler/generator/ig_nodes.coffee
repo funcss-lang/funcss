@@ -8,6 +8,8 @@
 # - *`toString()`*: returns the generated JavaScript code
 #
 
+assert = require "../helpers/assert"
+
 IG = exports
 IG.camel = camel = (s) ->
   return s if s.match(/^--/)
@@ -121,6 +123,7 @@ class IG.DomReady extends IG.BlockStatement
 
 class IG.SetDeclarationValue extends IG.Statement
   constructor: (@ruleIndex, @name, @value) ->
+    assert.present {@value, @name, @ruleIndex}
   toString: () -> """
     rule#{@ruleIndex}.style[#{JSON.stringify camel(@name)}] = #{@value.ssjs()};
   """

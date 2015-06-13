@@ -1,9 +1,11 @@
+@import "vanilla-1.0";
+
 .clock > .second-hand {
-  transform: rotate(linear(seconds(1s), 0 0, 1turn 60s));
+  transform: rotate(linear(seconds(), 1turn 60));
 }
 .clock > .minute-hand {
-  transform: rotate(linear(minutes(1s), 0 0, 1turn 3600s));
+  transform: rotate(linear(minutes(), 1turn 60));
 }
 .clock > .hour-hand {
-  transform: rotate(linear(hours(1m), 1turn / 0.5day));
+  transform: rotate(linear(hours(), 1turn 12));
 }

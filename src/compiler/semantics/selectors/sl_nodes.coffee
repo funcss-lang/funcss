@@ -41,6 +41,11 @@ class SL.ClassSelector extends SL.SimpleSelector
   toString: ->
     ".#{@className}"
 
+class SL.IdSelector extends SL.SimpleSelector
+  constructor: (@id) ->
+  toString: ->
+    "##{@id}"
+
 class SL.DescendantCombinator extends SL.Combinator
   constructor: (@a, @b) ->
   toString: ->

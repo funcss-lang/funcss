@@ -10,10 +10,10 @@ exports.metrics =
                 pc: new VL.Number 96/72/12
   time:       new DM.Metric "time", "ms",
                 s: new VL.Number 1000
-                #m: new VL.Number 1000*60
-                #h: new VL.Number 1000*60*60
-                #d: new VL.Number 1000*60*60*24
-                #y: new VL.Number 1000*60*60*24*365.24
+                min: new VL.Number 1000*60
+                hour: new VL.Number 1000*60*60
+                day: new VL.Number 1000*60*60*24
+                year: new VL.Number 1000*60*60*24*365.24
   angle:      new DM.Metric "angle", "rad",
                 deg: new VL.Number Math.PI/180
                 grad: new VL.Number Math.PI/200

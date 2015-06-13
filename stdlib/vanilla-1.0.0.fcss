@@ -1,97 +1,161 @@
 
 @def {
-  $e:number { return Math.E }
-  $ln10:number { return Math.LN10 }
-  $ln2:number { return Math.LN2 }
-  $log2e:number { return Math.LOG2E }
-  $log10e:number { return Math.LOG10E }
-  $pi:number { return Math.PI }
-  $sqrt1-2:number { return Math.SQRT1_2 }
-  $sqrt2:number { return Math.SQRT2 }
-  random():number { return Math.random() }
-  abs(x:number):number { return Math.abs(x) }
-  acos(x:number):number { return Math.acos(x) }
-  asin(x:number):number { return Math.asin(x) }
-  atan(x:number):number { return Math.atan(x) }
-  ceil(x:number):number { return Math.ceil(x) }
-  cos(x:number):number { return Math.cos(x) }
-  exp(x:number):number { return Math.exp(x) }
-  floor(x:number):number { return Math.floor(x) }
-  log(x:number):number { return Math.log(x) }
-  round(x:number):number { return Math.round(x) }
-  sin(x:number):number { return Math.sin(x) }
-  sqrt(x:number):number { return Math.sqrt(x) }
-  tan(x:number):number { return Math.tan(x) }
-  atan2(y:number,x:number):number { return Math.atan2(y,x) }
-  pow(x:number):number { return Math.pow(x) }
-  max(x:[<number>*]):number { return Math.max.apply(Math,x) }
-  min(x:[<number>*]):number { return Math.min.apply(Math,x) }
-  imul(x:number):number { return Math.imul(x) }
-  sign(x:number):number { return Math.sign(x) }
-  trunc(x:number):number { return Math.trunc(x) }
-  sinh(x:number):number { return Math.sinh(x) }
-  cosh(x:number):number { return Math.cosh(x) }
-  tanh(x:number):number { return Math.tanh(x) }
-  asinh(x:number):number { return Math.asinh(x) }
-  acosh(x:number):number { return Math.acosh(x) }
-  atanh(x:number):number { return Math.atanh(x) }
-  log10(x:number):number { return Math.log10(x) }
-  log2(x:number):number { return Math.log2(x) }
-  hypot(x:number):number { return Math.hypot(x) }
-  fround(x:number):number { return Math.fround(x) }
-  clz32(x:number):number { return Math.clz32(x) }
-  cbrt(x:number):number { return Math.cbrt(x) }
-  log1p(x:number):number { return Math.log1p(x) }
-  expm1(x:number):number { return Math.expm1(x) }
+  $e:number {{ return Math.E }}
+  $ln10:number {{ return Math.LN10 }}
+  $ln2:number {{ return Math.LN2 }}
+  $log2e:number {{ return Math.LOG2E }}
+  $log10e:number {{ return Math.LOG10E }}
+  $pi:number {{ return Math.PI }}
+  $sqrt1-2:number {{ return Math.SQRT1_2 }}
+  $sqrt2:number {{ return Math.SQRT2 }}
+  random():number {{ return Math.random() }}
+  abs($x:number):number {{ return Math.abs($x) }}
+  acos($x:number):number {{ return Math.acos($x) }}
+  asin($x:number):number {{ return Math.asin($x) }}
+  atan($x:number):number {{ return Math.atan($x) }}
+  roundup(x:number):integer {{ return Math.ceil(x) }}
+  cos(x:number):number {{ return Math.cos(x) }}
+  exp(x:number):number {{ return Math.exp(x) }}
+  rounddown(x:number):integer {{ return Math.floor(x) }}
+  log(x:number):number {{ return Math.log(x) }}
+  round(x:number):integer {{ return Math.round(x) }}
+  sin(x:number):number {{ return Math.sin(x) }}
+  sqrt(x:number):number {{ return Math.sqrt(x) }}
+  tan(x:number):number {{ return Math.tan(x) }}
+  atan2(y:number,x:number):number {{ return Math.atan2(y,x) }}
+  pow(x:number,e:number):number {{ return Math.pow(x,e) }}
+  max(x:[<number>*]):number {{ return Math.max.apply(Math,x) }}
+  min(x:[<number>*]):number {{ return Math.min.apply(Math,x) }}
+  /*imul(x:number):number {{ return Math.imul(x) }}*/
+  sign(x:number):integer {{ return Math.sign(x) }}
+  /*roundtozero(x:number):integer {{ return Math.trunc(x) }}*/
+  sinh(x:number):number {{ return Math.sinh(x) }}
+  cosh(x:number):number {{ return Math.cosh(x) }}
+  tanh(x:number):number {{ return Math.tanh(x) }}
+  asinh(x:number):number {{ return Math.asinh(x) }}
+  acosh(x:number):number {{ return Math.acosh(x) }}
+  atanh(x:number):number {{ return Math.atanh(x) }}
+  log10(x:number):number {{ return Math.log10(x) }}
+  log2(x:number):number {{ return Math.log2(x) }}
+  /*hypot(x:number):number {{ return Math.hypot(x) }}*/
+  /*fround(x:number):number {{ return Math.fround(x) }}*/
+  /*clz32(x:number):number {{ return Math.clz32(x) }}*/
+  /*cbrt(x:number):number {{ return Math.cbrt(x) }}*/
+  /*log1p(x:number):number {{ return Math.log1p(x) }}*/
+  /*expm1(x:number):number {{ return Math.expm1(x) }}*/
 
   /*1pt:length = 0.02px;*/
   
-  /*if(a:number '=' b:number, )*/
-
-  /*linear(x:number, p[y:<number> x:<number>]#):number {
-    var x = 0;
+  /*@error threshold(<number>, <number> <number>, <number> <number>) {
+    message: "For `threshold()`, you need to specify only one x value at the beginning.";
+    position: 6, 13;
   }*/
 
-  linear(x:number, y0:number x0:number, y1:number x1:number):number { return y0 + x*(y1-y0)/(x1-x0); }
-  linear(x:length, y0:number x0:length, y1:number x1:length):number { return y0 + x*(y1-y0)/(x1-x0); }
-  linear(x:time, y0:number x0:time, y1:number x1:time):number { return y0 + x*(y1-y0)/(x1-x0); }
+  threshold($x:number, $y0: number, $y1: number $x1: number):number {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:length, $y0: number, $y1: length $x1: number):number {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:number, $y0: length, $y1: number $x1: length):length {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:length, $y0: length, $y1: length $x1: length):length {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:number, $y0: color , $y1: color  $x1: number):color  {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:length, $y0: color , $y1: color  $x1: length):color  {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:number, $y0: string, $y1: string $x1: number):string {{ return $x < $x1 ? $y0 : $y1 }}
+  threshold($x:length, $y0: string, $y1: string $x1: length):string {{ return $x < $x1 ? $y0 : $y1 }}
 
-  linear(x:number, y0:length x0:number, y1:length x1:number):length { return y0 + x*(y1-y0)/(x1-x0); }
-  linear(x:length, y0:length x0:length, y1:length x1:length):length { return y0 + x*(y1-y0)/(x1-x0); }
-  linear(x:time, y0:length x0:time, y1:length x1:time):length { return y0 + x*(y1-y0)/(x1-x0); }
+  threshold($x:number, $y0: color, $a:[[yi:color xi:number]#] ):color  {{ 
+    var s = 0, e = $a.length;
+    for (var p = Math.floor(e/2); p!=s; ) {
+      if ($x < $a[p].xi) {
+        e = p;
+      } else {
+        s = p;
+      }
+      p = s+Math.floor((e-s)/2);
+    }
+    return $x < $a[p].xi ? p == 0 ? $y0 : $a[p-1].yi : $a[p].yi;
+  }}
 
-  linear(x:number, y0:color x0:number, y1:color x1:number):color { 
+  roundup(x:number, modulus:number):number {{ return Math.ceil(x/modulus)*modulus }}
+  roundup(x:length, modulus:length):length {{ return Math.ceil(x/modulus)*modulus }}
+  roundup(x:angle,  modulus:angle):angle {{ return Math.ceil(x/modulus)*modulus }}
+  round(x:number, modulus:number):number {{ return Math.round(x/modulus)*modulus }}
+  round(x:length, modulus:length):length {{ return Math.round(x/modulus)*modulus }}
+  round(x:angle,  modulus:angle):angle {{ return Math.round(x/modulus)*modulus }}
+  rounddown(x:number, modulus:number):number {{ return Math.floor(x/modulus)*modulus }}
+  rounddown(x:length, modulus:length):length {{ return Math.floor(x/modulus)*modulus }}
+  rounddown(x:angle,  modulus:angle):angle {{ return Math.floor(x/modulus)*modulus }}
+
+  wrap($x:number, $from:number $to:number):number {{ var $l=$to-$from; return $from+(($x-$from)%$l+$l)%$l; }}
+
+
+  linear(x:number, y0:number x0:number, y1:number x1:number):number {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:number x0:length, y1:number x1:length):number {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:time, y0:number x0:time, y1:number x1:time):number {{ return y0 + x*(y1-y0)/(x1-x0); }}
+
+  linear(x:number, y0:angle x0:number, y1:angle x1:number):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:angle x0:length, y1:angle x1:length):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:time, y0:angle x0:time, y1:angle x1:time):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:angle, y0:angle x0:angle, y1:angle x1:angle):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
+
+  linear(x:number, y1:angle x1:number):angle {{ return x*y1/x1; }}
+  linear(x:number, y1:length x1:number):length {{ return x*y1/x1; }}
+  linear(x:length, y1:number x1:length):number {{ return x*y1/x1; }}
+
+  linear(x:number, y0:length x0:number, y1:length x1:number):length {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:length x0:length, y1:length x1:length):length {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:time, y0:length x0:time, y1:length x1:time):length {{ return y0 + x*(y1-y0)/(x1-x0); }}
+
+  linear(x:number, y0:color x0:number, y1:color x1:number):color {{
     return {
       r: y0.r + x*(y1.r-y0.r)/(x1-x0),
       g: y0.g + x*(y1.g-y0.g)/(x1-x0),
       b: y0.b + x*(y1.b-y0.b)/(x1-x0)
     }
-  };
-  linear(x:length, y0:color x0:length, y1:color x1:length):color { 
+  }}
+  linear(x:length, y0:color x0:length, y1:color x1:length):color {{
     return {
       r: y0.r + x*(y1.r-y0.r)/(x1-x0),
       g: y0.g + x*(y1.g-y0.g)/(x1-x0),
       b: y0.b + x*(y1.b-y0.b)/(x1-x0)
     }
-  };
-  linear(x:time, y0:color x0:time, y1:color x1:time):color { 
+  }}
+  linear(x:time, y0:color x0:time, y1:color x1:time):color {{
     return {
       r: y0.r + x*(y1.r-y0.r)/(x1-x0),
       g: y0.g + x*(y1.g-y0.g)/(x1-x0),
       b: y0.b + x*(y1.b-y0.b)/(x1-x0)
     }
-  };
+  }}
 
-  linear(x:number, y0:time x0:number, y1:time x1:number):time { return y0 + x*(y1-y0)/(x1-x0); }
-  linear(x:length, y0:time x0:length, y1:time x1:length):time { return y0 + x*(y1-y0)/(x1-x0); }
+  linear(x:number, y0:time x0:number, y1:time x1:number):time {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:time x0:length, y1:time x1:length):time {{ return y0 + x*(y1-y0)/(x1-x0); }}
 
-  page-mouse-x():length {
-    return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseX();
-  }
-  page-mouse-y():length {
-    return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseY();
-  }
-  rgb(r:number, g:number, b:number):color { return {r:r,g:g,b:b}; }
+  page-mouse-x():length {{
+    return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseX()
+  }}
+  page-mouse-y():length {{
+    return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseY()
+  }}
+  seconds():time {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getSeconds()
+  }}
+  minutes():time {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getMinutes()
+  }}
+  hours():time {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getHours()
+  }}
+  seconds():number {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getSeconds()
+  }}
+  minutes():number {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getMinutes()
+  }}
+  hours():number {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getHours()
+  }}
+  time-since-load():time {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).getTimeSinceLoad()
+  }}
+  rgb(r:number, g:number, b:number):color {{ return {r:r,g:g,b:b}; }}
   
 
   /*best()*/
@@ -105,8 +169,8 @@
   /**@prop background-color: <color>;**/
   /*@prop opacity: <number>;*/
 
-  string(x:number):string { return x; }
-  number(x:length px):number { return x; }
+  string(x:number):string {{ return x; }}
+  number(x:length px):number {{ return x; }}
 
 
 }

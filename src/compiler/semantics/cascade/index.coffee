@@ -12,6 +12,9 @@ module.exports = class Cascade
     type = @fs.getPropertyType(decl.name)
     type.setFs(@fs)
 
+    value = type.parse(decl.value)
+    value ? throw new Error("Internal error in FunCSS: type #{type} did not return a value")
+
     @simpleRules.push new FS.SimpleRule
       mediaQuery: null
       selector: sel

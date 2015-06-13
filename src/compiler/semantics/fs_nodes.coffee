@@ -80,11 +80,11 @@ class FS.FunctionalStylesheet
       'border-width': vds "[thin | medium | thick | <length>]{1,4}"
       'border-color': vds "<color>{1,4}"
       'border-style': vds "none | dotted | dashed | solid | double | groove | ridge | inset | outset"
-      'border-top': vds "<border-top-width> || <border-style> || <color>"
-      'border-right': vds "<border-right-width> || <border-style> || <color>"
-      'border-bottom': vds "<border-bottom-width> || <border-style> || <color>"
-      'border-left': vds "<border-left-width> || <border-style> || <color>"
-      'border': vds "<border-width> || <border-style> || <color>"
+      'border-top': vds "<'border-top-width'> || <'border-style'> || <color>"
+      'border-right': vds "<'border-right-width'> || <'border-style'> || <color>"
+      'border-bottom': vds "<'border-bottom-width'> || <'border-style'> || <color>"
+      'border-left': vds "<'border-left-width'> || <'border-style'> || <color>"
+      'border': vds "<'border-width'> || <'border-style'> || <color>"
       'width': vds "<length> | <percentage> | auto"
       'height': vds "<length> | auto"
       'float': vds "left | right | none"
@@ -98,6 +98,8 @@ class FS.FunctionalStylesheet
       'opacity': vds "<number>"
       'content': vds "none | [<string>]+" # TODO mockup
       'transform': vds "none | rotate(<angle>)" # TODO mockup
+      'top': vds "<length>"  #TODO mockup
+      'left': vds "<length>"  #TODO mockup
     }
     @_typeStack = [
       Values.primitiveTypes,
@@ -198,6 +200,7 @@ class FS.FunctionalStylesheet
 class FS.SimpleRule
   constructor: (opts) ->
     {@mediaQuery, @selector, @name, @value, @important} = opts
+    assert.present {@selector, @name, @value, @important}
   isConstantMediaQuery: -> false
   isConstantValue: -> false
   isConstantSelector: -> false

@@ -45,6 +45,7 @@ Values.primitiveTypes =
 # Takes a JS code which, when evaled, returns a JS value
 # Returns a JS code which, when evaled, returns the CSS representation of the value
 
+
 exports.primitiveTypes.ident.decodejs = (x) -> "''+#{x}"
 exports.primitiveTypes.number.decodejs = (x) -> "+#{x}"
 exports.primitiveTypes.integer.decodejs = (x) -> "Math.round(#{x})"

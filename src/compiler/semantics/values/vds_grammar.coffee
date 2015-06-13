@@ -223,11 +223,12 @@ And = new GR.DelimitedBy DblAmpersand, Juxtaposition, (l)-> pairsOf(
   cons: Cons
 )
 
-# We pass a parameter to the TT.InclusiveOr constructor, the semantic function to be used with the nested Optional type.
+# We pass a parameter to the GR.InclusiveOr constructor, the semantic function to be used with the nested Optional type.
 InclusiveOr = new GR.DelimitedBy Column, And, (l)-> pairsOf(
   GR.InclusiveOr, l,
   pair: (x,y)->new VL.InclusiveOr([x ? new VL.EmptyValue, y ? new VL.EmptyValue])
-  cons: (x,y)->y.unshift(x ? new VL.EmptyValue) ; y
+  # XXX a||[b||c] is not equivalent to a||b||c because for input `a`, it cannot know how many undefined values to attach to the result. Added a workaround of fallback to []. Need to analyze this
+  cons: (x,y)->(y ?= new VL.InclusiveOr([])).unshift(x ? new VL.EmptyValue) ; y
 )
 
 ExclusiveOr = new GR.DelimitedBy Bar, InclusiveOr, (l)-> pairsOf(

@@ -100,7 +100,7 @@ class DF.Definition
           value
         else if @block?
           if !type.decodejs?
-            throw new ER.TypeError "Cannot convert type <#{@typeName}> back from JavaScript"
+            throw new ER.DecodingNotSupported type
           new VL.JavaScriptFunction type, argument, @block
         else
           throw new Error "Internal Error in FunCSS"

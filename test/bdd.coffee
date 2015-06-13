@@ -51,6 +51,7 @@ describe "FunCSS compiler", ->
             result.should.equal(expected)
           else if err?
             if e?
+              e.createStack()
               e.stack.should.equal(err)
             else
               throw new Error "#{basename} should have failed with an error, but it succeeded."

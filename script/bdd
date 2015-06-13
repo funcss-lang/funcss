@@ -33,7 +33,8 @@ switch process.argv[3]
       browserify: !!fcss.match(/require/)
       done: (err, js) ->
         if err
-          fs.writeFile("#{basename}.err", err.stack ? err.toString(), encoding: 'utf-8')
+          err.createStack?()
+          fs.writeFile("#{basename}.err", err.toString() + "\n" + err.stack, encoding: 'utf-8')
         else
           fs.writeFile("#{basename}.js", js, encoding: 'utf-8')
 

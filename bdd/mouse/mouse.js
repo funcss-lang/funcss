@@ -73,9 +73,9 @@
   2: [ function(require, module, exports) {
     !function() {
       var S = document.createElement("style");
-      S.innerHTML = "body::before {  }";
+      S.innerHTML = "body::before {  }\nbody {  }";
       document.head.appendChild(S);
-      var rule0 = S.sheet.cssRules[0];
+      var rule0 = S.sheet.cssRules[0], rule1 = S.sheet.cssRules[1];
       window.addEventListener("load", function() {
         Tracker.autorun(function() {
           rule0.style.content = JSON.stringify("" + function() {
@@ -83,6 +83,30 @@
           }()) + ' "," ' + JSON.stringify("" + function() {
             return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseY();
           }());
+        });
+      });
+      window.addEventListener("load", function() {
+        Tracker.autorun(function() {
+          rule1.style.backgroundColor = function() {
+            var c = function(x, y0, x0, y1, x1) {
+              return {
+                r: y0.r + x * (y1.r - y0.r) / (x1 - x0),
+                g: y0.g + x * (y1.g - y0.g) / (x1 - x0),
+                b: y0.b + x * (y1.b - y0.b) / (x1 - x0)
+              };
+            }(function() {
+              return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseX();
+            }(), {
+              r: 255,
+              g: 0,
+              b: 0
+            }, 0, {
+              r: 255,
+              g: 255,
+              b: 0
+            }, 1e3);
+            return c.a || 0 === c.a ? "rgba(" + Math.round(c.r) + "," + Math.round(c.g) + "," + Math.round(c.b) + "," + Math.round(c.a) + ")" : "rgb(" + Math.round(c.r) + "," + Math.round(c.g) + "," + Math.round(c.b) + ")";
+          }();
         });
       });
     }();

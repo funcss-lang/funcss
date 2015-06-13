@@ -10,6 +10,7 @@
 #
 
 assert = require "../../helpers/assert"
+ER     = require "../../errors/er_nodes"
 
 # TODO
 VL = exports
@@ -156,7 +157,8 @@ class VL.FunctionalNotation extends VL.Value
 
 class VL.JavaScriptFunction extends VL.Value
   constructor: (@type, @argument, @block) ->
-    assert.hasProp {@type}, "decodejs"
+    if ! @type.decodejs
+      throw new ER.DecodingNotSupported type
     assert.instanceOf {@argument}, VL.Marking
     @optimized = @block.toString().match(/^\{ ?return ?([()a-zA-Z$_0-9+/*.-][()a-zA-Z$_0-9+/*. -]*) ?;? ?\}$/)?[1]
   jsjs: ->
@@ -168,7 +170,7 @@ class VL.JavaScriptFunction extends VL.Value
           before + value.jsjs()
         else
           before + identifier
-      x
+      "(#{x})"
     else
       "(function(#{@argument.formalArguments()})#{@block})(#{@argument.actualArguments()})"
   ssjs: ->

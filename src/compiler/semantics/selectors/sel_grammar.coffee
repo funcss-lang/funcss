@@ -19,9 +19,16 @@ ClassSelector = new GR.CloselyJuxtaposed(
   Snd
 )
 
+IdSelector = new GR.Hash(
+  (x)->new SL.IdSelector(x.value)
+)
+
 SimpleSelector = new GR.ExclusiveOr(
   TypeSelector,
-  ClassSelector
+  new GR.ExclusiveOr(
+    ClassSelector,
+    IdSelector
+  )
 )
 
 Combinable = SimpleSelector
