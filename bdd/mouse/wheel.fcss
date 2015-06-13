@@ -1,0 +1,7 @@
+@import "vanilla-1.0.0";
+/* uses requires */
+
+body::before {
+  content: string(mouse-wheel-delta());
+}
+

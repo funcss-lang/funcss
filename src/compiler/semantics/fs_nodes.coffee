@@ -86,7 +86,7 @@ class FS.FunctionalStylesheet
       'border-left': vds "<'border-left-width'> || <'border-style'> || <color>"
       'border': vds "<'border-width'> || <'border-style'> || <color>"
       'width': vds "<length> | <percentage> | auto"
-      'height': vds "<length> | auto"
+      'height': vds "<length> | auto | <percentage>" # TODO Mockup
       'float': vds "left | right | none"
       'clear': vds "none | left | right | both"
       'display': vds "block | inline | list-item | none"
@@ -97,9 +97,11 @@ class FS.FunctionalStylesheet
       'list-style': vds "[disc | circle | square | decimal | lower-roman | upper-roman | lower-alpha | upper-alpha | none] || [inside | outside] || [<url> | none]"
       'opacity': vds "<number>"
       'content': vds "none | [<string>]+" # TODO mockup
-      'transform': vds "none | rotate(<angle>)" # TODO mockup
+      'transform': vds "none | rotate(<angle>) | scale(<number>)" # TODO mockup
       'top': vds "<length>"  #TODO mockup
       'left': vds "<length>"  #TODO mockup
+      'position': vds "absolute | relative | static | fixed"  #TODO mockup
+      'overflow': vds "visible | hidden | auto"  #TODO mockup
     }
     @_typeStack = [
       Values.primitiveTypes,

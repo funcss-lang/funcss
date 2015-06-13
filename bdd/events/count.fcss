@@ -1,1 +1,3 @@
-
+body::after {
+  content: (count(click #up) - count(click #down)) | string() " clicks";
+}

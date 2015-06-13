@@ -16,6 +16,7 @@
   roundup(x:number):integer {{ return Math.ceil(x) }}
   cos(x:number):number {{ return Math.cos(x) }}
   exp(x:number):number {{ return Math.exp(x) }}
+  exp(x:number, base:number):number {{ return Math.pow(base, x) }}
   rounddown(x:number):integer {{ return Math.floor(x) }}
   log(x:number):number {{ return Math.log(x) }}
   round(x:number):integer {{ return Math.round(x) }}
@@ -86,22 +87,22 @@
   wrap($x:number, $from:number $to:number):number {{ var $l=$to-$from; return $from+(($x-$from)%$l+$l)%$l; }}
 
 
-  linear(x:number, y0:number x0:number, y1:number x1:number):number {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:length, y0:number x0:length, y1:number x1:length):number {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:time, y0:number x0:time, y1:number x1:time):number {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:number, y0:number x0:number, y1:number x1:number):number {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:number x0:length, y1:number x1:length):number {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:time, y0:number x0:time, y1:number x1:time):number {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
 
-  linear(x:number, y0:angle x0:number, y1:angle x1:number):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:length, y0:angle x0:length, y1:angle x1:length):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:time, y0:angle x0:time, y1:angle x1:time):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:angle, y0:angle x0:angle, y1:angle x1:angle):angle {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:number, y0:angle x0:number, y1:angle x1:number):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:angle x0:length, y1:angle x1:length):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:time, y0:angle x0:time, y1:angle x1:time):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:angle, y0:angle x0:angle, y1:angle x1:angle):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
 
   linear(x:number, y1:angle x1:number):angle {{ return x*y1/x1; }}
   linear(x:number, y1:length x1:number):length {{ return x*y1/x1; }}
   linear(x:length, y1:number x1:length):number {{ return x*y1/x1; }}
 
-  linear(x:number, y0:length x0:number, y1:length x1:number):length {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:length, y0:length x0:length, y1:length x1:length):length {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:time, y0:length x0:time, y1:length x1:time):length {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:number, y0:length x0:number, y1:length x1:number):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:length x0:length, y1:length x1:length):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:time, y0:length x0:time, y1:length x1:time):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
 
   linear(x:number, y0:color x0:number, y1:color x1:number):color {{
     return {
@@ -125,14 +126,32 @@
     }
   }}
 
-  linear(x:number, y0:time x0:number, y1:time x1:number):time {{ return y0 + x*(y1-y0)/(x1-x0); }}
-  linear(x:length, y0:time x0:length, y1:time x1:length):time {{ return y0 + x*(y1-y0)/(x1-x0); }}
+  linear(x:number, y0:time x0:number, y1:time x1:number):time {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+  linear(x:length, y0:time x0:length, y1:time x1:length):time {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
+
+  linear($x:number, $y0: number, $a:[[yi:number xi:number]#], $yn:number ):number  {{ 
+    var s = 0, e = $a.length;
+    for (var p = Math.floor(e/2); p!=s; ) {
+      if ($x < $a[p].xi) {
+        e = p;
+      } else {
+        s = p;
+      }
+      p = s+Math.floor((e-s)/2);
+    }
+    if (p == 0 && $x < $a[0].xi) return $y0;
+    if (p == $a.length-1 && $x > $a[p].xi) return $yn;
+    return $a[p-1].yi + (x-$a[p-1].xi)*($a[p].yi-$a[p-1].yi)/($a[p].xi-$a[p-1].xi);
+  }}
 
   page-mouse-x():length {{
     return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseX()
   }}
   page-mouse-y():length {{
     return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseY()
+  }}
+  mouse-wheel-delta():number {{
+    return (window._funcss_mouseWheel || (window._funcss_mouseWheel = require("mouse-wheel"))).mouseWheelDelta();
   }}
   seconds():time {{
     return (window._funcss_timer || (window._funcss_timer = require("timer"))).get().getSeconds()
@@ -160,8 +179,17 @@
 
   /*best()*/
 
+  white:color = #fff;
+  black:color = #000;
   red:color = #ff0000;
   yellow:color = #ffff00;
+  blue:color = #0000ff;
+  green:color = #008000;
+  lime: color= #00ff00;
+  teal: color = #008080;
+  aqua: color = #00ffff;
+  silver: color = #c0c0c0;
+
 
   
   /**rgb(r:color, g:color: b:color):color = --css-rgb(r,g,b);**/
