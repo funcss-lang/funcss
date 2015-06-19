@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>FunCSS BDD</title>
+  <link rel="stylesheet" href="../node_modules/mocha/mocha.css">
+  <script src="../rtlib/jquery-1.11.3.min.js"></script>
+  <script src="../node_modules/should/should.min.js"></script>
+  <script src="../node_modules/mocha/mocha.js"></script>
+</head>
+<body>
+  <iframe id="frame"></iframe>
+  <div id="mocha"></div>
+  <script>
+    mocha.setup("bdd");
+    $frame = $("#frame");
+    frame = $frame[0];
+    function test(url, spec, f) {
+      specify(spec, function(done) {
+        // go to url and call f() after loading
+        frame.src = url;
+        var mocha = this;
+        $frame.one("load", function() {
+          setTimeout(function() {
+            f.call(mocha, frame.contentDocument, done);
+            // only call done() if f() does not wish to call it (like in Mocha)
+            if (f.length <= 1) { done(); } 
+          });
+        });
+      });
+    }
+  </script>
+
+  <script src="animation/test.js"></script>
+  <script src="stylesheet/test.js"></script>
+
+  <script>
+    mocha.checkLeaks();
+    mocha.globals(['jQuery', '$']);
+    mocha.run();
+  </script>
+</body>
+</html>
+

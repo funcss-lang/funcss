@@ -96,9 +96,12 @@
   linear(x:time, y0:angle x0:time, y1:angle x1:time):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
   linear(x:angle, y0:angle x0:angle, y1:angle x1:angle):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
 
-  linear(x:number, y1:angle x1:number):angle {{ return x*y1/x1; }}
-  linear(x:number, y1:length x1:number):length {{ return x*y1/x1; }}
-  linear(x:length, y1:number x1:length):number {{ return x*y1/x1; }}
+  linear(x:number, y1:angle / x1:number):angle {{ return x*y1/x1; }}
+  linear(x:number, y1:length / x1:number):length {{ return x*y1/x1; }}
+  linear(x:length, y1:number / x1:length):number {{ return x*y1/x1; }}
+  linear(x:time, y1:angle / x1:time):angle {{ return x*y1/x1; }}
+  linear(x:time, y1:length / x1:time):length {{ return x*y1/x1; }}
+  linear(x:time, y1:number / x1:time):number {{ return x*y1/x1; }}
 
   linear(x:number, y0:length x0:number, y1:length x1:number):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
   linear(x:length, y0:length x0:length, y1:length x1:length):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
