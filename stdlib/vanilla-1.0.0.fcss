@@ -103,6 +103,9 @@
   linear(x:time, y1:length / x1:time):length {{ return x*y1/x1; }}
   linear(x:time, y1:number / x1:time):number {{ return x*y1/x1; }}
 
+  linear(x:number, y0:angle x0: number, dy:angle / dx:number):angle {{ return y0+(x-x0)*dy/dx; }}
+  linear(x:time, y0:number x0: time, dy:number / dx:time):number {{ return y0+(x-x0)*dy/dx; }}
+
   linear(x:number, y0:length x0:number, y1:length x1:number):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
   linear(x:length, y0:length x0:length, y1:length x1:length):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
   linear(x:time, y0:length x0:time, y1:length x1:time):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
@@ -177,6 +180,9 @@
   time-since-load():time {{
     return (window._funcss_timer || (window._funcss_timer = require("timer"))).getTimeSinceLoad()
   }}
+  time-since(page-load):time {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).getTimeSinceLoad()
+  }}
   rgb(r:number, g:number, b:number):color {{ return {r:r,g:g,b:b}; }}
   
 
@@ -200,8 +206,19 @@
   /**@prop background-color: <color>;**/
   /*@prop opacity: <number>;*/
 
+  /* conversions */
+
   string(x:number):string {{ return x; }}
   number(x:length px):number {{ return x; }}
+
+  /* string methods */
+  substring(s:string, start:integer to end:integer):string {{
+    return s.substring(start-1, end)
+  }}
+
+  substring(s:string, start:integer until end:integer):string {{
+    return s.substring(start-1, end-1)
+  }}
 
 
 }
