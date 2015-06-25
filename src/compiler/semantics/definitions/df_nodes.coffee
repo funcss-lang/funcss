@@ -37,6 +37,8 @@ class DF.VariableName extends DF.Definable
   toString: ->
     @value
 
+#class DF.Dimension
+
 class DF.FunctionalNotation extends DF.Definable
   constructor: (@name, @argument) ->
   grammar: (semantic) ->

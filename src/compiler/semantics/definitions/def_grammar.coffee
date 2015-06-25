@@ -25,10 +25,16 @@ FunctionalNotation = new GR.AnyFunctionalNotation(
   (name, argument)->new DF.FunctionalNotation(name, argument)
 )
 
-# For now, only a variable with type can be used. 
+#Dimension = new GR.Dimension(
+  #(x)->new DF.Dimension(x.value, x.unit)
+#)
+
 Definable = new GR.ExclusiveOr(
   VariableName,
+  #new GR.ExclusiveOr(
   FunctionalNotation
+    #,Dimension
+  #)
 )
 
 # A definable (variable or function) and a type name:

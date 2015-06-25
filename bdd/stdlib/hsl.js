@@ -97,6 +97,7 @@
           return rv.get();
         };
       }();
+      window.setTimeout(pageRect(), 100);
       module.exports = {
         pageWidth: function() {
           return pageRect().width;
@@ -111,8 +112,9 @@
     !function() {
       var S = document.createElement("style");
       document.getElementsByTagName("head")[0].appendChild(S);
-      S.styleSheet.cssText = "body::before {  }\nhtml {  }\nhtml {  }";
-      var rule0 = S.sheet.cssRules[0], rule1 = S.sheet.cssRules[1], rule2 = S.sheet.cssRules[2];
+      var S_content = "body::before {  }\nhtml {  }\nhtml {  }";
+      S.sheet ? S.innerHTML = S_content : S.styleSheet.cssText = S_content;
+      var rule0 = S.sheet ? S.sheet.cssRules[0] : S.styleSheet.rules[0], rule1 = S.sheet ? S.sheet.cssRules[1] : S.styleSheet.rules[1], rule2 = S.sheet ? S.sheet.cssRules[2] : S.styleSheet.rules[2];
       !function() {
         function ready() {
           if (!_funcss_dom_loaded) {
@@ -168,8 +170,8 @@
           }
         }
         var _funcss_dom_loaded = !1;
-        document.addEventListener("DOMContentLoaded", ready);
-        document.addEventListener("readystatechange", ready);
+        (document.addEventListener || document.attachEvent)("DOMContentLoaded", ready);
+        (document.addEventListener || document.attachEvent)("readystatechange", ready);
       }();
     }();
   }, {

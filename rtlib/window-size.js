@@ -31,6 +31,8 @@ var pageRect = function() {
     };
 }();
 
+window.setTimeout(pageRect(),100);
+
 module.exports = {
   pageWidth: function() {return pageRect().width},
   pageHeight: function() {return pageRect().height}
