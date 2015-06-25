@@ -193,7 +193,7 @@ class FS.FunctionalStylesheet
       ig.push new IG.Require "reactive-var"
     ig.push @definitions.ig()
     ig.push @cascade.ig()
-    ig
+    ig.optimize()
 
 
 
