@@ -35,7 +35,9 @@ window.setTimeout(pageRect(),100);
 
 module.exports = {
   pageWidth: function() {return pageRect().width},
-  pageHeight: function() {return pageRect().height}
+  pageHeight: function() {return pageRect().height},
+  windowWidth: function() {pageRect(); return window.innerWidth},
+  windowHeight: function() {pageRect(); return window.innerHeight}
 }
 
 }();

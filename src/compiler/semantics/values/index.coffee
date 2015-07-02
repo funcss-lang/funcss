@@ -60,6 +60,6 @@ exports.primitiveTypes.color.decodejs = (x) -> """
   })()
   """
 
-
+require "./dimensions/viewport.coffee"
 
 
