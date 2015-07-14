@@ -17,6 +17,19 @@
   "engines": {
     "node": ">=0.10.37 <0.13"
   },
+  "testling": {
+    "harness": "mocha-bdd",
+    "files": "bdd/**/test.js",
+    "browsers": [
+      "ie/9..latest",
+      "chrome/latest",
+      "firefox/latest"
+    ],
+    "scripts": [
+      "rtlib/jquery-1.11.3.min.js",
+      "bdd/bdd.js"
+    ]
+  },
   "scripts": {
     "test": "mocha",
     "prepublish": "npm run build",
