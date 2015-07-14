@@ -80,7 +80,7 @@ describe "VdsGrammar", ->
     it "can refer to a quoted type", ->
       check_tree "solid", "<'border-type'>", 1, VL.Keyword, value: "solid"
     it "can refer to a quoted type with no match", ->
-      check_nomatch "asdf", "<'border-type'>", 0, "'solid' or 'dashed' or 'dotted' or 'none' expected but 'asdf' found"
+      check_nomatch "asdf", "<'border-type'>", 0, "'border-type' property value expected but 'asdf' found"
     it "cannot use unnamed quoted type", ->
       check_error "3%", "<'asdf'>", ER.UnknownProperty, "Unknown property: asdf"
 
@@ -88,7 +88,7 @@ describe "VdsGrammar", ->
     it "can parse an ident", ->
       check_tree "asdf", "<ident>", 1, VL.Keyword, value: "asdf"
     it "cannot parse sth", ->
-      check_nomatch "3px", "<ident>", 0, "identifier expected but '3px' found"
+      check_nomatch "3px", "<ident>", 0, "ident expected but '3px' found"
 
   describe "<number>", ->
     it "can parse a number", ->
