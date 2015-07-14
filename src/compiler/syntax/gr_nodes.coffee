@@ -505,7 +505,7 @@ class GR.SimpleBlock extends GR.Grammar
 class GR.TypeReference extends GR.Grammar
   semantic: Id
   constructor: (@name, @quoted = no, @semantic = @semantic) ->
-    @expected = @name
+    @expected = if @quoted then "'#{@name}' property value" else @name
   consume: (s) ->
     if ! @fs
       throw new Error "Internal error in FunCSS: fs is not set up correctly"
