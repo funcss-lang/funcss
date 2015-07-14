@@ -97,7 +97,7 @@ class FS.FunctionalStylesheet
       'list-style': vds "[disc | circle | square | decimal | lower-roman | upper-roman | lower-alpha | upper-alpha | none] || [inside | outside] || [<url> | none]"
       'opacity': vds "<number>"
       'content': vds "none | [<string>]+" # TODO mockup
-      'transform': vds "none | rotate(<angle>) | scale(<number>)" # TODO mockup
+      'transform': vds "none | rotate(<angle>) | scale(<number>) | translate(<length>, <length>)" # TODO mockup
       'top': vds "<length>"  #TODO mockup
       'left': vds "<length>"  #TODO mockup
       'position': vds "absolute | relative | static | fixed"  #TODO mockup
@@ -193,7 +193,7 @@ class FS.FunctionalStylesheet
       ig.push new IG.Require "reactive-var"
     ig.push @definitions.ig()
     ig.push @cascade.ig()
-    ig
+    ig.optimize()
 
 
 

@@ -66,21 +66,20 @@
   2: [ function(require, module, exports) {
     !function() {
       var S = document.createElement("style");
-      S.innerHTML = "span {  }\nspan {  }";
+      S.innerHTML = "body::before {  }";
       document.head.appendChild(S);
-      var rule0 = S.sheet.cssRules[0], rule1 = S.sheet.cssRules[1];
+      var rule0 = S.sheet.cssRules[0];
       window.addEventListener("load", function() {
         Tracker.autorun(function() {
-          rule0.style.display = "block";
-        });
-      });
-      window.addEventListener("load", function() {
-        Tracker.autorun(function() {
-          rule1.style.transform = "translate(" + function(x, y1, x1) {
+          rule0.style.content = JSON.stringify("" + function(s, start, end) {
+            return s.substring(start - 1, end);
+          }("Lorem ipsum dolor sit amet consectetur adepiscing elit. ", 1, function(x) {
+            return Math.round(x);
+          }(function(x, y1, x1) {
             return x * y1 / x1;
           }(function() {
             return (window._funcss_timer || (window._funcss_timer = require("timer"))).getTimeSinceLoad();
-          }(), 1, 1e3) + "px , 0px)";
+          }(), 12, 1e3)))) + ' "_"';
         });
       });
     }();

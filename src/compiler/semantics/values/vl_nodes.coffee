@@ -160,7 +160,7 @@ class VL.JavaScriptFunction extends VL.Value
     if ! @type.decodejs
       throw new ER.DecodingNotSupported type
     assert.instanceOf {@argument}, VL.Marking
-    @optimized = @block.toString().match(/^\{ ?return ?([()a-zA-Z$_0-9+/*.-][()a-zA-Z$_0-9+/*. -]*) ?;? ?\}$/)?[1]
+    @optimized = @block.toString().match(/^\{\{? ?return ?([()a-zA-Z$_0-9+/*.-][()a-zA-Z$_0-9+/*. -]*) ?;? ?\}\}?$/)?[1]
   jsjs: ->
     if @optimized
       x = (" "+@optimized).replace /([^a-zA-Z0-9$_.])([a-zA-Z$_][a-zA-Z$_0-9]*)/g, (s) =>

@@ -1,0 +1,4 @@
+No match: ')' expected but ':' found
+')' expected but ':' found
+x(t:number):number)
+-----------^

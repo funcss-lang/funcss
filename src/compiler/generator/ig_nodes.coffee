@@ -17,6 +17,8 @@ IG.camel = camel = (s) ->
   
 
 class IG.JSCode
+  optimize: -> @
+
 class IG.Statement extends IG.JSCode
 
 class IG.Empty extends IG.Statement
@@ -31,6 +33,20 @@ class IG.BlockStatement extends IG.Statement
   constructor: (@value...) ->
   push: (newStatement) ->
     @value.push newStatement
+  optimize: ->
+    optimized = super
+
+    v = optimized.value
+    i = 0; while i < v.length
+      if v[i] instanceof IG.Sequence
+        v.splice(i,1,v[i].value...)
+      else if i>0 and v[i-1] instanceof IG.DomReady and v[i] instanceof IG.DomReady
+        v[i-1].value = v[i-1].value.concat v[i].value
+        v.splice(i,1)
+      else
+        ++i
+
+    optimized
 
 class IG.Sequence extends IG.BlockStatement
   toString: ->
@@ -51,15 +67,18 @@ class IG.CssStylesheet extends IG.Statement
   constructor: (@value, @name="S") ->
   toString: -> """
     var #{@name} = document.createElement("style");
-    #{@name}.innerHTML=#{JSON.stringify("#{@value}")};
-    document.head.appendChild(#{@name});
+    document.getElementsByTagName('head')[0].appendChild(#{@name});
+    var #{@name}_content = #{JSON.stringify("#{@value}")};
+    #{@name}.sheet ?
+      #{@name}.innerHTML = #{@name}_content :
+      #{@name}.styleSheet.cssText = #{@name}_content;
   """
 
 
 class IG.Rule extends IG.Statement
   constructor: (@cssStylesheet, @index) ->
   toString: -> """
-    var rule#{@index} = #{@cssStylesheet.name}.sheet.cssRules[#{@index}];
+    var rule#{@index} = #{@cssStylesheet.name}.sheet ? #{@cssStylesheet.name}.sheet.cssRules[#{@index}] : #{@cssStylesheet.name}.styleSheet.rules[#{@index}];
   """
   
 class IG.CustomFunction extends IG.BlockStatement
@@ -116,9 +135,16 @@ class IG.Autorun extends IG.BlockStatement
 
 class IG.DomReady extends IG.BlockStatement
   toString: () -> """
-    window.addEventListener("load", function() {
-      #{@value.join("\n")}
-    });
+    (function() {
+      var _funcss_dom_loaded = false;
+      function ready() {
+        if (_funcss_dom_loaded) return;
+        _funcss_dom_loaded = true;
+        #{@value.join("\n")}
+      }
+      (document.addEventListener || document.attachEvent)("DOMContentLoaded", ready);
+      (document.addEventListener || document.attachEvent)("readystatechange", ready);
+    })();
   """
 
 class IG.SetDeclarationValue extends IG.Statement

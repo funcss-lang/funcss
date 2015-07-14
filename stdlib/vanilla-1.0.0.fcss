@@ -22,11 +22,17 @@
   round(x:number):integer {{ return Math.round(x) }}
   sin(x:number):number {{ return Math.sin(x) }}
   sqrt(x:number):number {{ return Math.sqrt(x) }}
+  length(x:length,y:length):length {{ return Math.sqrt(x*x+y*y) }}
   tan(x:number):number {{ return Math.tan(x) }}
   atan2(y:number,x:number):number {{ return Math.atan2(y,x) }}
+  atan2(y:length,x:length):number {{ return Math.atan2(y,x) }}
+  atan2(y:number,x:number):angle {{ return Math.atan2(y,x) }}
+  atan2(y:length,x:length):angle {{ return Math.atan2(y,x) }}
   pow(x:number,e:number):number {{ return Math.pow(x,e) }}
-  max(x:[<number>*]):number {{ return Math.max.apply(Math,x) }}
-  min(x:[<number>*]):number {{ return Math.min.apply(Math,x) }}
+  max(x:[<number>#]):number {{ return Math.max.apply(Math,x) }}
+  min(x:[<number>#]):number {{ return Math.min.apply(Math,x) }}
+  max(x:[<length>#]):length {{ return Math.max.apply(Math,x) }}
+  min(x:[<length>#]):length {{ return Math.min.apply(Math,x) }}
   /*imul(x:number):number {{ return Math.imul(x) }}*/
   sign(x:number):integer {{ return Math.sign(x) }}
   /*roundtozero(x:number):integer {{ return Math.trunc(x) }}*/
@@ -96,9 +102,17 @@
   linear(x:time, y0:angle x0:time, y1:angle x1:time):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
   linear(x:angle, y0:angle x0:angle, y1:angle x1:angle):angle {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
 
-  linear(x:number, y1:angle x1:number):angle {{ return x*y1/x1; }}
-  linear(x:number, y1:length x1:number):length {{ return x*y1/x1; }}
-  linear(x:length, y1:number x1:length):number {{ return x*y1/x1; }}
+  linear(x:length, y1:percentage / x1:length):percentage {{ return x*y1/x1; }}
+  linear(x:angle, y1:percentage / x1:angle):percentage {{ return x*y1/x1; }}
+  linear(x:number, y1:angle / x1:number):angle {{ return x*y1/x1; }}
+  linear(x:number, y1:length / x1:number):length {{ return x*y1/x1; }}
+  linear(x:length, y1:number / x1:length):number {{ return x*y1/x1; }}
+  linear(x:time, y1:angle / x1:time):angle {{ return x*y1/x1; }}
+  linear(x:time, y1:length / x1:time):length {{ return x*y1/x1; }}
+  linear(x:time, y1:number / x1:time):number {{ return x*y1/x1; }}
+
+  linear(x:number, y0:angle x0: number, dy:angle / dx:number):angle {{ return y0+(x-x0)*dy/dx; }}
+  linear(x:time, y0:number x0: time, dy:number / dx:time):number {{ return y0+(x-x0)*dy/dx; }}
 
   linear(x:number, y0:length x0:number, y1:length x1:number):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
   linear(x:length, y0:length x0:length, y1:length x1:length):length {{ return y0 + (x-x0)*(y1-y0)/(x1-x0); }}
@@ -150,6 +164,12 @@
   page-mouse-y():length {{
     return (window._funcss_mousePointer || (window._funcss_mousePointer = require("mouse-pointer"))).pageMouseY()
   }}
+  page-width():length {{
+    return (window._funcss_windowSize || (window._funcss_windowSize = require("window-size"))).pageWidth()
+  }}
+  page-height():length {{
+    return (window._funcss_windowSize || (window._funcss_windowSize = require("window-size"))).pageHeight();
+  }}
   mouse-wheel-delta():number {{
     return (window._funcss_mouseWheel || (window._funcss_mouseWheel = require("mouse-wheel"))).mouseWheelDelta();
   }}
@@ -174,6 +194,9 @@
   time-since-load():time {{
     return (window._funcss_timer || (window._funcss_timer = require("timer"))).getTimeSinceLoad()
   }}
+  time-since(page-load):time {{
+    return (window._funcss_timer || (window._funcss_timer = require("timer"))).getTimeSinceLoad()
+  }}
   rgb(r:number, g:number, b:number):color {{ return {r:r,g:g,b:b}; }}
   
 
@@ -191,14 +214,72 @@
   silver: color = #c0c0c0;
 
 
+  hsl(h:percentage, s:percentage, l:percentage):color {{
+    function hue2rgb(m1, m2, h) {
+      if (h < 0) h = h+1;
+      if (h > 1) h = h-1;
+      if (h*6<1) return m1+(m2-m1)*h*6;
+      if (h*2<1) return m2;
+      if (h*3<2) return m1+(m2-m1)*(2/3-h)*6;
+      return m1;
+    }
+    var m1, m2;
+    if (l<=0.5) {
+      m2 = l*(s+1);
+    } else {
+      m2 = l+s-l*s;
+    }
+    m1  = l*2-m2;
+    return {
+      r: hue2rgb(m1, m2, h+1/3)*255,
+      g: hue2rgb(m1, m2, h    )*255,
+      b: hue2rgb(m1, m2, h-1/3)*255
+    };
+  }}
+  hsl(h:angle, s:percentage, l:percentage):color {{
+    function hue2rgb(m1, m2, h) {
+      if (h < 0) h = h+1;
+      if (h > 1) h = h-1;
+      if (h*6<1) return m1+(m2-m1)*h*6;
+      if (h*2<1) return m2;
+      if (h*3<2) return m1+(m2-m1)*(2/3-h)*6;
+      return m1;
+    }
+    h = h / Math.PI * 2;
+    var m1, m2;
+    if (l<=0.5) {
+      m2 = l*(s+1);
+    } else {
+      m2 = l+s-l*s;
+    }
+    m1  = l*2-m2;
+    return {
+      r: hue2rgb(m1, m2, h+1/3)*255,
+      g: hue2rgb(m1, m2, h    )*255,
+      b: hue2rgb(m1, m2, h-1/3)*255
+    };
+  }}
+
+
   
   /**rgb(r:color, g:color: b:color):color = --css-rgb(r,g,b);**/
 
   /**@prop background-color: <color>;**/
   /*@prop opacity: <number>;*/
 
+  /* conversions */
+
   string(x:number):string {{ return x; }}
   number(x:length px):number {{ return x; }}
+
+  /* string methods */
+  substring(s:string, start:integer to end:integer):string {{
+    return s.substring(start-1, end)
+  }}
+
+  substring(s:string, start:integer until end:integer):string {{
+    return s.substring(start-1, end-1)
+  }}
 
 
 }
