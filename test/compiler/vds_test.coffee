@@ -1,46 +1,65 @@
 # This file tests both the VDS grammar and the `js()` feature of the LLL.
-TP = require "../../src/compiler/semantics/values/tp_nodes"
-Stream = require "../../src/compiler/helpers/stream"
+ER = require "../../src/compiler/errors/er_nodes"
+GR = require "../../src/compiler/semantics/../syntax/gr_nodes"
 Parser = require "../../src/compiler/syntax/parser"
-Vds = require "../../src/compiler/semantics/values/vds"
+VdsGrammar = require "../../src/compiler/semantics/values/vds_grammar"
+VL = require "../../src/compiler/semantics/values/vl_nodes"
 check = require "./check"
+FS = require "../../src/compiler/semantics/fs_nodes"
+
+customFunctions =
+  abs: Math.abs
+  sign: Math.sign
+  sqrt: Math.sqrt
+
+BorderType = VdsGrammar.parse("solid|dashed|dotted|none")
 
 parse = (s, typeStr) ->
-  type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-  value = type.parse(s)
-  jsjs = value.jsjs()
-  eval("#{jsjs}")
+  type = VdsGrammar.parse(typeStr)
+  fs = new FS.FunctionalStylesheet
+  type.setFs(fs)
+  fs.setPropertyType('border-type', BorderType)
+  value = type.consume(s)
+  value
 
-
-check_value = (str, typeStr, next, value) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
-  t = parse(s, typeStr)
-  t.should.equal(value) unless t is undefined and value is undefined
-  s.position.should.be.equal(next)
+check_grammar_optional = (typeStr, args...) ->
+  grammar = VdsGrammar.OptionalRoot.parse(typeStr)
+  check grammar, args...
+  grammar
 
 check_tree = (str, typeStr, next, args...) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
   t = parse(s, typeStr)
   check t, args...
   s.position.should.be.equal(next)
   t
 
 check_nomatch = (str, typeStr, pos, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
-  check.error TP.NoMatch, message: message, ->
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
+  check.error GR.NoMatch, message: message, ->
     parse(s, typeStr)
   s.position.should.be.equal(pos)
 
 check_error = (str, typeStr, errorClass, message) ->
-  s = new Stream(Parser.parse_list_of_component_values(str))
+  s = new GR.Stream(Parser.parse_list_of_component_values(str))
   check.error errorClass, message: message, ->
-    type = Vds.parse(new Stream(Parser.parse_list_of_component_values(typeStr)))
-    t = type.parse(s)
+    type = VdsGrammar.parse(typeStr)
+    type.setFs(new FS.FunctionalStylesheet)
+    t = type.consume(s)
 
-describe "Vds", ->
+describe "VdsGrammar", ->
+  describe "OptionalRoot", ->
+    it "works with empty", ->
+      g = check_grammar_optional "", GR.Empty
+      t = g.parse("  ")
+      check t, VL.EmptyValue
+    it "works with non-empty", ->
+      g = check_grammar_optional "asdf", GR.AnnotationRoot
+      check g.a, GR.Keyword, value: "asdf"
+
   describe "keyword", ->
     it "can parse ident", ->
-      check_value "asdf", "asdf", 1, "asdf"
+      check_tree "asdf", "asdf", 1, VL.Keyword, value: "asdf"
     it "cannot parse sth", ->
       check_nomatch "3px", "asdf", 0, "'asdf' expected but '3px' found"
     it "cannot parse EOF", ->
@@ -48,31 +67,41 @@ describe "Vds", ->
 
   describe "type reference", ->
     it "works", ->
-      check_value "3%", "<percentage>", 1, 0.03
-    it "cannot use whitespace", ->
-      # TODO make better error messages in this case
-      check_error "3%", "< percentage>", TP.NoMatch, /identifier expected but ' ' found/
-      check_error "3%", "<percentage >", TP.NoMatch, /'>' expected but ' ' found/
+      check_tree "3%", "<percentage>", 1, VL.Percentage, value: 3
+    it "can use whitespace", ->
+      # TODO make this disallowed?
+      #check_error "3%", "< percentage>", GR.NoMatch, /identifier expected but ' ' found/
+      #check_error "3%", "<percentage >", GR.NoMatch, /'>' expected but ' ' found/
+      check_tree "3%", "< percentage>", 1, VL.Percentage, value: 3
+      check_tree "3%", "<percentage >", 1, VL.Percentage, value: 3
+      check_tree "3%", "< percentage >", 1, VL.Percentage, value: 3
     it "cannot use unnamed type", ->
-      check_error "3%", "<asdf>", Vds.UnknownType, "unknown type <asdf>"
+      check_error "3%", "<asdf>", ER.UnknownType, "Unknown type: asdf"
+    it "can refer to a quoted type", ->
+      check_tree "solid", "<'border-type'>", 1, VL.Keyword, value: "solid"
+    it "can refer to a quoted type with no match", ->
+      check_nomatch "asdf", "<'border-type'>", 0, "'border-type' property value expected but 'asdf' found"
+    it "cannot use unnamed quoted type", ->
+      check_error "3%", "<'asdf'>", ER.UnknownProperty, "Unknown property: asdf"
 
   describe "<ident>", ->
     it "can parse an ident", ->
-      check_value "asdf", "<ident>", 1, "asdf"
+      check_tree "asdf", "<ident>", 1, VL.Keyword, value: "asdf"
     it "cannot parse sth", ->
-      check_nomatch "3px", "<ident>", 0, "identifier expected but '3px' found"
+      check_nomatch "3px", "<ident>", 0, "ident expected but '3px' found"
 
   describe "<number>", ->
     it "can parse a number", ->
-      check_value "3.14", "<number>", 1, 3.14
+      check_tree "3.14", "<number>", 1, VL.Number, value: 3.14
     it "can parse an integer", ->
-      check_value "3", "<number>", 1, 3
+      check_tree "3", "<number>", 1, VL.Number, value: 3
     it "cannot parse sth", ->
       check_nomatch "3px", "<number>", 0, "number expected but '3px' found"
 
   describe "<integer>", ->
     it "can parse an integer", ->
-      check_value "3", "<integer>", 1, 3
+      # TODO VL.Integer?
+      check_tree "3", "<integer>", 1, VL.Number, value: 3
     it "cannot parse a number", ->
       check_nomatch "3.14", "<integer>", 0, "integer expected but '3.14' found"
     it "cannot parse sth", ->
@@ -80,9 +109,9 @@ describe "Vds", ->
 
   describe "delimiters", ->
     it "can parse a slash token", ->
-      check_value "/", "/", 1, "/"
+      check_tree "/", "/", 1, VL.Keyword, value:"/"
     it "can parse a comma token", ->
-      check_value ",", ",", 1, ","
+      check_tree ",", ",", 1, VL.Keyword, value: ","
     describe "cannot parse sth", ->
       specify "with '/'", ->
         check_nomatch "3px", "/", 0, "'/' expected but '3px' found"
@@ -91,7 +120,7 @@ describe "Vds", ->
 
   describe "<percentage>", ->
     it "can parse a percentage", ->
-      check_value "3%", "<percentage>", 1, 0.03
+      check_tree "3%", "<percentage>", 1, VL.Percentage, value: 3
     it "cannot parse a number", ->
       check_nomatch "3.14", "<percentage>", 0, "percentage expected but '3.14' found"
     it "cannot parse sth", ->
@@ -99,9 +128,9 @@ describe "Vds", ->
 
   describe "<string>", ->
     it "can parse a string", ->
-      check_value "'asdf'", "<string>", 1, "asdf"
+      check_tree "'asdf'", "<string>", 1, VL.String, value: "asdf"
     it "can parse a string with doulbe quotes", ->
-      check_value '"asdf"', "<string>", 1, "asdf"
+      check_tree '"asdf"', "<string>", 1, VL.String, value: "asdf"
     it "cannot parse a number", ->
       check_nomatch "3.14", "<string>", 0, "string expected but '3.14' found"
     it "cannot parse sth", ->
@@ -110,16 +139,37 @@ describe "Vds", ->
 
   describe "Juxtaposition", ->
     it "works", ->
-      check_tree "black 3.3", "black <number>", 3, Array, length: 2, 0:"black", 1:3.3
+      t = check_tree "black 3.3", "black <number>", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value:3.3
     it "works with three elements", ->
-      check_tree "black 3.3 12%", "black <number> <percentage>", 5, Array, length: 3, 0:"black", 1:3.3, 2:0.12
-      check_tree "black 3.3 12%", "[black <number> <percentage>]", 5, Array, length: 3, 0:"black", 1:3.3, 2:0.12
+      t = check_tree "black 3.3 12%", "black <number> <percentage>", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value: 3.3
+      check t.value[2], VL.Percentage, value: 12
+      t = check_tree "black 3.3 12%", "[black <number> <percentage>]", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value: 3.3
+      check t.value[2], VL.Percentage, value: 12
     it "works with three elements grouped 1-2", ->
-      t = check_tree "black 3.3 12%", "[black <number>] <percentage>", 5, Array, length: 2, 1:0.12
-      check t[0], Array, length: 2, 0:"black", 1:3.3
+      t = check_tree "black 3.3 12%", "[black <number>] <percentage>", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Collection, delimiter: " "
+      check t.value[0].value, Array, length: 2
+      check t.value[0].value[0], VL.Keyword, value: "black"
+      check t.value[0].value[1], VL.Number, value: 3.3
+      check t.value[1], VL.Percentage, value: 12
     it "works with three elements grouped 2-3", ->
-      t = check_tree "black 3.3 12%", "black [<number> <percentage>]", 5, Array, length: 2, 0:"black"
-      check t[1], Array, length: 2, 0:3.3, 1:0.12
+      t = check_tree "black 3.3 12%", "black [<number> <percentage>]", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Collection, delimiter: " "
+      check t.value[1].value, Array, length: 2
+      check t.value[1].value[0], VL.Number, value: 3.3
+      check t.value[1].value[1], VL.Percentage, value: 12
     it "fails for first bad type", ->
       check_nomatch "green 3.3", "black <number>", 0, "'black' expected but 'green' found"
     it "fails for first EOF", ->
@@ -144,9 +194,15 @@ describe "Vds", ->
 
   describe "double ampersand", ->
     it "works forward", ->
-      check_tree "black 3.3", "black && <number>", 3, Array, length: 2, 0:"black", 1:3.3
+      t = check_tree "black 3.3", "black && <number>", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value: 3.3
     it "works backwards", ->
-      check_tree "3.3 black", "black && <number>", 3, Array, length: 2, 0:"black", 1:3.3
+      t = check_tree "3.3 black", "black && <number>", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value: 3.3
     it "fails for first", ->
       check_nomatch "black", "black && <number>", 1, "number expected but '' found"
     it "fails for second", ->
@@ -156,13 +212,25 @@ describe "Vds", ->
 
   describe "double bar", ->
     it "works forward", ->
-      check_tree "black 3.3", "black || <number>", 3, Array, length: 2, 0:"black", 1:3.3
+      t = check_tree "black 3.3", "black || <number>", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value: 3.3
     it "works backwards", ->
-      check_tree "3.3 black", "black || <number>", 3, Array, length: 2, 0:"black", 1:3.3
+      t = check_tree "3.3 black", "black || <number>", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.Number, value: 3.3
     it "works for first", ->
-      check_tree "black", "black || <number>", 1, Array, length: 2, 0:"black", 1:undefined
+      t = check_tree "black", "black || <number>", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Keyword, value: "black"
+      check t.value[1], VL.EmptyValue
     it "works for second", ->
-      check_tree "3.3", "black || <number>", 1, Array, length: 2, 0:undefined, 1:3.3
+      t = check_tree "3.3", "black || <number>", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.EmptyValue
+      check t.value[1], VL.Number, value: 3.3
     it "fails for empty", ->
       check_nomatch "", "black || <number>", 0, "'black' or number expected but '' found"
       check_nomatch "", "black || [<number>]", 0, "'black' or number expected but '' found"
@@ -170,9 +238,9 @@ describe "Vds", ->
 
   describe "Bar", ->
     it "works for first", ->
-      check_value "black", "black | <number>", 1, "black"
+      t = check_tree "black", "black | <number>", 1, VL.Keyword, value: "black"
     it "works for second", ->
-      check_value "3.3", "black | <number>", 1, 3.3
+      t = check_tree "3.3", "black | <number>", 1, VL.Number, value: 3.3
     it "fails for empty", ->
       check_nomatch "", "black | <number>", 0, "'black' or number expected but '' found"
       check_nomatch "", "[black] | <number>", 0, "'black' or number expected but '' found"
@@ -180,15 +248,26 @@ describe "Vds", ->
 
   describe "Asterisk", ->
     it "works for none", ->
-      check_tree "", "<number>*", 0, Array, length: 0
+      t = check_tree "", "<number>*", 0, VL.Collection, delimiter: " "
+      check t.value, Array, length: 0
     it "works for one", ->
-      check_tree "1", "<number>*", 1, Array, length: 1, 0:1
+      t = check_tree "1", "<number>*", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 1
+      check t.value[0], VL.Number, value: 1
     it "works for two", ->
-      check_tree "1 2", "<number>*", 3, Array, length: 2, 0:1, 1:2
+      t = check_tree "1 2", "<number>*", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
     it "works for three", ->
-      check_tree "1 2 3", "<number>*", 5, Array, length: 3, 0:1, 1:2, 2:3
+      t = check_tree "1 2 3", "<number>*", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
+      check t.value[2], VL.Number, value: 3
     it "works for sth", ->
-      check_tree "black", "<number>*", 0, Array, length: 0
+      t = check_tree "black", "<number>*", 0, VL.Collection, delimiter: " "
+      check t.value, Array, length: 0
 
   describe "Plus", ->
     it "fails for none", ->
@@ -196,25 +275,38 @@ describe "Vds", ->
       check_nomatch "", "[<number>+]", 0, "number expected but '' found"
       check_nomatch "", "[<number>]+", 0, "number expected but '' found"
     it "works for one", ->
-      check_tree "1", "<number>+", 1, Array, length: 1, 0:1
-      check_tree "1", "[<number>+]", 1, Array, length: 1, 0:1
-      check_tree "1", "[<number>]+", 1, Array, length: 1, 0:1
+      t = check_tree "1", "<number>+", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 1
+      check t.value[0], VL.Number, value: 1
+      t = check_tree "1", "[<number>+]", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 1
+      check t.value[0], VL.Number, value: 1
+      t = check_tree "1", "[<number>]+", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 1
+      check t.value[0], VL.Number, value: 1
     it "works for two", ->
-      check_tree "1 2", "<number>+", 3, Array, length: 2, 0:1, 1:2
+      t = check_tree "1 2", "<number>+", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
     it "works for three", ->
-      check_tree "1 2 3", "<number>+", 5, Array, length: 3, 0:1, 1:2, 2:3
+      t = check_tree "1 2 3", "<number>+", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
+      check t.value[2], VL.Number, value: 3
     it "fails for sth", ->
       check_nomatch "black", "<number>+", 0, "number expected but 'black' found"
 
   describe "QuestionMark", ->
     it "works for none", ->
-      check_value "", "<number>?", 0, undefined
+      check_tree "", "<number>?", 0, VL.EmptyValue
     it "works for one", ->
-      check_value "3.3", "<number>?", 1, 3.3
+      t = check_tree "1", "<number>?", 1, VL.Number, value: 1
     it "works for two", ->
-      check_value "3.3 2", "<number>?", 1, 3.3
+      t = check_tree "1 2", "<number>?", 1, VL.Number, value: 1
     it "works for sth", ->
-      check_value "black", "<number>?", 0, undefined
+      check_tree "black", "<number>?", 0, VL.EmptyValue
 
   describe "Range", ->
     it "works for none", ->
@@ -222,13 +314,26 @@ describe "Vds", ->
       check_nomatch "", "[<number>]{1,3}", 0, "number expected but '' found"
       check_nomatch "", "[<number>{1,3}]", 0, "number expected but '' found"
     it "works for one", ->
-      check_tree "1", "<number>{1,3}", 1, Array, length: 1, 0:1
+      t = check_tree "1", "<number>{1,3}", 1, VL.Collection, delimiter: " "
+      check t.value, Array, length: 1
+      check t.value[0], VL.Number, value: 1
     it "works for two", ->
-      check_tree "1 2", "<number>{1,3}", 3, Array, length: 2, 0:1, 1:2
+      t = check_tree "1 2", "<number>{1,3}", 3, VL.Collection, delimiter: " "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
     it "works for three", ->
-      check_tree "1 2 3", "<number>{1,3}", 5, Array, length: 3, 0:1, 1:2, 2:3
+      t = check_tree "1 2 3", "<number>{1,3}", 5, VL.Collection, delimiter: " "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
+      check t.value[2], VL.Number, value: 3
     it "works for four", ->
-      check_tree "1 2 3 4", "<number>{1,3}", 6, Array, length: 3, 0:1, 1:2, 2:3
+      t = check_tree "1 2 3 4", "<number>{1,3}", 6, VL.Collection, delimiter: " "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
+      check t.value[2], VL.Number, value: 3
     it "fails for sth", ->
       check_nomatch "black", "<number>{1,3}", 0, "number expected but 'black' found"
 
@@ -236,111 +341,22 @@ describe "Vds", ->
     it "fails for none", ->
       check_nomatch "", "<number>#", 0, "number expected but '' found"
     it "works for one", ->
-      check_tree "1", "<number>#", 1, Array, length: 1, 0:1
+      t = check_tree "1", "<number>#", 1, VL.Collection, delimiter: ", "
+      check t.value, Array, length: 1
+      check t.value[0], VL.Number, value: 1
     it "works for two", ->
-      check_tree "1, 2", "<number>#", 4, Array, length: 2, 0:1, 1:2
+      t = check_tree "1, 2", "<number>#", 4, VL.Collection, delimiter: ", "
+      check t.value, Array, length: 2
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
     it "works for three", ->
-      check_tree "1, 2,3", "<number>#", 6, Array, length: 3, 0:1, 1:2, 2:3
+      t = check_tree "1 ,2, 3", "<number>#", 7, VL.Collection, delimiter: ", "
+      check t.value, Array, length: 3
+      check t.value[0], VL.Number, value: 1
+      check t.value[1], VL.Number, value: 2
+      check t.value[2], VL.Number, value: 3
     it "fails for sth", ->
       check_nomatch "black", "<number>#", 0, "number expected but 'black' found"
-
-
-  describe "annotations", ->
-    it "works for x:hello", ->
-      check_tree "black", "color:<ident>", 1, Object, color:"black"
-    it "works for x:y:hello", ->
-      t = check_tree "hello", "x:y:<ident>", 1, Object
-      check t.x, Object, y:"hello"
-    it "works for x:[a:yes b:no]", ->
-      t = check_tree "yes no", "x:[a:yes b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-    it "works for x:[a:yes && b:no]", ->
-      t = check_tree "yes no", "x:[a:yes && b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-      t = check_tree "no yes", "x:[a:yes && b:no]", 3, Object
-      check t.x, Object, a:"yes", b:"no"
-
-    describe "works for x:[a:yes || b:no]", ->
-      specify "for 'yes no'", ->
-        t = check_tree "yes no", "x:[a:yes || b:no]", 3, Object
-        check t.x, Object, a:"yes", b:"no"
-      specify "for 'no yes'", ->
-        t = check_tree "no yes", "x:[a:yes || b:no]", 3, Object
-        check t.x, Object, a:"yes", b:"no"
-      specify "for 'no'", ->
-        t = check_tree "no", "x:[a:yes || b:no]", 1, Object
-        check t.x, Object, a:undefined, b:"no"
-      specify "for 'yes'", ->
-        t = check_tree "yes", "x:[a:yes || b:no]", 1, Object
-        check t.x, Object, a:"yes", b:undefined
-
-    describe "works for x:[a:yes | b:no]", ->
-      specify "for 'no'", ->
-        t = check_tree "no", "x:[a:yes | b:no]", 1, Object
-        check t.x, Object, a:undefined, b:"no"
-      specify "for 'yes'", ->
-        t = check_tree "yes", "x:[a:yes | b:no]", 1, Object
-        check t.x, Object, a:"yes", b:undefined
-
-    describe "works for x:[a:yes|b:no]*", ->
-      specify "for ''", ->
-        t = check_tree "", "x:[a:yes|b:no]*", 0, Object
-        check t.x, Array, length: 0
-      specify "for 'yes'", ->
-        t = check_tree "yes", "x:[a:yes|b:no]*", 1, Object
-        check t.x, Array, length: 1
-        check t.x[0], Object, a:"yes", b:undefined
-      specify "for 'yes no'", ->
-        t = check_tree "yes no", "x:[a:yes|b:no]*", 3, Object
-        check t.x, Array, length: 2
-        check t.x[0], Object, a:"yes", b:undefined
-        check t.x[1], Object, a:undefined, b:"no"
-
-    describe "works for x:[a:yes|b:no]#", ->
-      specify "for 'yes'", ->
-        t = check_tree "yes", "x:[a:yes|b:no]#", 1, Object
-        check t.x, Array, length: 1
-        check t.x[0], Object, a:"yes", b:undefined
-      specify "for 'no,no,yes'", ->
-        t = check_tree "no,no,yes", "x:[a:yes|b:no]#", 5, Object
-        check t.x, Array, length: 3
-        check t.x[0], Object, a:undefined, b:"no"
-        check t.x[1], Object, a:undefined, b:"no"
-        check t.x[2], Object, a:"yes", b:undefined
-
-    describe "works for x:[a:yes|b:no]?", ->
-      specify "for ''", ->
-        check_tree "", "x:[a:yes|b:no]?", 0, Object, x:undefined
-      specify "for 'no'", ->
-        t = check_tree "no", "x:[a:yes|b:no]?", 1, Object
-        check t.x, Object, a:undefined, b:"no"
-
-    describe "works for x:[a:yes||b:no]?", ->
-      specify "for ''", ->
-        check_tree "", "x:[a:yes||b:no]?", 0, Object, x:undefined
-      specify "for 'no'", ->
-        t = check_tree "no", "x:[a:yes||b:no]?", 1, Object
-        check t.x, Object, a:undefined, b:"no"
-      specify "for 'yes'", ->
-        t = check_tree "yes", "x:[a:yes||b:no]?", 1, Object
-        check t.x, Object, a:"yes", b:undefined
-      specify "for 'yes no'", ->
-        t = check_tree "yes no", "x:[a:yes||b:no]?", 3, Object
-        check t.x, Object, a:"yes", b:"no"
-      specify "for 'no yes'", ->
-        t = check_tree "no yes", "x:[a:yes||b:no]?", 3, Object
-        check t.x, Object, a:"yes", b:"no"
-
-    describe "works for [a:yes|b:no]*", ->
-      specify "for ''", ->
-        check_tree "", "[a:yes|b:no]*", 0, Array, length: 0
-      specify "for 'yes'", ->
-        t = check_tree "yes", "[a:yes|b:no]*", 1, Array, length: 1
-        check t[0], Object, a:"yes", b:undefined
-      specify "for 'yes no'", ->
-        t = check_tree "yes no", "[a:yes|b:no]*", 3, Array, length: 2
-        check t[0], Object, a:"yes", b:undefined
-        check t[1], Object, a:undefined, b:"no"
 
 
 

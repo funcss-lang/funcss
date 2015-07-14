@@ -1,5 +1,5 @@
 Tokenizer = require "./tokenizer"
-SS = require "./ss_nodes"
+SS        = require "./ss_nodes"
 
 
 
@@ -29,6 +29,7 @@ class Parser
 
   parse_stylesheet: (tokens) ->
     @init(tokens)
+    console.debug? "parsing #{tokens[0..5]}..."
     return new SS.Stylesheet(@consume_list_of_rules(true))
 
 

@@ -1,0 +1,7 @@
+@import "vanilla-1.0.0"; /*require*/
+
+div {
+  width: 95vmin;
+  height: 95vmin;
+  background-color: red;
+}

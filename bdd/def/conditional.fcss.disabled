@@ -1,0 +1,7 @@
+@def {
+  @template T, U {
+    if(x:T = y:T, then:U, else:U) : T {
+      return x() === y() ? then() : els_();
+    }
+  }
+}

@@ -1,0 +1,13 @@
+@def {
+  mirror(x $x:number) = translate($x,0) scale(1,-1) translate(calc(- $y));
+  mirror(y $y:number) = translate(0,$y) scale(1,-1) translate(0,calc(- $y));
+}
+
+@-funcss-property border {
+  type: <number>;
+}
+
+body {
+  transform: mirror(y 25px);
+}
+

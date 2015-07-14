@@ -1,0 +1,26 @@
+@import "vanilla-1.0";
+/*require*/
+
+@def {
+  $zoom-level : number = mouse-wheel(body);
+  $zoom-factor : number = exp($zoom-level, 1.1);
+}
+
+.map {
+  width: 400px;
+  height: 300px;
+  overflow: hidden;
+}
+.canvas {
+  transform: scale($zoom-factor);
+  width: 100%; height: 100%;
+}
+.layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+#layer1 {
+  opacity: linear($zoom-level, 0 2, 1 5);
+}
+

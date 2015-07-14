@@ -2,16 +2,44 @@
   "name": "funcss",
   "version": "0.0.1",
   "description": "An advanced stylesheet language.",
-  "scripts": {
-    "test": "mocha"
-  },
   "license": "MIT",
   "dependencies": {
+    "browserify": "^10.2.0",
+    "uglify-js": "^2.4.23"
+  },
+  "devDependencies": {
     "coffee-script": "^1.9.1",
     "mocha": "^2.2.1",
-    "should": "^5.0.1"
+    "should": "^5.0.1",
+    "rimraf": "latest",
+    "uglifyjs": ""
   },
   "engines": {
-      "node": ">=0.10.37 <0.13"
+    "node": ">=0.10.37 <0.13"
+  },
+  "testling": {
+    "harness": "mocha-bdd",
+    "files": "bdd/**/test.js",
+    "browsers": [
+      "ie/9..latest",
+      "chrome/latest",
+      "firefox/latest"
+    ],
+    "scripts": [
+      "rtlib/jquery-1.11.3.min.js",
+      "bdd/bdd.js"
+    ]
+  },
+  "scripts": {
+    "test": "mocha",
+    "prepublish": "npm run build",
+    "build": "npm run build:coffee",
+    "build:coffee": "rimraf lib/ && coffee -o lib/ -c src/",
+    "build:browserify": "browserify -o dist/funcss.js build/compiler",
+    "build:uglify": "uglifyjs dist/funcss.js > dist/funcss.min.js",
+    "clean": "rimraf lib/ dist/funcss.js dist/funcss.min.js",
+    "push": "git push",
+    "prepush": "npm test && npm run commit",
+    "commit": "git add . && git commit --all"
   }
 }

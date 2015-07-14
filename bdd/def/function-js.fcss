@@ -1,0 +1,10 @@
+@def {
+  f():number {
+    return 3/10;
+  };
+}
+
+body {
+  opacity: f();
+}
+

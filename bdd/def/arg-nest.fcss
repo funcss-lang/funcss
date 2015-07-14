@@ -1,0 +1,9 @@
+@def {
+  f(x:number):number {
+    return x*0.95;
+  }
+}
+
+body {
+  opacity: f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(1)))))))))))))))))))))));
+}

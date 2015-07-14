@@ -1,0 +1,6 @@
+@import "vanilla-1.0.0";
+/* require */
+span {
+  display: block;
+  transform: translate(linear(time-since-load(), 1px/1s), 0);
+}
