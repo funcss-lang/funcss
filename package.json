@@ -26,6 +26,7 @@
       "firefox/latest"
     ],
     "scripts": [
+      "rtlib/jquery-1.11.3.min.js",
       "bdd/bdd.js"
     ]
   },
