@@ -20,7 +20,7 @@ For an introduction about the project, see the slides of [my thesis presenatatio
 
 ## How it works?
 
-FunCSS is based on Meteor.js's [Tracker](https://meteor.com/projects/tracker) library for handling reactive updating of styles.
+FunCSS is based on Meteor.js's [Tracker](https://www.meteor.com/tracker) library for handling reactive updating of styles.
 
 ## Future plans
 
