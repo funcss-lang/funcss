@@ -1,7 +1,31 @@
-# FuncSS
+# FunCSS
 
 ![Build status](https://travis-ci.org/funcss-lang/funcss.svg)
 
-FuncSS will be a new langauge for web development, based on CSS. It will include programming capabilities, so that you can use the full power of selectors togehter with the full power of the DOM, in a declarative style.
+FunCSS is an extension of the CSS language where you can define custom functions in JavaScript that run **in the browser**. So, unlike CSS preprocessor, it compiles CSS-like code to JavaScript.
 
-The software is a work in progress, currently no working version is available.
+FunCSS is in the alpha phase and the language is subject to change. Do NOT use it in production.
+
+## Introduction
+
+For some function definition examples, head on to the standard library in [stdlib/](https://github.com/funcss-lang/funcss/tree/master/stdlib/vanilla-1.0.0.fcss).
+
+For an introduction about the project, see the slides of [my thesis presenatation](http://cie.web.elte.hu/funcss/slideshow) about FunCSS.
+
+## What it can do that CSS preprocessors can't
+
+* Styles depending on run-time data (e.g. current time)
+* Some event handling
+* Polyfill `vw`, `vh`, `vmin`, `vmax`
+
+## How it works?
+
+FunCSS is based on Meteor.js's [Tracker](https://meteor.com/projects/tracker) library for handling reactive updating of styles.
+
+## Future plans
+
+* Reimplement the compiler as a PostCSS plugin pack
+* Add support for custom selectors, properties, media queries etc., all of which evaluated in the browser
+* Add better event handling support
+
+
