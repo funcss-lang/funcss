@@ -1,35 +1,65 @@
+## The Selector nodes
+#
+# These nodes represent the Selector class
+#
+# *Outputs*
+#
+# - `toString()`: returns a string that contains the selector in CSS format
+# - `matchjs()`: TODO returns a string that contains a JavaScript expression which evaluates to a
+#     boolean: whether the element matches or not 
 
-#### The Selector nodes
+SL = exports
+
+class SL.Selector
 
 
-exports.Selector = class Selector
-
-
-exports.SelectorGroup = class SelectorGroup extends Selector
+class SL.SelectorGroup extends SL.Selector
   constructor: (@value) ->
   toString: ->
     @value.join(", ")
 
-exports.CombinedSelector = class CombinedSelector extends Selector
+class SL.CombinedSelector extends SL.Selector
   constructor: (@head, @combinator, @tail) ->
   toString: ->
     "#{head}#{combinator}#{tail}"
 
-exports.CombinedSelector = class CombinedSelector extends Selector
+class SL.CombinedSelector extends SL.Selector
 
-exports.Combinator = class Combinator extends Selector
+class SL.Combinator extends SL.Selector
 
-exports.SimpleSelectorGroup = class SimpleSelectorGroup extends Selector
+class SL.SimpleSelectorGroup extends SL.Selector
 
-exports.SimpleSelector = class SimpleSelector extends Selector
+class SL.SimpleSelector extends SL.Selector
 
-exports.TypeSelector = class TypeSelector extends SimpleSelector
+class SL.TypeSelector extends SL.SimpleSelector
   constructor: (@nodeName) ->
   toString: ->
     "#{@nodeName}"
 
+class SL.ClassSelector extends SL.SimpleSelector
+  constructor: (@className) ->
+  toString: ->
+    ".#{@className}"
 
+class SL.IdSelector extends SL.SimpleSelector
+  constructor: (@id) ->
+  toString: ->
+    "##{@id}"
 
+class SL.DescendantCombinator extends SL.Combinator
+  constructor: (@a, @b) ->
+  toString: ->
+    "#{@a} #{@b}"
+
+class SL.ChildCombinator extends SL.Combinator
+  constructor: (@a, @b) ->
+  toString: ->
+    "#{@a}>#{@b}"
+
+class SL.Pseudoelement extends SL.Selector
+  constructor: (@name, @a) ->
+  toString: ->
+    "#{@a}::#{@name}"
 
 
 

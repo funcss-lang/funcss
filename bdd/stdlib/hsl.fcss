@@ -1,0 +1,14 @@
+@import "vanilla-1.0.0";
+/* require */
+
+body::before {
+  content: string(number(page-height() px));
+}
+
+html {
+  height: 100%;
+  background: hsl(
+                linear(atan2(page-mouse-x(), page-mouse-y()), 100%/90deg),
+                linear(length(page-mouse-x(), page-mouse-y()), 100%/min(page-width(),page-height())),
+                50%);
+}

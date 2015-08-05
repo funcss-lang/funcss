@@ -1,0 +1,14 @@
+@import "vanilla-1.0.0";
+/* require */
+body::before {
+  content: substring("Lorem ipsum dolor sit amet consectetur adepiscing elit. ",
+     1 to round(linear(time-since-load(), 12/1s))) "_";
+  /* content:
+       target-text(.menuelem:hover) | transition(substring($prev-value, 1 to ($t | linear(100% to 0 in 3s))) for 3s,
+          substring($current-value 1 to ($t | linear(0 to 100% in 3s))) for 3s)
+       */
+
+
+}
+
+

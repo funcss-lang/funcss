@@ -1,0 +1,5 @@
+@import "vanilla-1.0.0";
+
+body {
+  opacity: sin(0.304693);
+}

@@ -1,0 +1,7 @@
+@def {
+  $x : length = 300px;
+}
+
+body {
+  margin-left: $x;
+}

@@ -1,0 +1,8 @@
+@def {
+  diff(y($x:number):number, x0:number) = ((y(x0) + y(x0 + 0.001)) / 0.001)
+}
+body {
+
+}
+
+

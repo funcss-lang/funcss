@@ -4,6 +4,5 @@
 --ui bdd
 --compilers coffee:coffee-script/register
 --globals config
-test/compiler
-test/bdd.coffee
+test
 src

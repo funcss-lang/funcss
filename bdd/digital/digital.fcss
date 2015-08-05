@@ -1,0 +1,56 @@
+@import "vanilla-1.0";
+/* use requires */
+
+@def {
+  $val0 : number = linear(page-mouse-x(), 1 20px);
+  $val0 : number = seconds();
+  $val:number = wrap(round($val0, 1), 0 10);
+  on : color = #800;
+  off : color = #000;
+}
+
+body {
+  background-color: #000;
+}
+
+.segment {
+  display: block;
+  float: left;
+}
+.horz {
+  margin: 5px 10px;
+  clear: left;
+  height: 5px;
+  width: 100px;
+  border-top: 5px solid;
+}
+.vert {
+  width: 5px;
+  height: 100px;
+  border-left: 5px solid;
+  margin-right: 100px;
+}
+#s2,#s5 {
+  clear: left;
+}
+#s1 {
+  border-color: threshold($val, on, off 1, on 2, off 4, on 5);
+}
+#s2 {
+  border-color: threshold($val, on, off 1, on 4, off 7, on 8);
+}
+#s3 {
+  border-color: threshold($val, on, off 5, on 7);
+}
+#s4 {
+  border-color: threshold($val, off, on 2, off 7, on 8);
+}
+#s5 {
+  border-color: threshold($val, on, off 1, on 2, off 3, on 6, off 7, on 8, off 9);
+}
+#s6 {
+  border-color: threshold($val, on, off 2, on 3, on 4);
+}
+#s7 {
+  border-color: threshold($val, on, off 1, on 2, off 4, on 5, off 7, on 8);
+}

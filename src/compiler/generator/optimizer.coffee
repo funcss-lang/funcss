@@ -1,5 +1,5 @@
-IG = require "./ig_nodes"
 walk = require "../helpers/walk"
+IG   = require "./ig_nodes"
 
 
 remove_empty_stylesheets = walk ->

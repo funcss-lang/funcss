@@ -1,0 +1,3 @@
+@def {
+  <mynum> = <number>;
+}

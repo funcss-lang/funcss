@@ -1,0 +1,9 @@
+@def {
+  $x : number {
+    return -(-0.3);
+  }
+}
+body {
+  opacity: $x;
+}
+

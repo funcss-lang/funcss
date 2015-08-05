@@ -1,0 +1,8 @@
+@def {
+  f():number = 0.3;
+}
+
+body {
+  opacity: f();
+}
+

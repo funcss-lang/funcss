@@ -32,8 +32,7 @@
 # usage.
 
 
-Stream = require "../helpers/stream"
-SS = require "./ss_nodes"
+SS     = require "./ss_nodes"
 
 class Tokenizer
   tokenize: (string) ->

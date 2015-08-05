@@ -1,0 +1,5 @@
+@import "vanilla-1.0.0";
+
+@def {
+  dif(x(t:number):number):number = x(1) - x(2);
+}
